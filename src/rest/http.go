@@ -8,17 +8,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetDevices(w http.ResponseWriter, r *http.Request) {
+type RESTInterface struct {
+}
+
+func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Getting Devices")
 }
 
-func SetNewDevice(w http.ResponseWriter, r *http.Request) {
+func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("Set Device")
 }
 
 func Setup() {
+	rest := RESTInterface{}
 	router := mux.NewRouter()
-	router.HandleFunc("/devices", GetDevices).Methods("GET")
+	router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 	fmt.Println("HTTP serve at 8000")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
