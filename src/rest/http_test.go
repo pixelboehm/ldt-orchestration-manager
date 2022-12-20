@@ -6,11 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Stringer interface {
-	String() string
-}
-
-func TestFail(t *testing.T) {
+func TestPass(t *testing.T) {
 	assert := assert.New(t)
-	assert.Fail("This test should fail")
+	assert.Truef(true, "this test should pass")
 }
