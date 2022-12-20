@@ -3,6 +3,8 @@ package rest
 import (
 	"fmt"
 	"log"
+	d "longevity/src/device"
+	"longevity/src/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,14 +18,21 @@ func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("Set Device\n")
+	name := r.FormValue("name")
+	if name != "" {
+		d.NewDevice(name)
+		fmt.Printf("New Device with name %s created.\n", name)
+	} else {
+		util.PrintMessage("No Name Specified for Device")
+		http.Error(w, "dunno", http.StatusMethodNotAllowed)
+	}
 }
 
 func Setup() *mux.Router {
 	rest := RESTInterface{}
 	router := mux.NewRouter()
-	router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
-	router.HandleFunc("/devices", rest.SetNewDevice).Methods("POST")
+	router.HandleFunc("/devices/", rest.GetDevices).Methods("GET")
+	router.HandleFunc("/devices/", rest.SetNewDevice).Methods("POST")
 	return router
 }
 

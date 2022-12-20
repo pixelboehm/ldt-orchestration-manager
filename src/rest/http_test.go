@@ -1,12 +1,15 @@
 package rest
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPass(t *testing.T) {
+func Test_createNewDeviceViaPostRequest(t *testing.T) {
+	rest := RESTInterface{}
 	assert := assert.New(t)
-	assert.Truef(true, "this test should pass")
+	values, _ := url.ParseQuery("name=thermostat")
+	assert.HTTPSuccess(rest.SetNewDevice, "POST", "localhost:8000/devices", values, nil)
 }
