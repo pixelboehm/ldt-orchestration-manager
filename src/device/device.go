@@ -1,9 +1,13 @@
 package device
 
-type Device struct {
+type device struct {
 	name string
 }
 
-func (device *Device) getName() string {
+func NewDevice(name string) device {
+	return device{name}
+}
+
+func (device *device) getName() string {
 	return device.name
 }
