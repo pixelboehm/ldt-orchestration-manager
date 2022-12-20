@@ -1,9 +1,10 @@
 package main
 
 import (
-	h "longevity/src/rest"
+	rest "longevity/src/rest"
 )
 
 func main() {
-	h.Setup()
+	router := rest.Setup()
+	rest.Start(router)
 }
