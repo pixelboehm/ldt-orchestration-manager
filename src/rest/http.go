@@ -3,7 +3,7 @@ package rest
 import (
 	"fmt"
 	"log"
-	d "longevity/src/device"
+	d "longevity/src/model"
 	"longevity/src/util"
 	"net/http"
 
