@@ -3,8 +3,8 @@ package device
 type device struct {
 	name       string
 	macAddress string
-	twin       string
-	version    string
+	twin       string `default:"none"`
+	version    string `default:"none"`
 }
 
 func NewDevice(name string, macAddress string, twin string, version string) device {

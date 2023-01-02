@@ -9,16 +9,21 @@ import (
 func Test_createDevice(t *testing.T) {
 	assert := assert.New(t)
 	var tests = []struct {
-		name  string
-		input string
-		want  device
+		test_name  string
+		name       string
+		macAddress string
+		twin       string
+		version    string
+		want       device
 	}{
-		{"Device should be named Foo", "Foo", device{"Foo"}},
-		{"Device should be named 1234", "1234", device{"12344"}},
+		{"Device should be named Foo", "Foo", "00:11:22:33:44", "", "", device{"Foo", "00:11:22:33:44", "", ""}},
+		{"Device should have macAdress 00:11:22:33:44", "Foo", "00:11:22:33:44", "", "", device{"Foo", "00:11:22:33:44", "", ""}},
+		{"Device should have default twin called none", "Foo", "00:11:22:33:44", "", "", device{"Foo", "00:11:22:33:44", "", ""}},
+		{"Device should have default version called none", "Foo", "00:11:22:33:44", "", "", device{"Foo", "00:11:22:33:44", "", ""}},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ans := NewDevice(tt.input)
+		t.Run(tt.test_name, func(t *testing.T) {
+			ans := NewDevice(tt.name, tt.macAddress, tt.twin, tt.version)
 			assert.Equal(ans, tt.want)
 		})
 	}
@@ -27,7 +32,7 @@ func Test_createDevice(t *testing.T) {
 func Test_getName(t *testing.T) {
 	assert := assert.New(t)
 	name := "Thermostat"
-	device := NewDevice(name)
+	device := NewDevice(name, "", "", "")
 	want := name
 	got := device.getName()
 	assert.Equal(want, got)

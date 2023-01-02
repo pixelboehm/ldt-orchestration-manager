@@ -20,7 +20,7 @@ func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if name != "" {
-		d.NewDevice(name)
+		d.NewDevice(name, "", "", "")
 		fmt.Printf("New Device with name %s created.\n", name)
 	} else {
 		util.PrintMessage("No Name Specified for Device")
