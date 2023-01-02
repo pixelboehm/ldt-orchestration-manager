@@ -24,7 +24,7 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 		fmt.Printf("New Device with name %s created.\n", name)
 	} else {
 		util.PrintMessage("No Name Specified for Device")
-		http.Error(w, "dunno", http.StatusMethodNotAllowed)
+		http.Error(w, "No Name Specified for Device", http.StatusBadRequest)
 	}
 }
 
