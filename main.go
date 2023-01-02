@@ -1,10 +1,11 @@
 package main
 
 import (
-	rest "longevity/src/rest"
+	"fmt"
+	"longevity/src/database"
 )
 
 func main() {
-	router := rest.Setup()
-	rest.Start(router)
+	fmt.Print("main\n")
+	database.Start()
 }
