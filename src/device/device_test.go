@@ -30,35 +30,23 @@ func Test_createDevice(t *testing.T) {
 		})
 	}
 }
-
-func Test_getName(t *testing.T) {
+func Test_getterFunctions(t *testing.T) {
 	assert := assert.New(t)
-	device := NewDevice(sample.name, "", "", "")
-	want := sample.name
-	got := device.getName()
-	assert.Equal(want, got)
-}
 
-func Test_getMacAddress(t *testing.T) {
-	assert := assert.New(t)
-	device := NewDevice("", sample.macAddress, "", "")
-	want := sample.macAddress
-	got := device.getMacAddress()
-	assert.Equal(want, got)
-}
-
-func Test_getTwin(t *testing.T) {
-	assert := assert.New(t)
-	device := NewDevice("", "", sample.twin, "")
-	want := sample.twin
-	got := device.getTwin()
-	assert.Equal(want, got)
-}
-
-func Test_getVersion(t *testing.T) {
-	assert := assert.New(t)
-	device := NewDevice("", "", "", sample.version)
-	want := sample.version
-	got := device.getVersion()
-	assert.Equal(want, got)
+	var tests = []struct {
+		name     string
+		function func() string
+		want     string
+	}{
+		{"Device name should be", sample.getName, sample.name},
+		{"Device macAddress should be", sample.getMacAddress, sample.macAddress},
+		{"Device twin should be", sample.getTwin, sample.twin},
+		{"Device version should be", sample.getVersion, sample.version},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := tt.function()
+			assert.Equal(ans, tt.want)
+		})
+	}
 }
