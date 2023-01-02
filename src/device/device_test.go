@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var sample = &device{"Foo", "00:11:22:33:44", "general", "0.0.1"}
+
 func Test_createDevice(t *testing.T) {
 	assert := assert.New(t)
 	var tests = []struct {
@@ -31,9 +33,32 @@ func Test_createDevice(t *testing.T) {
 
 func Test_getName(t *testing.T) {
 	assert := assert.New(t)
-	name := "Thermostat"
-	device := NewDevice(name, "", "", "")
-	want := name
+	device := NewDevice(sample.name, "", "", "")
+	want := sample.name
 	got := device.getName()
+	assert.Equal(want, got)
+}
+
+func Test_getMacAddress(t *testing.T) {
+	assert := assert.New(t)
+	device := NewDevice("", sample.macAddress, "", "")
+	want := sample.macAddress
+	got := device.getMacAddress()
+	assert.Equal(want, got)
+}
+
+func Test_getTwin(t *testing.T) {
+	assert := assert.New(t)
+	device := NewDevice("", "", sample.twin, "")
+	want := sample.twin
+	got := device.getTwin()
+	assert.Equal(want, got)
+}
+
+func Test_getVersion(t *testing.T) {
+	assert := assert.New(t)
+	device := NewDevice("", "", "", sample.version)
+	want := sample.version
+	got := device.getVersion()
 	assert.Equal(want, got)
 }
