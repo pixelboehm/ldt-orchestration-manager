@@ -10,7 +10,7 @@ import (
 func Test_createNewDeviceViaPostRequest(t *testing.T) {
 	assert := assert.New(t)
 	rest := NewRestInterface()
-	values, _ := url.ParseQuery("name=thermostat")
+	values, _ := url.ParseQuery("name=thermostat&macAddress=00:11:22:33:44")
 	assert.HTTPSuccess(rest.SetNewDevice, "POST", "localhost:8000/devices", values, nil)
 }
 
