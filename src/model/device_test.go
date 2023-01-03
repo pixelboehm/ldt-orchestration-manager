@@ -30,7 +30,7 @@ func Test_createDevice(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.test_name, func(t *testing.T) {
 			ans := NewDevice(tt.name, tt.macAddress, tt.twin, tt.version)
-			assert.Equal(ans, tt.want)
+			assert.Equal(tt.want, *ans)
 		})
 	}
 }
@@ -50,7 +50,7 @@ func Test_getterFunctions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ans := tt.function()
-			assert.Equal(ans, tt.want)
+			assert.Equal(tt.want, ans)
 		})
 	}
 }
