@@ -30,7 +30,7 @@ func createTable() {
 
 	defer db.Close()
 
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name VARCHAR(64), macAddress VARCHAR(17), twin VARCHAR(64), version string)")
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name VARCHAR(64), macAddress VARCHAR(17) UNIQUE, twin VARCHAR(64), version string)")
 
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +40,7 @@ func createTable() {
 	}
 }
 
-func AddDeviceToDatabase(d *Device) {
+func AddDeviceToDatabase(d *Device) error {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
 	if err != nil {
@@ -50,8 +50,13 @@ func AddDeviceToDatabase(d *Device) {
 	defer db.Close()
 
 	statement, _ := db.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES (?, ?, ?, ?)")
-	statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
+	_, err = statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
+	if err != nil {
+		log.Println("Device with macAddress already exists")
+		return err
+	}
 	log.Printf("Inserted device %s!\n", d.Name)
+	return nil
 }
 
 func UpdateDevice(macAddress string, d *Device) {
@@ -95,7 +100,7 @@ func RemoveDevice(macAddress string) {
 	log.Println("Successfully deleted the device in database!")
 }
 
-func ReadTable(name string) {
+func PrintTable(name string) {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
 	if err != nil {
