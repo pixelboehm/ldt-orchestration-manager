@@ -16,5 +16,7 @@ test-c:
 coverage:
 	go tool cover -html=out/coverage.html
 
+clean:
+	go clean --cache
 
 cover: test-c coverage
