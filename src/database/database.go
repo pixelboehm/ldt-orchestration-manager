@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	. "longevity/src/model"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,7 +39,7 @@ func createTable() {
 	}
 }
 
-func AddDeviceToDatabase(name string, macAddress string, twin string, version string) {
+func AddDeviceToDatabase(d *Device) {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
 	if err != nil {
@@ -48,8 +49,8 @@ func AddDeviceToDatabase(name string, macAddress string, twin string, version st
 	defer db.Close()
 
 	statement, _ := db.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES (?, ?, ?, ?)")
-	statement.Exec(name, macAddress, twin, version)
-	log.Printf("Inserted device %s!\n", name)
+	statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
+	log.Printf("Inserted device %s!\n", d.Name)
 }
 
 func setup() {

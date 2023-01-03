@@ -1,28 +1,28 @@
 package model
 
-type device struct {
-	name       string
-	macAddress string
-	twin       string `default:"none"`
-	version    string `default:"none"`
+type Device struct {
+	Name       string
+	MacAddress string
+	Twin       string `default:"none"`
+	Version    string `default:"none"`
 }
 
-func NewDevice(name string, macAddress string, twin string, version string) device {
-	return device{name, macAddress, twin, version}
+func NewDevice(name string, macAddress string, twin string, version string) Device {
+	return Device{name, macAddress, twin, version}
 }
 
-func (device *device) getName() string {
-	return device.name
+func (device *Device) getName() string {
+	return device.Name
 }
 
-func (device *device) getMacAddress() string {
-	return device.macAddress
+func (device *Device) getMacAddress() string {
+	return device.MacAddress
 }
 
-func (device *device) getTwin() string {
-	return device.twin
+func (device *Device) getTwin() string {
+	return device.Twin
 }
 
-func (device *device) getVersion() string {
-	return device.version
+func (device *Device) getVersion() string {
+	return device.Version
 }
