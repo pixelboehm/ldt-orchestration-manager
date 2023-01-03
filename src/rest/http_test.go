@@ -9,14 +9,14 @@ import (
 
 func Test_createNewDeviceViaPostRequest(t *testing.T) {
 	assert := assert.New(t)
-	rest := RESTInterface{}
+	rest := NewRestInterface()
 	values, _ := url.ParseQuery("name=thermostat")
 	assert.HTTPSuccess(rest.SetNewDevice, "POST", "localhost:8000/devices", values, nil)
 }
 
 func Test_createNewDeviceWithEmptyNameViaPostRequest(t *testing.T) {
 	assert := assert.New(t)
-	rest := RESTInterface{}
+	rest := NewRestInterface()
 	values, _ := url.ParseQuery("name=")
 	assert.HTTPError(rest.SetNewDevice, "POST", "localhost:8000/devices", values, nil)
 }
