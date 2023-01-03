@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	. "longevity/src/model"
@@ -53,6 +54,47 @@ func AddDeviceToDatabase(d *Device) {
 	log.Printf("Inserted device %s!\n", d.Name)
 }
 
+func UpdateDevice(macAddress string, d *Device) {
+	if !checkIfDeviceExists(macAddress) {
+		log.Printf("Device with macAddress %s does not exist", macAddress)
+		return
+	}
+
+	err := checkMatchingMacAdress(macAddress, d)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	statement, _ := db.Prepare("update devices set name=?, twin=?, version=? where macAddress=?")
+	statement.Exec(d.Name, d.Twin, d.Version, macAddress)
+	log.Println("Successfully updated the device in database!")
+}
+
+func RemoveDevice(macAddress string) {
+	if !checkIfDeviceExists(macAddress) {
+		log.Printf("Device with macAddress %s does not exist", macAddress)
+		return
+	}
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	statement, _ := db.Prepare("delete from devices where macAddress=?")
+	statement.Exec(macAddress)
+	log.Println("Successfully deleted the device in database!")
+}
+
 func ReadTable(name string) {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
@@ -79,4 +121,28 @@ func setup() {
 	}
 	file.Close()
 	log.Println("longevity.db created")
+}
+
+func checkIfDeviceExists(address string) bool {
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows, _ := db.Query("SELECT EXISTS(SELECT 1 FROM devices WHERE macAddress=?);", address)
+	var result bool
+	for rows.Next() {
+		rows.Scan(&result)
+	}
+	return result
+}
+
+func checkMatchingMacAdress(address string, d *Device) error {
+	if address != d.MacAddress {
+		return errors.New("MacAdresses do not match")
+	}
+	return nil
 }
