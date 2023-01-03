@@ -53,11 +53,30 @@ func AddDeviceToDatabase(d *Device) {
 	log.Printf("Inserted device %s!\n", d.Name)
 }
 
+func ReadTable(name string) {
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows, _ := db.Query("SELECT name, macAddress, twin, version FROM devices")
+	var device Device
+	for rows.Next() {
+		rows.Scan(&device.Name, &device.MacAddress, &device.Twin, &device.Version)
+		log.Printf("name: %s, macAddress: %s, twin: %s, version: %s\n",
+			device.Name, device.MacAddress, device.Twin, device.Version)
+	}
+
+}
+
 func setup() {
-	file, err := os.Create("./sqlite.db")
+	file, err := os.Create("./longevity.db")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	file.Close()
-	log.Println("sqlite.db created")
+	log.Println("longevity.db created")
 }
