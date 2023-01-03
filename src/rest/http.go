@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	d "longevity/src/model"
-	"longevity/src/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -23,7 +22,6 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 		d.NewDevice(name, "", "", "")
 		fmt.Printf("New Device with name %s created.\n", name)
 	} else {
-		util.PrintMessage("No Name Specified for Device")
 		http.Error(w, "No Name Specified for Device", http.StatusBadRequest)
 	}
 }
