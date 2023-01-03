@@ -40,6 +40,7 @@ func Test_DeleteEntryFromDatabase(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+
 	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
 	var sample2 = NewDevice("Bar", "11:22:33:44:55", "general", "0.0.1")
 	Start()
@@ -48,4 +49,29 @@ func Test_DeleteEntryFromDatabase(t *testing.T) {
 	ReadTable("devices")
 	RemoveDevice("11:22:33:44:55")
 	ReadTable("devices")
+}
+
+func Test_CheckIfDeviceExists(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	assert := assert.New(t)
+	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
+	Start()
+	AddDeviceToDatabase(&sample)
+	var tests = []struct {
+		name       string
+		macAddress string
+		want       bool
+	}{
+		{"Device should exist", "00:11:22:33:44", true},
+		{"Device should not exist", "11:22:33:44:55", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := checkIfDeviceExists(tt.macAddress)
+			assert.Equal(tt.want, ans)
+		})
+	}
 }

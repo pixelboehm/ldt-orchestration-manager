@@ -55,6 +55,11 @@ func AddDeviceToDatabase(d *Device) {
 }
 
 func UpdateDevice(macAddress string, d *Device) {
+	if !checkIfDeviceExists(macAddress) {
+		log.Printf("Device with macAddress %s does not exist", macAddress)
+		return
+	}
+
 	err := checkMatchingMacAdress(macAddress, d)
 	if err != nil {
 		log.Fatal(err)
@@ -73,6 +78,10 @@ func UpdateDevice(macAddress string, d *Device) {
 }
 
 func RemoveDevice(macAddress string) {
+	if !checkIfDeviceExists(macAddress) {
+		log.Printf("Device with macAddress %s does not exist", macAddress)
+		return
+	}
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
 	if err != nil {
@@ -112,6 +121,23 @@ func setup() {
 	}
 	file.Close()
 	log.Println("longevity.db created")
+}
+
+func checkIfDeviceExists(address string) bool {
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	rows, _ := db.Query("SELECT EXISTS(SELECT 1 FROM devices WHERE macAddress=?);", address)
+	var result bool
+	for rows.Next() {
+		rows.Scan(&result)
+	}
+	return result
 }
 
 func checkMatchingMacAdress(address string, d *Device) error {
