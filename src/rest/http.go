@@ -10,6 +10,13 @@ import (
 )
 
 type RESTInterface struct {
+	Router *mux.Router
+}
+
+func NewRestInterface() *RESTInterface {
+	return &RESTInterface{
+		Router: mux.NewRouter(),
+	}
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
@@ -26,15 +33,12 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func Setup() *mux.Router {
-	rest := RESTInterface{}
-	router := mux.NewRouter()
-	router.HandleFunc("/devices/", rest.GetDevices).Methods("GET")
-	router.HandleFunc("/devices/", rest.SetNewDevice).Methods("POST")
-	return router
+func (rest *RESTInterface) Setup() {
+	rest.Router.HandleFunc("/devices/", rest.GetDevices).Methods("GET")
+	rest.Router.HandleFunc("/devices/", rest.SetNewDevice).Methods("POST")
 }
 
-func Start(router *mux.Router) {
+func (rest *RESTInterface) Start() {
 	fmt.Println("HTTP serve at 8000")
-	log.Fatal(http.ListenAndServe(":8000", router))
+	log.Fatal(http.ListenAndServe(":8000", rest.Router))
 }
