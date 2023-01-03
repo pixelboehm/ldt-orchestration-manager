@@ -34,10 +34,10 @@ func Test_AddEntryToDatabase(t *testing.T) {
 	Start()
 	AddDeviceToDatabase(&sample)
 	AddDeviceToDatabase(&sample2)
-	ReadTable("devices")
+	PrintTable("devices")
 	sample2.Name = "Bar2"
 	UpdateDevice("11:22:33:44:55", &sample2)
-	ReadTable("devices")
+	PrintTable("devices")
 }
 
 func Test_DeleteEntryFromDatabase(t *testing.T) {
@@ -50,9 +50,9 @@ func Test_DeleteEntryFromDatabase(t *testing.T) {
 	Start()
 	AddDeviceToDatabase(&test_sample)
 	AddDeviceToDatabase(&test_sample2)
-	ReadTable("devices")
+	PrintTable("devices")
 	RemoveDevice("11:22:33:44:55")
-	ReadTable("devices")
+	PrintTable("devices")
 }
 
 func Test_CheckIfDeviceExists(t *testing.T) {
@@ -78,4 +78,18 @@ func Test_CheckIfDeviceExists(t *testing.T) {
 			assert.Equal(tt.want, ans)
 		})
 	}
+}
+func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	assert := assert.New(t)
+	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
+	var sample2 = NewDevice("Bar", "00:11:22:33:44", "general", "0.0.1")
+	Start()
+	AddDeviceToDatabase(&sample)
+	err := AddDeviceToDatabase(&sample2)
+	assert.Error(err)
+	PrintTable("devices")
 }
