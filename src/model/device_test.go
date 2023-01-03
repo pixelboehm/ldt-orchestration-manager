@@ -6,7 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var sample = &Device{"Foo", "00:11:22:33:44", "general", "0.0.1"}
+var sample = &Device{
+	Name:       "Foo",
+	MacAddress: "00:11:22:33:44",
+	Twin:       "general",
+	Version:    "0.0.1"}
 
 func Test_createDevice(t *testing.T) {
 	assert := assert.New(t)
