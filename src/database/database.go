@@ -72,6 +72,20 @@ func UpdateDevice(macAddress string, d *Device) {
 	log.Println("Successfully updated the device in database!")
 }
 
+func RemoveDevice(macAddress string) {
+	db, err := sql.Open("sqlite3", "./longevity.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	statement, _ := db.Prepare("delete from devices where macAddress=?")
+	statement.Exec(macAddress)
+	log.Println("Successfully deleted the device in database!")
+}
+
 func ReadTable(name string) {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
