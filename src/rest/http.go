@@ -25,8 +25,12 @@ func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
-	if name != "" {
-		d.NewDevice(name, "", "", "")
+	macAddress := r.FormValue("macAddress")
+	twin := r.FormValue("twin")
+	version := r.FormValue("version")
+
+	if containsEmptyString(name, macAddress) == false {
+		d.NewDevice(name, macAddress, twin, version)
 		fmt.Printf("New Device with name %s created.\n", name)
 	} else {
 		http.Error(w, "No Name Specified for Device", http.StatusBadRequest)
@@ -41,4 +45,13 @@ func (rest *RESTInterface) Setup() {
 func (rest *RESTInterface) Start() {
 	fmt.Println("HTTP serve at 8000")
 	log.Fatal(http.ListenAndServe(":8000", rest.Router))
+}
+
+func containsEmptyString(formValues ...string) bool {
+	for _, s := range formValues {
+		if s == "" {
+			return true
+		}
+	}
+	return false
 }
