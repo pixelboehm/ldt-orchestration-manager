@@ -7,8 +7,12 @@ type Device struct {
 	Version    string `default:"none"`
 }
 
-func NewDevice(name string, macAddress string, twin string, version string) Device {
-	return Device{name, macAddress, twin, version}
+func NewDevice(name string, macAddress string, twin string, version string) *Device {
+	return &Device{
+		Name:       name,
+		MacAddress: macAddress,
+		Twin:       twin,
+		Version:    version}
 }
 
 func (device *Device) getName() string {
