@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	d "longevity/src/model"
@@ -13,6 +14,11 @@ type RESTInterface struct {
 	Router *mux.Router
 }
 
+type JsonResponse struct {
+	Type string
+	Data string
+}
+
 func NewRestInterface() *RESTInterface {
 	return &RESTInterface{
 		Router: mux.NewRouter(),
@@ -20,7 +26,9 @@ func NewRestInterface() *RESTInterface {
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Getting Devices\n")
+	response := JsonResponse{Type: "success", Data: "foo"}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
