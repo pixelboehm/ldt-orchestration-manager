@@ -10,6 +10,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type DatabaseInterface interface {
+	GetDevices()
+	SetNewDevice()
+	GetTwins()
+	Start()
+	setup()
+}
+
 type RESTInterface struct {
 	Router *mux.Router
 }
@@ -45,12 +53,18 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (rest *RESTInterface) Setup() {
-	rest.Router.HandleFunc("/devices/", rest.GetDevices).Methods("GET")
-	rest.Router.HandleFunc("/devices/", rest.SetNewDevice).Methods("POST")
+func (rest *RESTInterface) GetTwins(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "bla", http.StatusBadGateway)
+}
+
+func (rest *RESTInterface) setup() {
+	rest.Router.HandleFunc("/twin", rest.GetTwins).Methods("GET")
+	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
+	rest.Router.HandleFunc("/devices", rest.SetNewDevice).Methods("POST")
 }
 
 func (rest *RESTInterface) Start() {
+	rest.setup()
 	fmt.Println("HTTP serve at 8000")
 	log.Fatal(http.ListenAndServe(":8000", rest.Router))
 }
