@@ -11,6 +11,18 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type database interface {
+	Start()
+	CreateTable()
+	AddDevice()
+	UpdateDevice()
+	RemoveDevice()
+	PrintTable()
+	setup()
+}
+
+type db struct{}
+
 func Start() {
 	setup()
 	sqliteDatabase, err := sql.Open("sqlite3", "./longevity.db")
@@ -40,7 +52,7 @@ func createTable() {
 	}
 }
 
-func AddDeviceToDatabase(d *Device) error {
+func AddDevice(d *Device) error {
 	db, err := sql.Open("sqlite3", "./longevity.db")
 
 	if err != nil {
