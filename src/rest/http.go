@@ -10,10 +10,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type DatabaseInterface interface {
-	GetDevices()
-	SetNewDevice()
-	GetTwins()
+type API interface {
+	GetDevices(w http.ResponseWriter, r *http.Request)
+	SetNewDevice(w http.ResponseWriter, r *http.Request)
 	Start()
 	setup()
 }
@@ -53,12 +52,7 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (rest *RESTInterface) GetTwins(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "bla", http.StatusBadGateway)
-}
-
 func (rest *RESTInterface) setup() {
-	rest.Router.HandleFunc("/twin", rest.GetTwins).Methods("GET")
 	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 	rest.Router.HandleFunc("/devices", rest.SetNewDevice).Methods("POST")
 }
