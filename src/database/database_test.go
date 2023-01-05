@@ -15,13 +15,13 @@ var sample = &Device{
 
 func Test_MatchingMacAddressRaisesError(t *testing.T) {
 	assert := assert.New(t)
-	err := checkMatchingMacAdress("11:22:33:44:55", sample)
+	err := checkMatchingMacAddress("11:22:33:44:55", sample)
 	assert.Error(err)
 }
 
 func Test_matchingMacAddressSucceeds(t *testing.T) {
 	assert := assert.New(t)
-	err := checkMatchingMacAdress("00:11:22:33:44", sample)
+	err := checkMatchingMacAddress("00:11:22:33:44", sample)
 	assert.Nil(err)
 }
 

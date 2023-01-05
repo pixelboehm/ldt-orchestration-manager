@@ -42,7 +42,7 @@ func createTable() {
 
 	defer db.Close()
 
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name VARCHAR(64), macAddress VARCHAR(17) UNIQUE, twin VARCHAR(64), version string)")
+	statement, err := db.Prepare(tableCreationQuery)
 
 	if err != nil {
 		log.Fatal(err)
@@ -61,7 +61,7 @@ func AddDevice(d *Device) error {
 
 	defer db.Close()
 
-	statement, _ := db.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES (?, ?, ?, ?)")
+	statement, _ := db.Prepare(insertDeviceQuery)
 	_, err = statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
 	if err != nil {
 		log.Println("Device with macAddress already exists")
@@ -77,7 +77,7 @@ func UpdateDevice(macAddress string, d *Device) {
 		return
 	}
 
-	err := checkMatchingMacAdress(macAddress, d)
+	err := checkMatchingMacAddress(macAddress, d)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func UpdateDevice(macAddress string, d *Device) {
 
 	defer db.Close()
 
-	statement, _ := db.Prepare("update devices set name=?, twin=?, version=? where macAddress=?")
+	statement, _ := db.Prepare(updateDeviceQuery)
 	statement.Exec(d.Name, d.Twin, d.Version, macAddress)
 	log.Println("Successfully updated the device in database!")
 }
@@ -107,7 +107,7 @@ func RemoveDevice(macAddress string) {
 
 	defer db.Close()
 
-	statement, _ := db.Prepare("delete from devices where macAddress=?")
+	statement, _ := db.Prepare(deleteDeviceQuery)
 	statement.Exec(macAddress)
 	log.Println("Successfully deleted the device in database!")
 }
@@ -121,7 +121,7 @@ func PrintTable(name string) {
 
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT name, macAddress, twin, version FROM devices")
+	rows, _ := db.Query(getDeviceTableQuery)
 	var device Device
 	for rows.Next() {
 		rows.Scan(&device.Name, &device.MacAddress, &device.Twin, &device.Version)
@@ -149,7 +149,7 @@ func checkIfDeviceExists(address string) bool {
 
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT EXISTS(SELECT 1 FROM devices WHERE macAddress=?);", address)
+	rows, _ := db.Query(checkIfDeviceExistsQuery, address)
 	var result bool
 	for rows.Next() {
 		rows.Scan(&result)
@@ -157,7 +157,7 @@ func checkIfDeviceExists(address string) bool {
 	return result
 }
 
-func checkMatchingMacAdress(address string, d *Device) error {
+func checkMatchingMacAddress(address string, d *Device) error {
 	if address != d.MacAddress {
 		return errors.New("MacAdresses do not match")
 	}
