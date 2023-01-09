@@ -92,17 +92,18 @@ func Test_matchingMacAddressSucceeds(t *testing.T) {
 	assert.Nil(err)
 }
 
-// func Test_AddEntryToDatabase(t *testing.T) {
-// 	t.Skip()
-// }
+func Test_CheckIfDeviceExists(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	_ = sample.createDevice(sql_db)
+	res := checkIfDeviceExists("00:11:22:33:44", test_db.Path)
+	assert.True(res)
+}
 
-// func Test_DeleteEntryFromDatabase(t *testing.T) {
-// 	t.Skip()
-// }
-
-// func Test_CheckIfDeviceExists(t *testing.T) {
-// 	t.Skip()
-// }
 // func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
 // 	t.Skip()
 // }

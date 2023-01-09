@@ -108,8 +108,8 @@ func Initialize(db_name string) {
 	log.Printf("%s created\n", db_name)
 }
 
-func checkIfDeviceExists(address string) bool {
-	db, err := sql.Open("sqlite3", app_db.Path)
+func checkIfDeviceExists(address string, db_path string) bool {
+	db, err := sql.Open("sqlite3", db_path)
 
 	if err != nil {
 		log.Fatal(err)
