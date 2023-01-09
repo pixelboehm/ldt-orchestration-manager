@@ -80,17 +80,17 @@ func Test_DeleteDevice(t *testing.T) {
 	assert.NoError(err)
 }
 
-// func Test_MatchingMacAddressRaisesError(t *testing.T) {
-// 	assert := assert.New(t)
-// 	err := checkMatchingMacAddress("11:22:33:44:55", sample)
-// 	assert.Error(err)
-// }
+func Test_MatchingMacAddressRaisesError(t *testing.T) {
+	assert := assert.New(t)
+	err := checkMatchingMacAddress("11:22:33:44:55", sample)
+	assert.Error(err)
+}
 
-// func Test_matchingMacAddressSucceeds(t *testing.T) {
-// 	assert := assert.New(t)
-// 	err := checkMatchingMacAddress("00:11:22:33:44", sample)
-// 	assert.Nil(err)
-// }
+func Test_matchingMacAddressSucceeds(t *testing.T) {
+	assert := assert.New(t)
+	err := checkMatchingMacAddress("00:11:22:33:44", sample)
+	assert.Nil(err)
+}
 
 // func Test_AddEntryToDatabase(t *testing.T) {
 // 	t.Skip()

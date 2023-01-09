@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	. "longevity/src/model"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -126,7 +125,7 @@ func checkIfDeviceExists(address string) bool {
 	return result
 }
 
-func checkMatchingMacAddress(address string, d *Device) error {
+func checkMatchingMacAddress(address string, d *DB_Device) error {
 	if address != d.MacAddress {
 		return errors.New("MacAdresses do not match")
 	}
