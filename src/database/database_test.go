@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 }
 
 func clearTable() {
-	// os.Remove(test_db.Path)
+	os.Remove(test_db.Path)
 }
 
 func Test_createDevice(t *testing.T) {
@@ -66,6 +66,17 @@ func Test_UpdateExistingDevice(t *testing.T) {
 	defer sql_db.Close()
 	sample.Name = "Foo Updated"
 	err = sample.updateDevice(sql_db)
+	assert.NoError(err)
+}
+
+func Test_DeleteDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	err = sample.deleteDevice(sql_db)
 	assert.NoError(err)
 }
 

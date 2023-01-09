@@ -24,7 +24,7 @@ const updateDeviceQuery = `UPDATE devices SET
 	version=? 
 	WHERE id=?`
 
-const deleteDeviceQuery = `DELETE FROM devices WHERE macAddress=?`
+const deleteDeviceQuery = `DELETE FROM devices WHERE id=?`
 
 const getDeviceTableQuery = `SELECT name, macAddress, twin, version FROM devices`
 

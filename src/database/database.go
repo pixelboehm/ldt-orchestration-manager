@@ -59,7 +59,10 @@ func (d *DB_Device) updateDevice(db *sql.DB) error {
 }
 
 func (d *DB_Device) deleteDevice(db *sql.DB) error {
-	return errors.New("Not implemented")
+	statement, _ := db.Prepare(deleteDeviceQuery)
+	_, err := statement.Exec(d.ID)
+
+	return err
 }
 
 func (d *DB_Device) createDevice(db *sql.DB) error {
