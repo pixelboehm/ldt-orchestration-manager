@@ -33,4 +33,4 @@ const checkIfDeviceExistsQuery = `SELECT EXISTS
 	SELECT 1 FROM devices WHERE macAddress=?
 );`
 
-const getDeviceByIDQuery = `SELECT name, macAddress, twin, version WHERE id = ?`
+const getDeviceByIDQuery = `SELECT name, macAddress, twin, version FROM devices WHERE id = ?`

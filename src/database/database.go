@@ -18,6 +18,7 @@ type database interface {
 	RemoveDevice()
 	PrintTable()
 	Initialize()
+	getDevice()
 }
 
 type DB struct {
@@ -32,22 +33,18 @@ type DB_Device struct {
 	Version    string `json:"version"`
 }
 
-var app_db = &DB{
-	Path: "./longevity.db",
-}
-
-func Run() {
-	Initialize(app_db.Path)
-	sqliteDatabase, err := sql.Open("sqlite3", app_db.Path)
+func Run(db *DB) {
+	Initialize(db.Path)
+	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	createTable(app_db.Path)
+	createTable(db.Path)
 	defer sqliteDatabase.Close()
 }
 
-func (d *DB_Device) getDevice(db *sql.DB) error {
-	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, d.MacAddress, d.Twin, d.Version)
+func (d *DB_Device) GetDevice(db *sql.DB) error {
+	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
 func (d *DB_Device) updateDevice(db *sql.DB) error {
@@ -64,7 +61,7 @@ func (d *DB_Device) deleteDevice(db *sql.DB) error {
 	return err
 }
 
-func (d *DB_Device) createDevice(db *sql.DB) error {
+func (d *DB_Device) CreateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(insertDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
 
