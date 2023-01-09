@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	. "longevity/src/model"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -73,8 +74,27 @@ func (d *DB_Device) CreateDevice(db *sql.DB) error {
 	return nil
 }
 
-func getDevices(db *sql.DB, start int, count int) error {
-	return errors.New("Not implemented")
+func getDevices(db *sql.DB) ([]Device, error) {
+	rows, err := db.Query("SELECT name, macAddress, twin, version FROM devices")
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	devices := []Device{}
+
+	for rows.Next() {
+		var d Device
+		err := rows.Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
+		if err != nil {
+			return nil, err
+		}
+		devices = append(devices, d)
+	}
+
+	return devices, nil
 }
 
 func createTable(db_name string) {

@@ -152,3 +152,43 @@ func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
 	err = device2.CreateDevice(sql_db)
 	assert.Error(err)
 }
+
+func Test_GetDevices(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+
+	var device1 = &DB_Device{
+		Name:       "Foo",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-lite",
+		Version:    "0.0.1",
+	}
+	var device2 = &DB_Device{
+		Name:       "Bar",
+		MacAddress: "44:44:44:44:44",
+		Twin:       "vs-full",
+		Version:    "0.0.1",
+	}
+
+	_ = device1.CreateDevice(sql_db)
+	_ = device2.CreateDevice(sql_db)
+
+	devices, err := getDevices(sql_db)
+	assert.NoError(err)
+
+	var containsDevice1 bool = false
+	var containsDevice2 bool = false
+	for _, device := range devices {
+		if device.Name == device1.Name {
+			containsDevice1 = true
+		} else if device.Name == device2.Name {
+			containsDevice2 = true
+		}
+	}
+	assert.True(containsDevice1)
+	assert.True(containsDevice2)
+}
