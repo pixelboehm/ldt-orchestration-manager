@@ -52,9 +52,8 @@ func (d *DB_Device) getDevice(db *sql.DB) error {
 }
 
 func (d *DB_Device) updateDevice(db *sql.DB) error {
-	_, err :=
-		db.Exec(updateDeviceQuery,
-			d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
+	statement, _ := db.Prepare(updateDeviceQuery)
+	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
 
 	return err
 }

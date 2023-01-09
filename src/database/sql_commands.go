@@ -19,7 +19,7 @@ const insertDeviceQuery = `INSERT INTO devices
 
 const updateDeviceQuery = `UPDATE devices SET 
 	name=?, 
-	macAddress=?
+	macAddress=?,
 	twin=?, 
 	version=? 
 	WHERE id=?`

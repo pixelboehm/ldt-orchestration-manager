@@ -12,6 +12,7 @@ import (
 )
 
 var sample = &DB_Device{
+	ID:         1,
 	Name:       "Foo",
 	MacAddress: "00:11:22:33:44",
 	Twin:       "general",
@@ -30,7 +31,7 @@ func TestMain(m *testing.M) {
 }
 
 func clearTable() {
-	os.Remove(test_db.Path)
+	// os.Remove(test_db.Path)
 }
 
 func Test_createDevice(t *testing.T) {
@@ -54,6 +55,18 @@ func Test_createAlreadyExistingDevice(t *testing.T) {
 	_ = sample.createDevice(sql_db)
 	err = sample.createDevice(sql_db)
 	assert.Error(err)
+}
+
+func Test_UpdateExistingDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	sample.Name = "Foo Updated"
+	err = sample.updateDevice(sql_db)
+	assert.NoError(err)
 }
 
 // func Test_MatchingMacAddressRaisesError(t *testing.T) {
