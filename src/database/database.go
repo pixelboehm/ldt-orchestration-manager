@@ -64,7 +64,15 @@ func (d *DB_Device) deleteDevice(db *sql.DB) error {
 }
 
 func (d *DB_Device) createDevice(db *sql.DB) error {
-	return errors.New("Not implemented")
+	statement, _ := db.Prepare(insertDeviceQuery)
+	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
+
+	if err != nil {
+		log.Println("Device with macAddress already exists")
+		return err
+	}
+	log.Printf("New Device %s added!\n", d.Name)
+	return nil
 }
 
 func getDevices(db *sql.DB, start int, count int) error {
