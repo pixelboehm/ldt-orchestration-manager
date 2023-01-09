@@ -19,9 +19,10 @@ const insertDeviceQuery = `INSERT INTO devices
 
 const updateDeviceQuery = `UPDATE devices SET 
 	name=?, 
+	macAddress=?
 	twin=?, 
 	version=? 
-	WHERE macAddress=?`
+	WHERE id=?`
 
 const deleteDeviceQuery = `DELETE FROM devices WHERE macAddress=?`
 
@@ -31,3 +32,5 @@ const checkIfDeviceExistsQuery = `SELECT EXISTS
 (
 	SELECT 1 FROM devices WHERE macAddress=?
 );`
+
+const getDeviceByIDQuery = `SELECT name, macAddress, twin, version WHERE id = ?`
