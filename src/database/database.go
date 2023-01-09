@@ -11,18 +11,94 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func Start() {
-	setup()
-	sqliteDatabase, err := sql.Open("sqlite3", "./longevity.db")
+type database interface {
+	Run()
+	CreateTable()
+	AddDevice()
+	UpdateDevice()
+	RemoveDevice()
+	PrintTable()
+	Initialize()
+	getDevice()
+}
+
+type DB struct {
+	Path string
+}
+
+type DB_Device struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	MacAddress string `json:"macAddress"`
+	Twin       string `json:"twin"`
+	Version    string `json:"version"`
+}
+
+func Run(db *DB) {
+	Initialize(db.Path)
+	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	createTable()
+	createTable(db.Path)
 	defer sqliteDatabase.Close()
 }
 
-func createTable() {
-	db, err := sql.Open("sqlite3", "./longevity.db")
+func (d *DB_Device) GetDevice(db *sql.DB) error {
+	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
+}
+
+func (d *DB_Device) updateDevice(db *sql.DB) error {
+	statement, _ := db.Prepare(updateDeviceQuery)
+	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
+
+	return err
+}
+
+func (d *DB_Device) deleteDevice(db *sql.DB) error {
+	statement, _ := db.Prepare(deleteDeviceQuery)
+	_, err := statement.Exec(d.ID)
+
+	return err
+}
+
+func (d *DB_Device) CreateDevice(db *sql.DB) error {
+	statement, _ := db.Prepare(insertDeviceQuery)
+	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
+
+	if err != nil {
+		log.Println("Device with macAddress already exists")
+		return err
+	}
+	log.Printf("New Device %s added!\n", d.Name)
+	return nil
+}
+
+func getDevices(db *sql.DB) ([]Device, error) {
+	rows, err := db.Query("SELECT name, macAddress, twin, version FROM devices")
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	devices := []Device{}
+
+	for rows.Next() {
+		var d Device
+		err := rows.Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
+		if err != nil {
+			return nil, err
+		}
+		devices = append(devices, d)
+	}
+
+	return devices, nil
+}
+
+func createTable(db_name string) {
+	db, err := sql.Open("sqlite3", db_name)
 
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +106,7 @@ func createTable() {
 
 	defer db.Close()
 
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name VARCHAR(64), macAddress VARCHAR(17) UNIQUE, twin VARCHAR(64), version string)")
+	statement, err := db.Prepare(tableCreationQuery)
 
 	if err != nil {
 		log.Fatal(err)
@@ -40,96 +116,17 @@ func createTable() {
 	}
 }
 
-func AddDeviceToDatabase(d *Device) error {
-	db, err := sql.Open("sqlite3", "./longevity.db")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	statement, _ := db.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES (?, ?, ?, ?)")
-	_, err = statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
-	if err != nil {
-		log.Println("Device with macAddress already exists")
-		return err
-	}
-	log.Printf("Inserted device %s!\n", d.Name)
-	return nil
-}
-
-func UpdateDevice(macAddress string, d *Device) {
-	if !checkIfDeviceExists(macAddress) {
-		log.Printf("Device with macAddress %s does not exist", macAddress)
-		return
-	}
-
-	err := checkMatchingMacAdress(macAddress, d)
-	if err != nil {
-		log.Fatal(err)
-	}
-	db, err := sql.Open("sqlite3", "./longevity.db")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	statement, _ := db.Prepare("update devices set name=?, twin=?, version=? where macAddress=?")
-	statement.Exec(d.Name, d.Twin, d.Version, macAddress)
-	log.Println("Successfully updated the device in database!")
-}
-
-func RemoveDevice(macAddress string) {
-	if !checkIfDeviceExists(macAddress) {
-		log.Printf("Device with macAddress %s does not exist", macAddress)
-		return
-	}
-	db, err := sql.Open("sqlite3", "./longevity.db")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	statement, _ := db.Prepare("delete from devices where macAddress=?")
-	statement.Exec(macAddress)
-	log.Println("Successfully deleted the device in database!")
-}
-
-func PrintTable(name string) {
-	db, err := sql.Open("sqlite3", "./longevity.db")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	rows, _ := db.Query("SELECT name, macAddress, twin, version FROM devices")
-	var device Device
-	for rows.Next() {
-		rows.Scan(&device.Name, &device.MacAddress, &device.Twin, &device.Version)
-		log.Printf("name: %s, macAddress: %s, twin: %s, version: %s\n",
-			device.Name, device.MacAddress, device.Twin, device.Version)
-	}
-
-}
-
-func setup() {
-	file, err := os.Create("./longevity.db")
+func Initialize(db_name string) {
+	file, err := os.Create(db_name)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	file.Close()
-	log.Println("longevity.db created")
+	log.Printf("%s created\n", db_name)
 }
 
-func checkIfDeviceExists(address string) bool {
-	db, err := sql.Open("sqlite3", "./longevity.db")
+func checkIfDeviceExists(address string, db_path string) bool {
+	db, err := sql.Open("sqlite3", db_path)
 
 	if err != nil {
 		log.Fatal(err)
@@ -137,7 +134,7 @@ func checkIfDeviceExists(address string) bool {
 
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT EXISTS(SELECT 1 FROM devices WHERE macAddress=?);", address)
+	rows, _ := db.Query(checkIfDeviceExistsQuery, address)
 	var result bool
 	for rows.Next() {
 		rows.Scan(&result)
@@ -145,7 +142,7 @@ func checkIfDeviceExists(address string) bool {
 	return result
 }
 
-func checkMatchingMacAdress(address string, d *Device) error {
+func checkMatchingMacAddress(address string, d *DB_Device) error {
 	if address != d.MacAddress {
 		return errors.New("MacAdresses do not match")
 	}

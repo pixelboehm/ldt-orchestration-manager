@@ -1,95 +1,194 @@
 package database
 
 import (
-	. "longevity/src/model"
+	"database/sql"
+	"log"
+	"os"
 	"testing"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var sample = &Device{
+var sample = &DB_Device{
+	ID:         1,
 	Name:       "Foo",
 	MacAddress: "00:11:22:33:44",
 	Twin:       "general",
 	Version:    "0.0.1"}
 
+var test_db = &DB{
+	Path: "./test_db.db",
+}
+
+func TestMain(m *testing.M) {
+	Initialize(test_db.Path)
+	createTable(test_db.Path)
+	code := m.Run()
+	clearTable()
+	os.Exit(code)
+}
+
+func clearTable() {
+	os.Remove(test_db.Path)
+}
+
+func Test_createDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	err = sample.CreateDevice(sql_db)
+	assert.NoError(err)
+}
+
+func Test_createAlreadyExistingDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	_ = sample.CreateDevice(sql_db)
+	err = sample.CreateDevice(sql_db)
+	assert.Error(err)
+}
+
+func Test_UpdateExistingDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	sample.Name = "Foo Updated"
+	err = sample.updateDevice(sql_db)
+	assert.NoError(err)
+}
+
+func Test_DeleteDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	err = sample.deleteDevice(sql_db)
+	assert.NoError(err)
+}
+
+func Test_GetDevice(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+	sample.CreateDevice(sql_db)
+	var test_device = &DB_Device{
+		ID:         1,
+		Name:       "",
+		MacAddress: "",
+		Twin:       "",
+		Version:    "",
+	}
+
+	test_device.GetDevice(sql_db)
+	assert.Equal("Foo Updated", test_device.Name)
+	assert.Equal("00:11:22:33:44", test_device.MacAddress)
+	assert.Equal("general", test_device.Twin)
+	assert.Equal("0.0.1", test_device.Version)
+}
+
 func Test_MatchingMacAddressRaisesError(t *testing.T) {
 	assert := assert.New(t)
-	err := checkMatchingMacAdress("11:22:33:44:55", sample)
+	err := checkMatchingMacAddress("11:22:33:44:55", sample)
 	assert.Error(err)
 }
 
 func Test_matchingMacAddressSucceeds(t *testing.T) {
 	assert := assert.New(t)
-	err := checkMatchingMacAdress("00:11:22:33:44", sample)
+	err := checkMatchingMacAddress("00:11:22:33:44", sample)
 	assert.Nil(err)
 }
 
-func Test_AddEntryToDatabase(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
-	var sample2 = NewDevice("Bar", "11:22:33:44:55", "general", "0.0.1")
-	Start()
-	AddDeviceToDatabase(sample)
-	AddDeviceToDatabase(sample2)
-	PrintTable("devices")
-	sample2.Name = "Bar2"
-	UpdateDevice("11:22:33:44:55", sample2)
-	PrintTable("devices")
-}
-
-func Test_DeleteEntryFromDatabase(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	var test_sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
-	var test_sample2 = NewDevice("Bar", "11:22:33:44:55", "general", "0.0.1")
-	Start()
-	AddDeviceToDatabase(test_sample)
-	AddDeviceToDatabase(test_sample2)
-	PrintTable("devices")
-	RemoveDevice("11:22:33:44:55")
-	PrintTable("devices")
-}
-
 func Test_CheckIfDeviceExists(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
 	assert := assert.New(t)
-	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
-	Start()
-	AddDeviceToDatabase(sample)
-	var tests = []struct {
-		name       string
-		macAddress string
-		want       bool
-	}{
-		{"Device should exist", "00:11:22:33:44", true},
-		{"Device should not exist", "11:22:33:44:55", false},
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ans := checkIfDeviceExists(tt.macAddress)
-			assert.Equal(tt.want, ans)
-		})
-	}
+	defer sql_db.Close()
+	_ = sample.CreateDevice(sql_db)
+	res := checkIfDeviceExists("00:11:22:33:44", test_db.Path)
+	assert.True(res)
 }
+
 func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+
+	var device1 = &DB_Device{
+		Name:       "Foo",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-lite",
+		Version:    "0.0.1",
+	}
+	var device2 = &DB_Device{
+		Name:       "Bar",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-full",
+		Version:    "0.0.1",
 	}
 
-	assert := assert.New(t)
-	var sample = NewDevice("Foo", "00:11:22:33:44", "general", "0.0.1")
-	var sample2 = NewDevice("Bar", "00:11:22:33:44", "general", "0.0.1")
-	Start()
-	AddDeviceToDatabase(sample)
-	err := AddDeviceToDatabase(sample2)
+	_ = device1.CreateDevice(sql_db)
+	err = device2.CreateDevice(sql_db)
 	assert.Error(err)
-	PrintTable("devices")
+}
+
+func Test_GetDevices(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+
+	var device1 = &DB_Device{
+		Name:       "Foo",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-lite",
+		Version:    "0.0.1",
+	}
+	var device2 = &DB_Device{
+		Name:       "Bar",
+		MacAddress: "44:44:44:44:44",
+		Twin:       "vs-full",
+		Version:    "0.0.1",
+	}
+
+	_ = device1.CreateDevice(sql_db)
+	_ = device2.CreateDevice(sql_db)
+
+	devices, err := getDevices(sql_db)
+	assert.NoError(err)
+
+	var containsDevice1 bool = false
+	var containsDevice2 bool = false
+	for _, device := range devices {
+		if device.Name == device1.Name {
+			containsDevice1 = true
+		} else if device.Name == device2.Name {
+			containsDevice2 = true
+		}
+	}
+	assert.True(containsDevice1)
+	assert.True(containsDevice2)
 }

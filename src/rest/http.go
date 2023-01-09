@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	d "longevity/src/model"
@@ -9,8 +10,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type API interface {
+	GetDevices(w http.ResponseWriter, r *http.Request)
+	SetNewDevice(w http.ResponseWriter, r *http.Request)
+	Start()
+	setup()
+}
+
 type RESTInterface struct {
 	Router *mux.Router
+}
+
+type JsonResponse struct {
+	Type string
+	Data string
 }
 
 func NewRestInterface() *RESTInterface {
@@ -20,7 +33,9 @@ func NewRestInterface() *RESTInterface {
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Getting Devices\n")
+	response := JsonResponse{Type: "success", Data: "foo"}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
@@ -37,12 +52,13 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (rest *RESTInterface) Setup() {
-	rest.Router.HandleFunc("/devices/", rest.GetDevices).Methods("GET")
-	rest.Router.HandleFunc("/devices/", rest.SetNewDevice).Methods("POST")
+func (rest *RESTInterface) setup() {
+	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
+	rest.Router.HandleFunc("/devices", rest.SetNewDevice).Methods("POST")
 }
 
 func (rest *RESTInterface) Start() {
+	rest.setup()
 	fmt.Println("HTTP serve at 8000")
 	log.Fatal(http.ListenAndServe(":8000", rest.Router))
 }
