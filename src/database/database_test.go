@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/*
-* test: ensure macAddress Key is unique
- */
-
 var sample = &DB_Device{
 	ID:         1,
 	Name:       "Foo",
@@ -129,4 +125,30 @@ func Test_CheckIfDeviceExists(t *testing.T) {
 	_ = sample.CreateDevice(sql_db)
 	res := checkIfDeviceExists("00:11:22:33:44", test_db.Path)
 	assert.True(res)
+}
+
+func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
+	assert := assert.New(t)
+	sql_db, err := sql.Open("sqlite3", test_db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer sql_db.Close()
+
+	var device1 = &DB_Device{
+		Name:       "Foo",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-lite",
+		Version:    "0.0.1",
+	}
+	var device2 = &DB_Device{
+		Name:       "Bar",
+		MacAddress: "55:55:55:55:55",
+		Twin:       "vs-full",
+		Version:    "0.0.1",
+	}
+
+	_ = device1.CreateDevice(sql_db)
+	err = device2.CreateDevice(sql_db)
+	assert.Error(err)
 }
