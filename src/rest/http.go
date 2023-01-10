@@ -37,9 +37,13 @@ func NewRestInterface(db *sql.DB) *RESTInterface {
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 	result := []string{}
+	respondWithJSON(w, http.StatusOK, result)
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	response, _ := json.Marshal(result)
+	w.WriteHeader(statusCode)
+	response, _ := json.Marshal(payload)
 	w.Write(response)
 }
 
