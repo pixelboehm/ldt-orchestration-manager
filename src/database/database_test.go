@@ -6,12 +6,14 @@ import (
 	"os"
 	"testing"
 
+	model "longevity/src/model"
+
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var sample = &DB_Device{
+var sample = &model.Device{
 	ID:         1,
 	Name:       "Foo",
 	MacAddress: "00:11:22:33:44",
@@ -41,7 +43,7 @@ func Test_createDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	err = sample.CreateDevice(sql_db)
+	err = CreateDevice(sql_db, sample)
 	assert.NoError(err)
 }
 
@@ -52,8 +54,8 @@ func Test_createAlreadyExistingDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	_ = sample.CreateDevice(sql_db)
-	err = sample.CreateDevice(sql_db)
+	_ = CreateDevice(sql_db, sample)
+	err = CreateDevice(sql_db, sample)
 	assert.Error(err)
 }
 
@@ -65,7 +67,7 @@ func Test_UpdateExistingDevice(t *testing.T) {
 	}
 	defer sql_db.Close()
 	sample.Name = "Foo Updated"
-	err = sample.updateDevice(sql_db)
+	err = updateDevice(sql_db, sample)
 	assert.NoError(err)
 }
 
@@ -76,7 +78,7 @@ func Test_DeleteDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	err = sample.deleteDevice(sql_db)
+	err = deleteDevice(sql_db, sample)
 	assert.NoError(err)
 }
 
@@ -87,8 +89,8 @@ func Test_GetDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	sample.CreateDevice(sql_db)
-	var test_device = &DB_Device{
+	CreateDevice(sql_db, sample)
+	var test_device = &model.Device{
 		ID:         1,
 		Name:       "",
 		MacAddress: "",
@@ -96,7 +98,7 @@ func Test_GetDevice(t *testing.T) {
 		Version:    "",
 	}
 
-	test_device.GetDevice(sql_db)
+	GetDevice(sql_db, test_device)
 	assert.Equal("Foo Updated", test_device.Name)
 	assert.Equal("00:11:22:33:44", test_device.MacAddress)
 	assert.Equal("general", test_device.Twin)
@@ -122,7 +124,7 @@ func Test_CheckIfDeviceExists(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	_ = sample.CreateDevice(sql_db)
+	_ = CreateDevice(sql_db, sample)
 	res := checkIfDeviceExists("00:11:22:33:44", test_db.Path)
 	assert.True(res)
 }
@@ -135,21 +137,21 @@ func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
 	}
 	defer sql_db.Close()
 
-	var device1 = &DB_Device{
+	var device1 = &model.Device{
 		Name:       "Foo",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-lite",
 		Version:    "0.0.1",
 	}
-	var device2 = &DB_Device{
+	var device2 = &model.Device{
 		Name:       "Bar",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-full",
 		Version:    "0.0.1",
 	}
 
-	_ = device1.CreateDevice(sql_db)
-	err = device2.CreateDevice(sql_db)
+	_ = CreateDevice(sql_db, device1)
+	err = CreateDevice(sql_db, device2)
 	assert.Error(err)
 }
 
@@ -161,21 +163,21 @@ func Test_GetDevices(t *testing.T) {
 	}
 	defer sql_db.Close()
 
-	var device1 = &DB_Device{
+	var device1 = &model.Device{
 		Name:       "Foo",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-lite",
 		Version:    "0.0.1",
 	}
-	var device2 = &DB_Device{
+	var device2 = &model.Device{
 		Name:       "Bar",
 		MacAddress: "44:44:44:44:44",
 		Twin:       "vs-full",
 		Version:    "0.0.1",
 	}
 
-	_ = device1.CreateDevice(sql_db)
-	_ = device2.CreateDevice(sql_db)
+	_ = CreateDevice(sql_db, device1)
+	_ = CreateDevice(sql_db, device2)
 
 	devices, err := getDevices(sql_db)
 	assert.NoError(err)
