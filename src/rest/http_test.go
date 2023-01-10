@@ -82,6 +82,7 @@ func Test_GetDevice(t *testing.T) {
 
 func Test_CreateDevice(t *testing.T) {
 	clearTable()
+	assert := assert.New(t)
 	var jsonStr = []byte(`{
 		"name":"Device101",
 		"macAddress": "11:22:33:44:55",
@@ -92,6 +93,14 @@ func Test_CreateDevice(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusCreated, response.Code)
+
+	var res map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &res)
+
+	assert.Equal("Device101", res["name"])
+	assert.Equal("11:22:33:44:55", res["macAddress"])
+	assert.Equal("vs-full", res["twin"])
+	assert.Equal("0.0.1", res["version"])
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {

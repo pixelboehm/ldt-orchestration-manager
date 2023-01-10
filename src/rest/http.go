@@ -77,7 +77,11 @@ func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
-	// todo: actually create device
+	err = device.CreateDevice(rest.DB)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	respondWithJSON(w, http.StatusCreated, device)
 }
