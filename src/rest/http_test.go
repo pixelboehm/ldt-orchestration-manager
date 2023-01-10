@@ -16,6 +16,7 @@ var db *DB
 
 func TestMain(m *testing.M) {
 	rest = NewRestInterface()
+	rest.setup()
 	db = &DB{Path: "./test_db.db"}
 	db.CreateTable()
 	os.Exit(m.Run())

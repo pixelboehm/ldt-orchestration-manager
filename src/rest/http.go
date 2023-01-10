@@ -33,9 +33,11 @@ func NewRestInterface() *RESTInterface {
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
-	response := JsonResponse{Type: "success", Data: "foo"}
-
-	json.NewEncoder(w).Encode(response)
+	result := []string{}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response, _ := json.Marshal(result)
+	w.Write(response)
 }
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +55,7 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 }
 
 func (rest *RESTInterface) setup() {
+	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 }
 
 func (rest *RESTInterface) Start() {
