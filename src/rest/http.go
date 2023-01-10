@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ type API interface {
 
 type RESTInterface struct {
 	Router *mux.Router
+	DB     *sql.DB
 }
 
 type JsonResponse struct {
@@ -26,9 +28,10 @@ type JsonResponse struct {
 	Data string
 }
 
-func NewRestInterface() *RESTInterface {
+func NewRestInterface(db *sql.DB) *RESTInterface {
 	return &RESTInterface{
 		Router: mux.NewRouter(),
+		DB:     db,
 	}
 }
 

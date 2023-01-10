@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,9 +17,14 @@ var rest *RESTInterface
 var db *DB
 
 func TestMain(m *testing.M) {
-	rest = NewRestInterface()
-	rest.setup()
 	db = &DB{Path: "./test_db.db"}
+	sql_db, err := sql.Open("sqlite3", db.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rest = NewRestInterface(sql_db)
+	rest.setup()
 	db.CreateTable()
 	os.Exit(m.Run())
 }
