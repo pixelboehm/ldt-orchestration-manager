@@ -3,10 +3,12 @@ package rest
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 
 	. "longevity/src/database"
@@ -24,10 +26,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer sql_db.Close()
 
 	rest = NewRestInterface(sql_db)
 	rest.setup()
-	db.CreateTable()
 	os.Exit(m.Run())
 }
 
@@ -63,6 +65,20 @@ func Test_GetNonExistentDevice(t *testing.T) {
 	}
 }
 
+func Test_GetDevice(t *testing.T) {
+	clearTable()
+	err := addTestDevices(1)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "/device/1", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	rest.Router.ServeHTTP(rr, req)
@@ -72,6 +88,43 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 func checkResponseCode(t *testing.T, want int, got int) {
 	assert := assert.New(t)
 	assert.Equalf(want, got, "Expected Response Code %d, Got %d\n", want, got)
+}
+
+func addTestDevices(amount int) error {
+	for i := 0; i < amount; i++ {
+		var device1 = &DB_Device{
+			Name:       "Device" + strconv.Itoa(i),
+			MacAddress: createFakeMacAddress(i),
+			Twin:       "vs-lite",
+			Version:    "0.0.1",
+		}
+		err := device1.CreateDevice(rest.DB)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addTestDevices2(amount int) error {
+	for i := 0; i < amount; i++ {
+		statement, _ := rest.DB.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES(?,?,?,?)")
+		_, err := statement.Exec(
+			"Device"+strconv.Itoa(i),
+			createFakeMacAddress(i),
+			"twin"+strconv.Itoa(i),
+			"0.0."+strconv.Itoa(i),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createFakeMacAddress(i int) string {
+	result := fmt.Sprintf("%d%d:%d%d:%d%d:%d%d", i, i, i, i, i, i, i, i)
+	return result
 }
 
 // func Test_createNewDeviceViaPostRequest(t *testing.T) {

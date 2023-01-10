@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	. "longevity/src/database"
-	d "longevity/src/model"
 	"net/http"
 	"strconv"
 
@@ -74,20 +73,6 @@ func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{})
 
 func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	respondWithJSON(w, statusCode, map[string]string{"error": message})
-}
-
-func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	macAddress := r.FormValue("macAddress")
-	twin := r.FormValue("twin")
-	version := r.FormValue("version")
-
-	if containsEmptyString(name, macAddress) == false {
-		d.NewDevice(name, macAddress, twin, version)
-		fmt.Printf("New Device with name %s created.\n", name)
-	} else {
-		http.Error(w, "No Name Specified for Device", http.StatusBadRequest)
-	}
 }
 
 func (rest *RESTInterface) setup() {
