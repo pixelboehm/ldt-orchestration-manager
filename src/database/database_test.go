@@ -24,7 +24,7 @@ var test_db = &DB{
 
 func TestMain(m *testing.M) {
 	Initialize(test_db.Path)
-	createTable(test_db.Path)
+	test_db.CreateTable()
 	code := m.Run()
 	clearTable()
 	os.Exit(code)

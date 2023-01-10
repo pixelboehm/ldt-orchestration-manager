@@ -40,7 +40,7 @@ func Run(db *DB) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	createTable(db.Path)
+	db.CreateTable()
 	defer sqliteDatabase.Close()
 }
 
@@ -97,8 +97,8 @@ func getDevices(db *sql.DB) ([]Device, error) {
 	return devices, nil
 }
 
-func createTable(db_name string) {
-	db, err := sql.Open("sqlite3", db_name)
+func (dbptr *DB) CreateTable() {
+	db, err := sql.Open("sqlite3", dbptr.Path)
 
 	if err != nil {
 		log.Fatal(err)

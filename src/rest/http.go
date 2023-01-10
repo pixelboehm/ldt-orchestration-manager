@@ -53,8 +53,6 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 }
 
 func (rest *RESTInterface) setup() {
-	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
-	rest.Router.HandleFunc("/devices", rest.SetNewDevice).Methods("POST")
 }
 
 func (rest *RESTInterface) Start() {
