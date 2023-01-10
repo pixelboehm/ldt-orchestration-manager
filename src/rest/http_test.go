@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -77,6 +78,20 @@ func Test_GetDevice(t *testing.T) {
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
+func Test_CreateDevice(t *testing.T) {
+	clearTable()
+	var jsonStr = []byte(`{
+		"name":"Device101",
+		"macAddress": "11:22:33:44:55",
+		"twin":"vs-full",
+		"version":"0.0.1"
+	}`)
+	req, _ := http.NewRequest("POST", "/device", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusCreated, response.Code)
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {

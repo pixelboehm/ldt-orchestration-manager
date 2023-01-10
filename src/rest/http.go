@@ -64,6 +64,24 @@ func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, p)
 }
 
+func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) {
+	var device DB_Device
+	decoder := json.NewDecoder(r.Body)
+
+	err := decoder.Decode(&device)
+
+	if err != nil {
+		log.Fatal(err)
+		respondWithError(w, http.StatusInternalServerError, "Invalid Payload")
+		return
+	}
+	defer r.Body.Close()
+
+	// todo: actually create device
+
+	respondWithJSON(w, http.StatusCreated, device)
+}
+
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -78,6 +96,7 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 func (rest *RESTInterface) setup() {
 	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
+	rest.Router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
 }
 
 func (rest *RESTInterface) Start() {
