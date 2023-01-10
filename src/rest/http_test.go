@@ -118,7 +118,7 @@ func addTestDevices(amount int) error {
 	for i := 0; i < amount; i++ {
 		var device1 = &DB_Device{
 			Name:       "Device" + strconv.Itoa(i),
-			MacAddress: createFakeMacAddress(i),
+			MacAddress: createDummyMacAddress(i),
 			Twin:       "vs-lite",
 			Version:    "0.0.1",
 		}
@@ -130,23 +130,7 @@ func addTestDevices(amount int) error {
 	return nil
 }
 
-func addTestDevices2(amount int) error {
-	for i := 0; i < amount; i++ {
-		statement, _ := rest.DB.Prepare("INSERT INTO devices (name, macAddress, twin, version) VALUES(?,?,?,?)")
-		_, err := statement.Exec(
-			"Device"+strconv.Itoa(i),
-			createFakeMacAddress(i),
-			"twin"+strconv.Itoa(i),
-			"0.0."+strconv.Itoa(i),
-		)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func createFakeMacAddress(i int) string {
+func createDummyMacAddress(i int) string {
 	result := fmt.Sprintf("%d%d:%d%d:%d%d:%d%d", i, i, i, i, i, i, i, i)
 	return result
 }
