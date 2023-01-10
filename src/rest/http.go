@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	. "longevity/src/database"
 	d "longevity/src/model"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -40,11 +42,38 @@ func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, result)
 }
 
+func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid device ID")
+		return
+	}
+
+	p := DB_Device{ID: id}
+	err = p.GetDevice(rest.DB)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			respondWithError(w, http.StatusNotFound, "device not found")
+		default:
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, p)
+}
+
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	response, _ := json.Marshal(payload)
 	w.Write(response)
+}
+
+func respondWithError(w http.ResponseWriter, statusCode int, message string) {
+	respondWithJSON(w, statusCode, map[string]string{"error": message})
 }
 
 func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +92,7 @@ func (rest *RESTInterface) SetNewDevice(w http.ResponseWriter, r *http.Request) 
 
 func (rest *RESTInterface) setup() {
 	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
+	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
 }
 
 func (rest *RESTInterface) Start() {
