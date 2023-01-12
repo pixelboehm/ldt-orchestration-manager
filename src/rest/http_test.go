@@ -83,6 +83,7 @@ func Test_GetDevice(t *testing.T) {
 func Test_CreateDevice(t *testing.T) {
 	clearTable()
 	assert := assert.New(t)
+
 	var jsonStr = []byte(`{
 		"name":"Device101",
 		"macAddress": "11:22:33:44:55",
@@ -105,6 +106,7 @@ func Test_CreateDevice(t *testing.T) {
 
 func Test_UpdateDevice(t *testing.T) {
 	clearTable()
+	assert := assert.New(t)
 
 	err := addTestDevices(1)
 	if err != nil {
@@ -118,8 +120,8 @@ func Test_UpdateDevice(t *testing.T) {
 
 	var jsonStr = []byte(`{
 		"name":"new name for device", 
-		"macAddress": 11:22:33:44:55,
-		"twin": "vs-lite"
+		"macAddress": "11:22:33:44:55",
+		"twin": "vs-lite",
 		"version": "0.0.1"
 		}`)
 	req, _ = http.NewRequest("PUT", "/device/1", bytes.NewBuffer(jsonStr))
@@ -128,6 +130,14 @@ func Test_UpdateDevice(t *testing.T) {
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var res map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &res)
+
+	assert.Equal("new name for device", res["name"])
+	assert.Equal("11:22:33:44:55", res["macAddress"])
+	assert.Equal("vs-lite", res["twin"])
+	assert.Equal("0.0.1", res["version"])
 
 }
 

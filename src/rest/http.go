@@ -129,7 +129,7 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 func (rest *RESTInterface) setup() {
 	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
-	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("PUT")
+	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
 	rest.Router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
 }
 
