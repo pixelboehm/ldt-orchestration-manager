@@ -65,7 +65,7 @@ func Test_UpdateExistingDevice(t *testing.T) {
 	}
 	defer sql_db.Close()
 	sample.Name = "Foo Updated"
-	err = sample.updateDevice(sql_db)
+	err = sample.UpdateDevice(sql_db)
 	assert.NoError(err)
 }
 

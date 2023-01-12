@@ -48,7 +48,7 @@ func (d *DB_Device) GetDevice(db *sql.DB) error {
 	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
-func (d *DB_Device) updateDevice(db *sql.DB) error {
+func (d *DB_Device) UpdateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(updateDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
 

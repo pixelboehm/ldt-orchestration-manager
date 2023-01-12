@@ -103,6 +103,34 @@ func Test_CreateDevice(t *testing.T) {
 	assert.Equal("0.0.1", res["version"])
 }
 
+func Test_UpdateDevice(t *testing.T) {
+	clearTable()
+
+	err := addTestDevices(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "/device/1", nil)
+	response := executeRequest(req)
+	var originalDevice map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &originalDevice)
+
+	var jsonStr = []byte(`{
+		"name":"new name for device", 
+		"macAddress": 11:22:33:44:55,
+		"twin": "vs-lite"
+		"version": "0.0.1"
+		}`)
+	req, _ = http.NewRequest("PUT", "/device/1", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+}
+
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	rest.Router.ServeHTTP(rr, req)
