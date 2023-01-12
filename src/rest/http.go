@@ -112,7 +112,24 @@ func (rest *RESTInterface) UpdateDevice(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	respondWithJSON(w, http.StatusOK, device)
+}
 
+func (rest *RESTInterface) DeleteDevice(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Unknown Device ID")
+		return
+	}
+
+	var device = &DB_Device{ID: id}
+	err = device.DeleteDevice(rest.DB)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
@@ -130,6 +147,7 @@ func (rest *RESTInterface) setup() {
 	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
 	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
 	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
+	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice).Methods("DELETE")
 	rest.Router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
 }
 

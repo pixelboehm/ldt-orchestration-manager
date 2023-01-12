@@ -138,7 +138,29 @@ func Test_UpdateDevice(t *testing.T) {
 	assert.Equal("11:22:33:44:55", res["macAddress"])
 	assert.Equal("vs-lite", res["twin"])
 	assert.Equal("0.0.1", res["version"])
+}
 
+func Test_DeleteDevice(t *testing.T) {
+	clearTable()
+	// assert := assert.New(t)
+
+	err := addTestDevices(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "/device/1", nil)
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("DELETE", "/device/1", nil)
+	response = executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("GET", "/device/1", nil)
+	response = executeRequest(req)
+	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {

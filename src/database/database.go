@@ -55,7 +55,7 @@ func (d *DB_Device) UpdateDevice(db *sql.DB) error {
 	return err
 }
 
-func (d *DB_Device) deleteDevice(db *sql.DB) error {
+func (d *DB_Device) DeleteDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(deleteDeviceQuery)
 	_, err := statement.Exec(d.ID)
 

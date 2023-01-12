@@ -76,7 +76,7 @@ func Test_DeleteDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	err = sample.deleteDevice(sql_db)
+	err = sample.DeleteDevice(sql_db)
 	assert.NoError(err)
 }
 
