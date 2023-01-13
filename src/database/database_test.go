@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var sample = &DB_Device{
+var sample = &Device{
 	ID:         1,
 	Name:       "Foo",
 	MacAddress: "00:11:22:33:44",
@@ -24,7 +24,7 @@ var test_db = &DB{
 
 func TestMain(m *testing.M) {
 	Initialize(test_db.Path)
-	createTable(test_db.Path)
+	test_db.CreateTable()
 	code := m.Run()
 	clearTable()
 	os.Exit(code)
@@ -65,7 +65,7 @@ func Test_UpdateExistingDevice(t *testing.T) {
 	}
 	defer sql_db.Close()
 	sample.Name = "Foo Updated"
-	err = sample.updateDevice(sql_db)
+	err = sample.UpdateDevice(sql_db)
 	assert.NoError(err)
 }
 
@@ -76,7 +76,7 @@ func Test_DeleteDevice(t *testing.T) {
 		log.Fatal(err)
 	}
 	defer sql_db.Close()
-	err = sample.deleteDevice(sql_db)
+	err = sample.DeleteDevice(sql_db)
 	assert.NoError(err)
 }
 
@@ -88,7 +88,7 @@ func Test_GetDevice(t *testing.T) {
 	}
 	defer sql_db.Close()
 	sample.CreateDevice(sql_db)
-	var test_device = &DB_Device{
+	var test_device = &Device{
 		ID:         1,
 		Name:       "",
 		MacAddress: "",
@@ -135,13 +135,13 @@ func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
 	}
 	defer sql_db.Close()
 
-	var device1 = &DB_Device{
+	var device1 = &Device{
 		Name:       "Foo",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-lite",
 		Version:    "0.0.1",
 	}
-	var device2 = &DB_Device{
+	var device2 = &Device{
 		Name:       "Bar",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-full",
@@ -161,13 +161,13 @@ func Test_GetDevices(t *testing.T) {
 	}
 	defer sql_db.Close()
 
-	var device1 = &DB_Device{
+	var device1 = &Device{
 		Name:       "Foo",
 		MacAddress: "55:55:55:55:55",
 		Twin:       "vs-lite",
 		Version:    "0.0.1",
 	}
-	var device2 = &DB_Device{
+	var device2 = &Device{
 		Name:       "Bar",
 		MacAddress: "44:44:44:44:44",
 		Twin:       "vs-full",

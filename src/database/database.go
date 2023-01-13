@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	. "longevity/src/model"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -26,43 +25,36 @@ type DB struct {
 	Path string
 }
 
-type DB_Device struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	MacAddress string `json:"macAddress"`
-	Twin       string `json:"twin"`
-	Version    string `json:"version"`
-}
-
-func Run(db *DB) {
+func Run(db *DB) *sql.DB {
 	Initialize(db.Path)
 	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	createTable(db.Path)
-	defer sqliteDatabase.Close()
+	db.CreateTable()
+	// defer sqliteDatabase.Close()
+	return sqliteDatabase
 }
 
-func (d *DB_Device) GetDevice(db *sql.DB) error {
+func (d *Device) GetDevice(db *sql.DB) error {
 	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
-func (d *DB_Device) updateDevice(db *sql.DB) error {
+func (d *Device) UpdateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(updateDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
 
 	return err
 }
 
-func (d *DB_Device) deleteDevice(db *sql.DB) error {
+func (d *Device) DeleteDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(deleteDeviceQuery)
 	_, err := statement.Exec(d.ID)
 
 	return err
 }
 
-func (d *DB_Device) CreateDevice(db *sql.DB) error {
+func (d *Device) CreateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(insertDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
 
@@ -97,8 +89,8 @@ func getDevices(db *sql.DB) ([]Device, error) {
 	return devices, nil
 }
 
-func createTable(db_name string) {
-	db, err := sql.Open("sqlite3", db_name)
+func (dbptr *DB) CreateTable() {
+	db, err := sql.Open("sqlite3", dbptr.Path)
 
 	if err != nil {
 		log.Fatal(err)
@@ -142,7 +134,7 @@ func checkIfDeviceExists(address string, db_path string) bool {
 	return result
 }
 
-func checkMatchingMacAddress(address string, d *DB_Device) error {
+func checkMatchingMacAddress(address string, d *Device) error {
 	if address != d.MacAddress {
 		return errors.New("MacAdresses do not match")
 	}
