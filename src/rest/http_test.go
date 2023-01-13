@@ -194,23 +194,3 @@ func createDummyMacAddress(i int) string {
 	result := fmt.Sprintf("%d%d:%d%d:%d%d:%d%d", i, i, i, i, i, i, i, i)
 	return result
 }
-
-// func Test_createNewDeviceViaPostRequest(t *testing.T) {
-// 	assert := assert.New(t)
-// 	rest := NewRestInterface()
-// 	values, _ := url.ParseQuery("name=thermostat&macAddress=00:11:22:33:44")
-// 	assert.HTTPSuccess(rest.SetNewDevice, "POST", "/devices", values, nil)
-// }
-
-// func Test_createNewDeviceWithEmptyNameViaPostRequest(t *testing.T) {
-// 	assert := assert.New(t)
-// 	rest := NewRestInterface()
-// 	values, _ := url.ParseQuery("name=")
-// 	assert.HTTPError(rest.SetNewDevice, "POST", "/devices", values, nil)
-// }
-
-// func Test_GetDevicesSucceeds(t *testing.T) {
-// 	assert := assert.New(t)
-// 	rest := RESTInterface{}
-// 	assert.HTTPBodyContains(rest.GetDevices, "GET", "/devices", nil, "foo")
-// }
