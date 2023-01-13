@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var rest *RESTInterface
+var rest API
 var db *DB
 
 func TestMain(m *testing.M) {
@@ -30,12 +30,12 @@ func TestMain(m *testing.M) {
 	defer sql_db.Close()
 
 	rest = NewRestInterface(sql_db)
-	rest.setup()
+	rest.initialize()
 	os.Exit(m.Run())
 }
 
 func clearTable() {
-	rest.DB.Exec("DELETE FROM devices")
+	rest.GetDB().Exec("DELETE FROM devices")
 }
 
 func Test_EmptyTable(t *testing.T) {
@@ -142,7 +142,6 @@ func Test_UpdateDevice(t *testing.T) {
 
 func Test_DeleteDevice(t *testing.T) {
 	clearTable()
-	// assert := assert.New(t)
 
 	err := addTestDevices(1)
 	if err != nil {
@@ -165,7 +164,7 @@ func Test_DeleteDevice(t *testing.T) {
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	rest.Router.ServeHTTP(rr, req)
+	rest.GetRouter().ServeHTTP(rr, req)
 	return rr
 }
 
@@ -182,7 +181,7 @@ func addTestDevices(amount int) error {
 			Twin:       "vs-lite",
 			Version:    "0.0.1",
 		}
-		err := device1.CreateDevice(rest.DB)
+		err := device1.CreateDevice(rest.GetDB())
 		if err != nil {
 			return err
 		}

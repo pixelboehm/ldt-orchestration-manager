@@ -13,27 +13,33 @@ import (
 )
 
 type API interface {
+	Run()
 	GetDevices(w http.ResponseWriter, r *http.Request)
-	SetNewDevice(w http.ResponseWriter, r *http.Request)
-	Start()
-	setup()
+	GetDevice(w http.ResponseWriter, r *http.Request)
+	CreateDevice(w http.ResponseWriter, r *http.Request)
+	UpdateDevice(w http.ResponseWriter, r *http.Request)
+	DeleteDevice(w http.ResponseWriter, r *http.Request)
+	GetDB() *sql.DB
+	GetRouter() *mux.Router
+	initialize()
 }
 
 type RESTInterface struct {
-	Router *mux.Router
-	DB     *sql.DB
-}
-
-type JsonResponse struct {
-	Type string
-	Data string
+	router *mux.Router
+	db     *sql.DB
 }
 
 func NewRestInterface(db *sql.DB) *RESTInterface {
 	return &RESTInterface{
-		Router: mux.NewRouter(),
-		DB:     db,
+		router: mux.NewRouter(),
+		db:     db,
 	}
+}
+
+func (rest *RESTInterface) Run() {
+	rest.initialize()
+	fmt.Println("HTTP serve at 8000")
+	log.Fatal(http.ListenAndServe(":8000", rest.router))
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +56,7 @@ func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := DB_Device{ID: id}
-	err = p.GetDevice(rest.DB)
+	err = p.GetDevice(rest.db)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -77,7 +83,7 @@ func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
-	err = device.CreateDevice(rest.DB)
+	err = device.CreateDevice(rest.db)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -106,7 +112,7 @@ func (rest *RESTInterface) UpdateDevice(w http.ResponseWriter, r *http.Request) 
 	defer r.Body.Close()
 	device.ID = id
 
-	err = device.UpdateDevice(rest.DB)
+	err = device.UpdateDevice(rest.db)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -123,13 +129,29 @@ func (rest *RESTInterface) DeleteDevice(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var device = &DB_Device{ID: id}
-	err = device.DeleteDevice(rest.DB)
+	err = device.DeleteDevice(rest.db)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (rest *RESTInterface) GetDB() *sql.DB {
+	return rest.db
+}
+
+func (rest *RESTInterface) GetRouter() *mux.Router {
+	return rest.router
+}
+
+func (rest *RESTInterface) SetDB(db *sql.DB) {
+	rest.db = db
+}
+
+func (rest *RESTInterface) SetRouter(router *mux.Router) {
+	rest.router = router
 }
 
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
@@ -143,25 +165,10 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	respondWithJSON(w, statusCode, map[string]string{"error": message})
 }
 
-func (rest *RESTInterface) setup() {
-	rest.Router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
-	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
-	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
-	rest.Router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice).Methods("DELETE")
-	rest.Router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
-}
-
-func (rest *RESTInterface) Start() {
-	rest.setup()
-	fmt.Println("HTTP serve at 8000")
-	log.Fatal(http.ListenAndServe(":8000", rest.Router))
-}
-
-func containsEmptyString(formValues ...string) bool {
-	for _, s := range formValues {
-		if s == "" {
-			return true
-		}
-	}
-	return false
+func (rest *RESTInterface) initialize() {
+	rest.router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
+	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
+	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
+	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice).Methods("DELETE")
+	rest.router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
 }
