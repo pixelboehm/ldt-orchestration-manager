@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	. "longevity/src/model"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -26,14 +25,6 @@ type DB struct {
 	Path string
 }
 
-type DB_Device struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	MacAddress string `json:"macAddress"`
-	Twin       string `json:"twin"`
-	Version    string `json:"version"`
-}
-
 func Run(db *DB) {
 	Initialize(db.Path)
 	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
@@ -44,25 +35,25 @@ func Run(db *DB) {
 	defer sqliteDatabase.Close()
 }
 
-func (d *DB_Device) GetDevice(db *sql.DB) error {
+func (d *Device) GetDevice(db *sql.DB) error {
 	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
-func (d *DB_Device) UpdateDevice(db *sql.DB) error {
+func (d *Device) UpdateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(updateDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version, d.ID)
 
 	return err
 }
 
-func (d *DB_Device) DeleteDevice(db *sql.DB) error {
+func (d *Device) DeleteDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(deleteDeviceQuery)
 	_, err := statement.Exec(d.ID)
 
 	return err
 }
 
-func (d *DB_Device) CreateDevice(db *sql.DB) error {
+func (d *Device) CreateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(insertDeviceQuery)
 	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
 
@@ -142,7 +133,7 @@ func checkIfDeviceExists(address string, db_path string) bool {
 	return result
 }
 
-func checkMatchingMacAddress(address string, d *DB_Device) error {
+func checkMatchingMacAddress(address string, d *Device) error {
 	if address != d.MacAddress {
 		return errors.New("MacAdresses do not match")
 	}

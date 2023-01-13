@@ -175,7 +175,7 @@ func checkResponseCode(t *testing.T, want int, got int) {
 
 func addTestDevices(amount int) error {
 	for i := 0; i < amount; i++ {
-		var device1 = &DB_Device{
+		var device1 = &Device{
 			Name:       "Device" + strconv.Itoa(i),
 			MacAddress: createDummyMacAddress(i),
 			Twin:       "vs-lite",

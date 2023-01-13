@@ -55,7 +55,7 @@ func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := DB_Device{ID: id}
+	p := Device{ID: id}
 	err = p.GetDevice(rest.db)
 	if err != nil {
 		switch err {
@@ -71,7 +71,7 @@ func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) {
-	var device DB_Device
+	var device Device
 	decoder := json.NewDecoder(r.Body)
 
 	err := decoder.Decode(&device)
@@ -100,7 +100,7 @@ func (rest *RESTInterface) UpdateDevice(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var device DB_Device
+	var device Device
 	decoder := json.NewDecoder(r.Body)
 
 	err = decoder.Decode(&device)
@@ -128,7 +128,7 @@ func (rest *RESTInterface) DeleteDevice(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var device = &DB_Device{ID: id}
+	var device = &Device{ID: id}
 	err = device.DeleteDevice(rest.db)
 
 	if err != nil {
