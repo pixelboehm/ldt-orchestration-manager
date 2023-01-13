@@ -21,7 +21,8 @@ var rest API
 var db *DB
 
 func TestMain(m *testing.M) {
-	db = &DB{Path: "./test_db.db"}
+	db_location := "./test_db.db"
+	db = &DB{Path: db_location}
 	db.CreateTable()
 	sql_db, err := sql.Open("sqlite3", db.Path)
 	if err != nil {
@@ -31,7 +32,9 @@ func TestMain(m *testing.M) {
 
 	rest = NewRestInterface(sql_db)
 	rest.initialize()
-	os.Exit(m.Run())
+	code := m.Run()
+	os.Remove(db_location)
+	os.Exit(code)
 }
 
 func clearTable() {

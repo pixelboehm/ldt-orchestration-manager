@@ -25,14 +25,15 @@ type DB struct {
 	Path string
 }
 
-func Run(db *DB) {
+func Run(db *DB) *sql.DB {
 	Initialize(db.Path)
 	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	db.CreateTable()
-	defer sqliteDatabase.Close()
+	// defer sqliteDatabase.Close()
+	return sqliteDatabase
 }
 
 func (d *Device) GetDevice(db *sql.DB) error {

@@ -77,7 +77,6 @@ func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) 
 	err := decoder.Decode(&device)
 
 	if err != nil {
-		log.Fatal(err)
 		respondWithError(w, http.StatusInternalServerError, "Invalid Payload")
 		return
 	}
@@ -105,7 +104,6 @@ func (rest *RESTInterface) UpdateDevice(w http.ResponseWriter, r *http.Request) 
 
 	err = decoder.Decode(&device)
 	if err != nil {
-		log.Fatal(err)
 		respondWithError(w, http.StatusInternalServerError, "Invalid Payload")
 		return
 	}
