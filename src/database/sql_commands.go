@@ -1,28 +1,29 @@
 package database
 
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS devices 
+const tableCreationQuery = `CREATE TABLE IF NOT EXISTS devices
 (
-	id INTEGER PRIMARY KEY, 
+	id SERIAL, 
 	name VARCHAR(64), 
 	macAddress VARCHAR(17) UNIQUE, 
 	twin VARCHAR(64), 
-	version string
+	version VARCHAR(6),
+	CONSTRAINT devices_pkey PRIMARY KEY (id)
 )`
 
-const insertDeviceQuery = `INSERT INTO devices 
+const insertDeviceQuery = `INSERT INTO devices
 (
 	name, 
 	macAddress, 
 	twin, 
 	version
-) VALUES (?, ?, ?, ?)`
+) VALUES ($1, $2, $3, $4)`
 
 const updateDeviceQuery = `UPDATE devices SET 
-	name=?, 
-	macAddress=?,
-	twin=?, 
-	version=? 
-	WHERE id=?`
+	name=$1, 
+	macAddress=$2,
+	twin=$3, 
+	version=$4 
+	WHERE id=$5`
 
 const deleteDeviceQuery = `DELETE FROM devices WHERE id=?`
 
@@ -30,7 +31,7 @@ const getDeviceTableQuery = `SELECT name, macAddress, twin, version FROM devices
 
 const checkIfDeviceExistsQuery = `SELECT EXISTS
 (
-	SELECT 1 FROM devices WHERE macAddress=?
+	SELECT 1 FROM devices WHERE macAddress=$4
 );`
 
-const getDeviceByIDQuery = `SELECT name, macAddress, twin, version FROM devices WHERE id = ?`
+const getDeviceByIDQuery = `SELECT name, macAddress, twin, version FROM devices WHERE id = $4`
