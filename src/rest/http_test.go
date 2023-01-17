@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -18,20 +17,15 @@ import (
 )
 
 var rest API
-var db *DB
 
 func TestMain(m *testing.M) {
 	db_location := "./test_db.db"
-	db = &DB{Path: db_location}
-	db.CreateTable()
-	sql_db, err := sql.Open("sqlite3", db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
+	// db := SetupSQLiteDB(db_location, table_name)
+	db := SetupPostgresDB("postgres", "foobar", "postgres")
 
-	rest = NewRestInterface(sql_db)
+	rest = NewRestInterface(db)
 	rest.initialize()
+
 	code := m.Run()
 	os.Remove(db_location)
 	os.Exit(code)
