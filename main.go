@@ -1,17 +1,20 @@
 package main
 
 import (
-	d "longevity/src/database"
+	. "longevity/src/database"
 	. "longevity/src/rest"
 )
 
 func main() {
-	db := &d.DB{Path: "longevity.db"}
+	db := SetupPostgresDB("postgres", "foobar", "postgres")
+	// db := SetupSQLiteDB("longevity.db", "longevity")
 
-	sql_db := d.Run(db)
-	defer sql_db.Close()
+	defer db.Close()
+
+	sample := NewDevice("anker", "01:23:45:67:89", "es-lite", "0.0.1")
+	sample.CreateDevice(db)
 
 	var rest API
-	rest = NewRestInterface(sql_db)
+	rest = NewRestInterface(db)
 	rest.Run()
 }
