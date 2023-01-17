@@ -25,13 +25,13 @@ const updateDeviceQuery = `UPDATE devices SET
 	version=$4 
 	WHERE id=$5`
 
-const deleteDeviceQuery = `DELETE FROM devices WHERE id=?`
+const deleteDeviceQuery = `DELETE FROM devices WHERE id=$1`
 
 const getDeviceTableQuery = `SELECT name, macAddress, twin, version FROM devices`
 
 const checkIfDeviceExistsQuery = `SELECT EXISTS
 (
-	SELECT 1 FROM devices WHERE macAddress=$4
+	SELECT 1 FROM devices WHERE macAddress=$1
 );`
 
-const getDeviceByIDQuery = `SELECT name, macAddress, twin, version FROM devices WHERE id = $4`
+const getDeviceByIDQuery = `SELECT name, macAddress, twin, version FROM devices WHERE id = $1`
