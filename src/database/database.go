@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -17,23 +18,31 @@ type database interface {
 	UpdateDevice()
 	RemoveDevice()
 	PrintTable()
-	Initialize()
 	getDevice()
 }
 
-type DB struct {
-	Path string
-}
-
-func Run(db *DB) *sql.DB {
-	Initialize(db.Path)
-	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
+func SetupSQLiteDB(db_name string) *sql.DB {
+	file, err := os.Create(db_name)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	db.CreateTable()
-	// defer sqliteDatabase.Close()
-	return sqliteDatabase
+	file.Close()
+	db, err := sql.Open("sqlite3", db_name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CreateTable(db, tableCreationQuerySQLite)
+	return db
+}
+
+func SetupPostgresDB(user string, password string, db_name string) *sql.DB {
+	connection := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, db_name)
+	db, err := sql.Open("postgres", connection)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CreateTable(db, tableCreationQuery)
+	return db
 }
 
 func (d *Device) GetDevice(db *sql.DB) error {
@@ -89,16 +98,8 @@ func getDevices(db *sql.DB) ([]Device, error) {
 	return devices, nil
 }
 
-func (dbptr *DB) CreateTable() {
-	db, err := sql.Open("sqlite3", dbptr.Path)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	statement, err := db.Prepare(tableCreationQuery)
+func CreateTable(db *sql.DB, query string) {
+	statement, err := db.Prepare(query)
 
 	if err != nil {
 		log.Fatal(err)
@@ -108,24 +109,7 @@ func (dbptr *DB) CreateTable() {
 	}
 }
 
-func Initialize(db_name string) {
-	file, err := os.Create(db_name)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	file.Close()
-	log.Printf("%s created\n", db_name)
-}
-
-func checkIfDeviceExists(address string, db_path string) bool {
-	db, err := sql.Open("sqlite3", db_path)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
+func checkIfDeviceExists(address string, db *sql.DB) bool {
 	rows, _ := db.Query(checkIfDeviceExistsQuery, address)
 	var result bool
 	for rows.Next() {

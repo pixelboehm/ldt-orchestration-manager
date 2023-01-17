@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"log"
 	"os"
 	"testing"
 
@@ -18,76 +17,70 @@ var sample = &Device{
 	Twin:       "general",
 	Version:    "0.0.1"}
 
-var test_db = &DB{
-	Path: "./test_db.db",
-}
+var sqlite_db string = "./test_db.db"
+var db *sql.DB
 
 func TestMain(m *testing.M) {
-	Initialize(test_db.Path)
-	test_db.CreateTable()
+	db = SetupSQLiteDB(sqlite_db)
+	defer os.Remove(sqlite_db)
+
+	// db = SetupPostgresDB("postgres", "foobar", "postgres")
+
+	defer db.Close()
+
 	code := m.Run()
 	clearTable()
 	os.Exit(code)
 }
 
 func clearTable() {
-	os.Remove(test_db.Path)
+	db.Exec("ALTER SEQUENCE devices_id_seq RESTART WITH 1")
+	db.Exec("DELETE FROM devices")
 }
 
 func Test_createDevice(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
-	err = sample.CreateDevice(sql_db)
+
+	err := sample.CreateDevice(db)
 	assert.NoError(err)
+	assert.True(true)
 }
 
 func Test_createAlreadyExistingDevice(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
-	_ = sample.CreateDevice(sql_db)
-	err = sample.CreateDevice(sql_db)
+
+	_ = sample.CreateDevice(db)
+	err := sample.CreateDevice(db)
 	assert.Error(err)
 }
 
 func Test_UpdateExistingDevice(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
+
+	_ = sample.CreateDevice(db)
+
 	sample.Name = "Foo Updated"
-	err = sample.UpdateDevice(sql_db)
+	err := sample.UpdateDevice(db)
 	assert.NoError(err)
 }
 
 func Test_DeleteDevice(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
-	err = sample.DeleteDevice(sql_db)
+
+	_ = sample.CreateDevice(db)
+	err := sample.DeleteDevice(db)
 	assert.NoError(err)
 }
 
 func Test_GetDevice(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
-	sample.CreateDevice(sql_db)
+
+	sample.CreateDevice(db)
 	var test_device = &Device{
 		ID:         1,
 		Name:       "",
@@ -96,7 +89,7 @@ func Test_GetDevice(t *testing.T) {
 		Version:    "",
 	}
 
-	test_device.GetDevice(sql_db)
+	test_device.GetDevice(db)
 	assert.Equal("Foo Updated", test_device.Name)
 	assert.Equal("00:11:22:33:44", test_device.MacAddress)
 	assert.Equal("general", test_device.Twin)
@@ -116,24 +109,16 @@ func Test_matchingMacAddressSucceeds(t *testing.T) {
 }
 
 func Test_CheckIfDeviceExists(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
-	_ = sample.CreateDevice(sql_db)
-	res := checkIfDeviceExists("00:11:22:33:44", test_db.Path)
+	_ = sample.CreateDevice(db)
+	res := checkIfDeviceExists("00:11:22:33:44", db)
 	assert.True(res)
 }
 
 func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
 
 	var device1 = &Device{
 		Name:       "Foo",
@@ -148,18 +133,14 @@ func Test_EnsureMacAddressKeyIsUnique(t *testing.T) {
 		Version:    "0.0.1",
 	}
 
-	_ = device1.CreateDevice(sql_db)
-	err = device2.CreateDevice(sql_db)
+	_ = device1.CreateDevice(db)
+	err := device2.CreateDevice(db)
 	assert.Error(err)
 }
 
 func Test_GetDevices(t *testing.T) {
+	clearTable()
 	assert := assert.New(t)
-	sql_db, err := sql.Open("sqlite3", test_db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
 
 	var device1 = &Device{
 		Name:       "Foo",
@@ -174,10 +155,10 @@ func Test_GetDevices(t *testing.T) {
 		Version:    "0.0.1",
 	}
 
-	_ = device1.CreateDevice(sql_db)
-	_ = device2.CreateDevice(sql_db)
+	_ = device1.CreateDevice(db)
+	_ = device2.CreateDevice(db)
 
-	devices, err := getDevices(sql_db)
+	devices, err := getDevices(db)
 	assert.NoError(err)
 
 	var containsDevice1 bool = false

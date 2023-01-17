@@ -18,26 +18,27 @@ import (
 )
 
 var rest API
-var db *DB
+var sqlite_db string = "./test_db.db"
+var db *sql.DB
 
 func TestMain(m *testing.M) {
-	db_location := "./test_db.db"
-	db = &DB{Path: db_location}
-	db.CreateTable()
-	sql_db, err := sql.Open("sqlite3", db.Path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer sql_db.Close()
+	db = SetupSQLiteDB(sqlite_db)
+	defer os.Remove(sqlite_db)
 
-	rest = NewRestInterface(sql_db)
+	// db = SetupPostgresDB("postgres", "foobar", "postgres")
+
+	defer db.Close()
+
+	rest = NewRestInterface(db)
 	rest.initialize()
+
 	code := m.Run()
-	os.Remove(db_location)
+	clearTable()
 	os.Exit(code)
 }
 
 func clearTable() {
+	rest.GetDB().Exec("ALTER SEQUENCE devices_id_seq RESTART WITH 1")
 	rest.GetDB().Exec("DELETE FROM devices")
 }
 

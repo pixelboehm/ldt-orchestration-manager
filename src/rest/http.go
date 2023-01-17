@@ -21,6 +21,9 @@ type API interface {
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	GetDB() *sql.DB
 	GetRouter() *mux.Router
+	SetDB(db *sql.DB)
+	SetRouter(router *mux.Router)
+	CloseDB(db *sql.DB)
 	initialize()
 }
 
@@ -150,6 +153,10 @@ func (rest *RESTInterface) SetDB(db *sql.DB) {
 
 func (rest *RESTInterface) SetRouter(router *mux.Router) {
 	rest.router = router
+}
+
+func (rest *RESTInterface) CloseDB(db *sql.DB) {
+	rest.db.Close()
 }
 
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
