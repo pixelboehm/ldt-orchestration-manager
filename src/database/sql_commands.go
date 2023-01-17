@@ -10,6 +10,15 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS devices
 	CONSTRAINT devices_pkey PRIMARY KEY (id)
 )`
 
+const tableCreationQuerySQLite = `CREATE TABLE IF NOT EXISTS devices
+(
+	id INTEGER PRIMARY KEY, 
+	name VARCHAR(64), 
+	macAddress VARCHAR(17) UNIQUE, 
+	twin VARCHAR(64), 
+	version VARCHAR(6)
+)`
+
 const insertDeviceQuery = `INSERT INTO devices
 (
 	name, 
@@ -18,7 +27,7 @@ const insertDeviceQuery = `INSERT INTO devices
 	version
 ) VALUES ($1, $2, $3, $4)`
 
-const updateDeviceQuery = `UPDATE devices SET 
+const updateDeviceQuery = `UPDATE devices SET
 	name=$1, 
 	macAddress=$2,
 	twin=$3, 
