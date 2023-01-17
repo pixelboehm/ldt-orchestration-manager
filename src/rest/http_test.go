@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,21 +18,27 @@ import (
 )
 
 var rest API
+var sqlite_db string = "./test_db.db"
+var db *sql.DB
 
 func TestMain(m *testing.M) {
-	db_location := "./test_db.db"
-	// db := SetupSQLiteDB(db_location, table_name)
-	db := SetupPostgresDB("postgres", "foobar", "postgres")
+	// db = SetupSQLiteDB(sqlite_db)
+	// defer os.Remove(sqlite_db)
+
+	db = SetupPostgresDB("postgres", "foobar", "postgres")
+
+	defer db.Close()
 
 	rest = NewRestInterface(db)
 	rest.initialize()
 
 	code := m.Run()
-	os.Remove(db_location)
+	clearTable()
 	os.Exit(code)
 }
 
 func clearTable() {
+	rest.GetDB().Exec("ALTER SEQUENCE devices_id_seq RESTART WITH 1")
 	rest.GetDB().Exec("DELETE FROM devices")
 }
 
