@@ -98,16 +98,8 @@ func getDevices(db *sql.DB) ([]Device, error) {
 	return devices, nil
 }
 
-func (dbptr *DB) CreateTable() {
-	db, err := sql.Open("sqlite3", dbptr.Path)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
-	statement, err := db.Prepare(tableCreationQuery)
+func CreateTable(db *sql.DB, query string) {
+	statement, err := db.Prepare(query)
 
 	if err != nil {
 		log.Fatal(err)
@@ -117,24 +109,7 @@ func (dbptr *DB) CreateTable() {
 	}
 }
 
-func Initialize(db_name string) {
-	file, err := os.Create(db_name)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	file.Close()
-	log.Printf("%s created\n", db_name)
-}
-
-func checkIfDeviceExists(address string, db_path string) bool {
-	db, err := sql.Open("sqlite3", db_path)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-
+func checkIfDeviceExists(address string, db *sql.DB) bool {
 	rows, _ := db.Query(checkIfDeviceExistsQuery, address)
 	var result bool
 	for rows.Next() {
