@@ -152,6 +152,10 @@ func (rest *RESTInterface) SetRouter(router *mux.Router) {
 	rest.router = router
 }
 
+func (rest *RESTInterface) CloseDB(db *sql.DB) {
+	rest.db.Close()
+}
+
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
