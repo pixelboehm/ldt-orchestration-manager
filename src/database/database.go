@@ -21,19 +21,28 @@ type database interface {
 	getDevice()
 }
 
-type DB struct {
-	Path string
-}
-
-func Run(db *DB) *sql.DB {
-	Initialize(db.Path)
-	sqliteDatabase, err := sql.Open("sqlite3", db.Path)
+func SetupSQLiteDB(db_name string) *sql.DB {
+	file, err := os.Create(db_name)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	db.CreateTable()
-	// defer sqliteDatabase.Close()
-	return sqliteDatabase
+	file.Close()
+	db, err := sql.Open("sqlite3", db_name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CreateTable(db, tableCreationQuerySQLite)
+	return db
+}
+
+func SetupPostgresDB(user string, password string, db_name string) *sql.DB {
+	connection := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, db_name)
+	db, err := sql.Open("postgres", connection)
+	if err != nil {
+		log.Fatal(err)
+	}
+	CreateTable(db, tableCreationQuery)
+	return db
 }
 
 func (d *Device) GetDevice(db *sql.DB) error {
