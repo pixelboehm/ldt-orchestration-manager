@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -17,7 +18,6 @@ type database interface {
 	UpdateDevice()
 	RemoveDevice()
 	PrintTable()
-	Initialize()
 	getDevice()
 }
 
