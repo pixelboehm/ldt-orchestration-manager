@@ -21,6 +21,9 @@ type API interface {
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	GetDB() *sql.DB
 	GetRouter() *mux.Router
+	SetDB(db *sql.DB)
+	SetRouter(router *mux.Router)
+	CloseDB(db *sql.DB)
 	initialize()
 }
 
