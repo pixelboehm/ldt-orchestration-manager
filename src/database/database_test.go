@@ -21,10 +21,10 @@ var sqlite_db string = "./test_db.db"
 var db *sql.DB
 
 func TestMain(m *testing.M) {
-	db = SetupSQLiteDB(sqlite_db)
-	defer os.Remove(sqlite_db)
+	// db = SetupSQLiteDB(sqlite_db)
+	// defer os.Remove(sqlite_db)
 
-	// db = SetupPostgresDB("postgres", "foobar", "postgres")
+	db = SetupPostgresDB("postgres", "foobar", "postgres")
 
 	defer db.Close()
 
