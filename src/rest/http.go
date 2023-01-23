@@ -13,7 +13,7 @@ import (
 )
 
 type API interface {
-	Run()
+	Run(port int)
 	GetDevices(w http.ResponseWriter, r *http.Request)
 	GetDevice(w http.ResponseWriter, r *http.Request)
 	CreateDevice(w http.ResponseWriter, r *http.Request)
@@ -39,10 +39,11 @@ func NewRestInterface(db *sql.DB) *RESTInterface {
 	}
 }
 
-func (rest *RESTInterface) Run() {
+func (rest *RESTInterface) Run(port int) {
 	rest.initialize()
-	fmt.Println("HTTP serve at 8000")
-	log.Fatal(http.ListenAndServe(":8000", rest.router))
+	fmt.Printf("HTTP serve at %d\n", port)
+	addr := fmt.Sprintf(":%d", port)
+	log.Fatal(http.ListenAndServe(addr, rest.router))
 }
 
 func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {

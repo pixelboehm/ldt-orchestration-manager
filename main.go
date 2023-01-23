@@ -16,5 +16,9 @@ func main() {
 
 	var rest API
 	rest = NewRestInterface(db)
-	rest.Run()
+	go rest.Run(8000)
+
+	var rest2 API
+	rest2 = NewRestInterface(db)
+	rest2.Run(8001)
 }
