@@ -27,7 +27,9 @@ The Makefile provides a `init` command, that initializes the project, if that is
 
 ## Testing
 
-The `Makefile` provides several helpful commands for testing, short testing, verbose testing, and also providing a coverage report located in the `out` directory.
+The `Makefile` provides several helpful commands for testing and coverage. _short_ and _verbose_ flags for the test command can be set via the CLI flags `TEST_VERBOSE` and `TEST_SHORT`. 
+The Coverage report can be generated via `make cover` and is located in the `out` directory.
+Testing and coverage will always be executed regardless of caching.
 
 ## Building
 
