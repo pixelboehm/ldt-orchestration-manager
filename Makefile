@@ -1,5 +1,7 @@
+PROJECT_NAME:=longevity
+
 build:
-	go build -o out/main main.go
+	go build -o out/$(PROJECT_NAME) main.go
 
 run:
 	go run main.go
@@ -27,7 +29,7 @@ cover:
 	coverage
 
 init:
-	go mod init longevity
+	go mod init $(PROJECT_NAME)
 
 setup: 
 	go mod vendor
