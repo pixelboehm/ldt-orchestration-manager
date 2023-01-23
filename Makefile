@@ -13,9 +13,11 @@ test:
 		$(if $(TEST_SHORT),--short) \
 		./...
 
+.PHONY: test-c
 test-c:
 	go test ./... -coverprofile=out/coverage.html
 
+.PHONY: coverage
 coverage:
 	go tool cover -html=out/coverage.html
 
