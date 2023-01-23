@@ -5,6 +5,9 @@ run:
 	go run main.go
 
 test:
+	go test ./...
+
+test-s:
 	go test ./... --short
 
 test-v:
@@ -19,4 +22,13 @@ coverage:
 clean:
 	go clean --cache
 
-cover: test-c coverage
+cover: 
+	test-c 
+	coverage
+
+init:
+	go mod init longevity
+
+setup: 
+	go mod vendor
+	go mod tidy
