@@ -6,6 +6,7 @@ build:
 run:
 	go run main.go
 
+.PHONY: test
 test:
 	go test ./...
 
@@ -21,6 +22,7 @@ test-c:
 coverage:
 	go tool cover -html=out/coverage.html
 
+.PHONY: clean
 clean:
 	go clean --cache
 
