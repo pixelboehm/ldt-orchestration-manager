@@ -8,13 +8,10 @@ run:
 
 .PHONY: test
 test:
-	go test ./...
-
-test-s:
-	go test ./... --short
-
-test-v:
-	go test ./... -v --short
+	go test \
+		$(if $(TEST_VERBOSE),-v) \
+		$(if $(TEST_SHORT),--short) \
+		./...
 
 test-c:
 	go test ./... -coverprofile=out/coverage.html
