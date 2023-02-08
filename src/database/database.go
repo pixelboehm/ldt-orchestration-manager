@@ -105,7 +105,7 @@ func CreateTable(db *sql.DB, query string) {
 		log.Fatal(err)
 	} else {
 		statement.Exec()
-		fmt.Println("Created Table devices")
+		log.Println("Created Table devices")
 	}
 }
 

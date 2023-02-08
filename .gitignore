@@ -210,3 +210,5 @@ vendor/
 Godeps/
 *.db
 out
+**/*.crt
+**/*.key

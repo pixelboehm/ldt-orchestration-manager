@@ -20,5 +20,5 @@ func main() {
 
 	var rest2 API
 	rest2 = NewRestInterface(db)
-	rest2.Run(8001)
+	rest2.RunWithHTTPS(443)
 }
