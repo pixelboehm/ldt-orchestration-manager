@@ -18,7 +18,7 @@ type database interface {
 	UpdateDevice()
 	RemoveDevice()
 	PrintTable()
-	getDevice()
+	Device()
 }
 
 func SetupSQLiteDB(db_name string) *sql.DB {
@@ -45,7 +45,7 @@ func SetupPostgresDB(user string, password string, db_name string) *sql.DB {
 	return db
 }
 
-func (d *Device) GetDevice(db *sql.DB) error {
+func (d *Device) Device(db *sql.DB) error {
 	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
@@ -65,9 +65,7 @@ func (d *Device) DeleteDevice(db *sql.DB) error {
 
 func (d *Device) CreateDevice(db *sql.DB) error {
 	statement, _ := db.Prepare(insertDeviceQuery)
-	_, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version)
-
-	if err != nil {
+	if _, err := statement.Exec(d.Name, d.MacAddress, d.Twin, d.Version); err != nil {
 		log.Println("Device with macAddress already exists")
 		return err
 	}
@@ -75,7 +73,7 @@ func (d *Device) CreateDevice(db *sql.DB) error {
 	return nil
 }
 
-func getDevices(db *sql.DB) ([]Device, error) {
+func Devices(db *sql.DB) ([]Device, error) {
 	rows, err := db.Query("SELECT name, macAddress, twin, version FROM devices")
 
 	if err != nil {
@@ -88,8 +86,7 @@ func getDevices(db *sql.DB) ([]Device, error) {
 
 	for rows.Next() {
 		var d Device
-		err := rows.Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
-		if err != nil {
+		if err := rows.Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version); err != nil {
 			return nil, err
 		}
 		devices = append(devices, d)
