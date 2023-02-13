@@ -15,16 +15,16 @@ import (
 type API interface {
 	Run(port int)
 	RunWithHTTPS(port int)
-	GetDevices(w http.ResponseWriter, r *http.Request)
-	GetDevice(w http.ResponseWriter, r *http.Request)
+	Devices(w http.ResponseWriter, r *http.Request)
+	Device(w http.ResponseWriter, r *http.Request)
 	CreateDevice(w http.ResponseWriter, r *http.Request)
 	UpdateDevice(w http.ResponseWriter, r *http.Request)
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
-	GetDB() *sql.DB
-	GetRouter() *mux.Router
-	SetDB(db *sql.DB)
+	Database() *sql.DB
+	Router() *mux.Router
+	SetDatabase(db *sql.DB)
 	SetRouter(router *mux.Router)
-	CloseDB(db *sql.DB)
+	CloseDatabase(db *sql.DB)
 	initialize()
 }
 
@@ -55,12 +55,12 @@ func (rest *RESTInterface) RunWithHTTPS(port int) {
 	log.Fatal(err)
 }
 
-func (rest *RESTInterface) GetDevices(w http.ResponseWriter, r *http.Request) {
+func (rest *RESTInterface) Devices(w http.ResponseWriter, r *http.Request) {
 	result := []string{}
 	respondWithJSON(w, http.StatusOK, result)
 }
 
-func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
+func (rest *RESTInterface) Device(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -69,7 +69,7 @@ func (rest *RESTInterface) GetDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := Device{ID: id}
-	err = p.GetDevice(rest.db)
+	err = p.Device(rest.db)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -149,15 +149,15 @@ func (rest *RESTInterface) DeleteDevice(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
-func (rest *RESTInterface) GetDB() *sql.DB {
+func (rest *RESTInterface) Database() *sql.DB {
 	return rest.db
 }
 
-func (rest *RESTInterface) GetRouter() *mux.Router {
+func (rest *RESTInterface) Router() *mux.Router {
 	return rest.router
 }
 
-func (rest *RESTInterface) SetDB(db *sql.DB) {
+func (rest *RESTInterface) SetDatabase(db *sql.DB) {
 	rest.db = db
 }
 
@@ -165,7 +165,7 @@ func (rest *RESTInterface) SetRouter(router *mux.Router) {
 	rest.router = router
 }
 
-func (rest *RESTInterface) CloseDB(db *sql.DB) {
+func (rest *RESTInterface) CloseDatabase(db *sql.DB) {
 	rest.db.Close()
 }
 
@@ -181,8 +181,8 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 }
 
 func (rest *RESTInterface) initialize() {
-	rest.router.HandleFunc("/devices", rest.GetDevices).Methods("GET")
-	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.GetDevice).Methods("GET")
+	rest.router.HandleFunc("/devices", rest.Devices).Methods("GET")
+	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.Device).Methods("GET")
 	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
 	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice).Methods("DELETE")
 	rest.router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
