@@ -89,7 +89,7 @@ func Test_GetDevice(t *testing.T) {
 		Version:    "",
 	}
 
-	test_device.GetDevice(db)
+	test_device.Device(db)
 	assert.Equal("Foo Updated", test_device.Name)
 	assert.Equal("00:11:22:33:44", test_device.MacAddress)
 	assert.Equal("general", test_device.Twin)
@@ -158,7 +158,7 @@ func Test_GetDevices(t *testing.T) {
 	_ = device1.CreateDevice(db)
 	_ = device2.CreateDevice(db)
 
-	devices, err := getDevices(db)
+	devices, err := Devices(db)
 	assert.NoError(err)
 
 	var containsDevice1 bool = false

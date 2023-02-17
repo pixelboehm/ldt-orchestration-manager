@@ -38,8 +38,8 @@ func TestMain(m *testing.M) {
 }
 
 func clearTable() {
-	rest.GetDB().Exec("ALTER SEQUENCE devices_id_seq RESTART WITH 1")
-	rest.GetDB().Exec("DELETE FROM devices")
+	rest.Database().Exec("ALTER SEQUENCE devices_id_seq RESTART WITH 1")
+	rest.Database().Exec("DELETE FROM devices")
 }
 
 func Test_EmptyTable(t *testing.T) {
@@ -168,7 +168,7 @@ func Test_DeleteDevice(t *testing.T) {
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	rest.GetRouter().ServeHTTP(rr, req)
+	rest.Router().ServeHTTP(rr, req)
 	return rr
 }
 
@@ -185,7 +185,7 @@ func addTestDevices(amount int) error {
 			Twin:       "vs-lite",
 			Version:    "0.0.1",
 		}
-		err := device1.CreateDevice(rest.GetDB())
+		err := device1.CreateDevice(rest.Database())
 		if err != nil {
 			return err
 		}
