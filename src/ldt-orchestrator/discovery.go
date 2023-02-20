@@ -1,8 +1,9 @@
 package ldtorchestrator
 
 import (
-	"fmt"
+	"bufio"
 	"log"
+	"os"
 
 	"github.com/mlafeldt/pkgcloud"
 )
@@ -10,14 +11,15 @@ import (
 var client *pkgcloud.Client
 var err error
 var packageList []pkgcloud.Package
+var repositories []string
 
 func Run() {
 	client, err = setup()
 	client.ShowProgress(true)
-	GetPackagesFromRepo("pixelboehm/longevity-digital-twins")
+	updateRepositories()
 
-	for _, pkg := range packageList {
-		fmt.Println(pkg.Name)
+	for _, repo := range repositories {
+		GetPackagesFromRepo(repo)
 	}
 }
 
@@ -34,8 +36,27 @@ func GetPackagesFromRepo(repo string) {
 	}
 }
 
+func updateRepositories() {
+	file, err := os.Open("src/ldt-orchestrator/repositories.list")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		repositories = append(repositories, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func clearCachedPackages() {
 	packageList = nil
+}
+
+func clearCachedRepositories() {
+	repositories = nil
 }
 
 func setup() (*pkgcloud.Client, error) {
