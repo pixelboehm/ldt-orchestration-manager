@@ -5,42 +5,44 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"sync"
 
 	"github.com/mlafeldt/pkgcloud"
 )
 
-var client *pkgcloud.Client
-var err error
 var packageList []pkgcloud.Package
 var repositories []string
 
 func Run(distro string) {
-	client, err = setup()
-	client.ShowProgress(true)
 	updateRepositories()
 
+	c := make(chan *pkgcloud.Package, 100)
+	wg := sync.WaitGroup{}
 	for _, repo := range repositories {
-		GetPackagesFromRepo(repo, distro)
+		wg.Add(1)
+		go GetPackagesFromRepo(repo, distro, c, &wg)
+	}
+	wg.Wait()
+	close(c)
+
+	for pkg := range c {
+		packageList = append(packageList, *pkg)
 	}
 	fmt.Printf("Found %d packages\n", len(packageList))
 }
 
-func GetPackagesFromRepo(repo, distro string) {
-	if client == nil {
-		log.Fatal("Client is not initialized")
-	}
+func GetPackagesFromRepo(repo, distro string, c chan *pkgcloud.Package, wg *sync.WaitGroup) {
+	client, _ := setup()
+	client.ShowProgress(true)
+
 	packages, err := client.All(repo)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, pkg := range packages {
-		if distro == "all" {
-			packageList = append(packageList, pkg)
-		} else if strings.Contains(pkg.DistroVersion, distro) {
-			packageList = append(packageList, pkg)
-		}
+		c <- &pkg
 	}
+	wg.Done()
 }
 
 func updateRepositories() {
