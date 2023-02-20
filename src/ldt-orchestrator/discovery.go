@@ -2,8 +2,10 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/mlafeldt/pkgcloud"
 )
@@ -13,17 +15,18 @@ var err error
 var packageList []pkgcloud.Package
 var repositories []string
 
-func Run() {
+func Run(distro string) {
 	client, err = setup()
 	client.ShowProgress(true)
 	updateRepositories()
 
 	for _, repo := range repositories {
-		GetPackagesFromRepo(repo)
+		GetPackagesFromRepo(repo, distro)
 	}
+	fmt.Printf("Found %d packages\n", len(packageList))
 }
 
-func GetPackagesFromRepo(repo string) {
+func GetPackagesFromRepo(repo, distro string) {
 	if client == nil {
 		log.Fatal("Client is not initialized")
 	}
@@ -32,7 +35,11 @@ func GetPackagesFromRepo(repo string) {
 		log.Fatal(err)
 	}
 	for _, pkg := range packages {
-		packageList = append(packageList, pkg)
+		if distro == "all" {
+			packageList = append(packageList, pkg)
+		} else if strings.Contains(pkg.DistroVersion, distro) {
+			packageList = append(packageList, pkg)
+		}
 	}
 }
 
