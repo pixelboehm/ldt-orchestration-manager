@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/mlafeldt/pkgcloud"
@@ -32,8 +33,13 @@ func GetPackagesFromRepo(repo, distro string, wg *sync.WaitGroup) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, pkg := range packages {
-		packageList = append(packageList, pkg)
+		if distro == "all" {
+			packageList = append(packageList, pkg)
+		} else if strings.Contains(pkg.DistroVersion, distro) {
+			packageList = append(packageList, pkg)
+		}
 	}
 	wg.Done()
 }
