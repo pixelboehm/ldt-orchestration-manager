@@ -2,7 +2,6 @@ package ldtorchestrator
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -16,22 +15,16 @@ var repositories []string
 func Run(distro string) {
 	updateRepositories()
 
-	c := make(chan *pkgcloud.Package, 100)
 	wg := sync.WaitGroup{}
 	for _, repo := range repositories {
 		wg.Add(1)
-		go GetPackagesFromRepo(repo, distro, c, &wg)
+		go GetPackagesFromRepo(repo, distro, &wg)
 	}
 	wg.Wait()
-	close(c)
-
-	for pkg := range c {
-		packageList = append(packageList, *pkg)
-	}
-	fmt.Printf("Found %d packages\n", len(packageList))
+	log.Printf("Found %d packages\n", len(packageList))
 }
 
-func GetPackagesFromRepo(repo, distro string, c chan *pkgcloud.Package, wg *sync.WaitGroup) {
+func GetPackagesFromRepo(repo, distro string, wg *sync.WaitGroup) {
 	client, _ := setup()
 	client.ShowProgress(true)
 
@@ -40,7 +33,7 @@ func GetPackagesFromRepo(repo, distro string, c chan *pkgcloud.Package, wg *sync
 		log.Fatal(err)
 	}
 	for _, pkg := range packages {
-		c <- &pkg
+		packageList = append(packageList, pkg)
 	}
 	wg.Done()
 }
