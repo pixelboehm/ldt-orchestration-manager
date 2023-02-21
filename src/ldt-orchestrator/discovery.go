@@ -2,9 +2,9 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/mlafeldt/pkgcloud"
@@ -13,33 +13,32 @@ import (
 var packageList []pkgcloud.Package
 var repositories []string
 
-func Run(distro string) {
+func Run(name, pkg_type, dist string) {
 	updateRepositories()
 
 	wg := sync.WaitGroup{}
 	for _, repo := range repositories {
 		wg.Add(1)
-		go GetPackagesFromRepo(repo, distro, &wg)
+		go GetPackagesFromRepo(repo, name, pkg_type, dist, &wg)
 	}
 	wg.Wait()
 	log.Printf("Found %d packages\n", len(packageList))
+	for _, pkg := range packageList {
+		fmt.Println(pkg.PackageHtmlUrl)
+	}
 }
 
-func GetPackagesFromRepo(repo, distro string, wg *sync.WaitGroup) {
+func GetPackagesFromRepo(repo, name, pkg_type, dist string, wg *sync.WaitGroup) {
 	client, _ := setup()
 	client.ShowProgress(true)
 
-	packages, err := client.All(repo)
+	packages, err := client.Search(repo, name, pkg_type, dist, 0)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, pkg := range packages {
-		if distro == "all" {
-			packageList = append(packageList, pkg)
-		} else if strings.Contains(pkg.DistroVersion, distro) {
-			packageList = append(packageList, pkg)
-		}
+		packageList = append(packageList, pkg)
 	}
 	wg.Done()
 }
