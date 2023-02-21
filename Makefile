@@ -33,5 +33,5 @@ init:
 	go mod init $(PROJECT_NAME)
 
 setup: 
-	go mod vendor
 	go mod tidy
+	go mod vendor
