@@ -20,6 +20,5 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
