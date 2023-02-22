@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/cavaliergopher/grab/v3"
 )
@@ -30,4 +31,14 @@ func DownloadPackage(url string) (string, error) {
 		log.Fatal(err)
 	}
 	return resp.Filename, nil
+}
+
+func StartPackageDetached(pkg string) {
+	cmd := exec.Command("./" + pkg)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	cmd.Start()
+
+	fmt.Printf("Started child process with PID %d\n", cmd.Process.Pid)
 }
