@@ -2,7 +2,6 @@ package ldtorchestrator
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -23,9 +22,6 @@ func Run(name, pkg_type, dist string) {
 	}
 	wg.Wait()
 	log.Printf("Found %d packages\n", len(packageList))
-	for _, pkg := range packageList {
-		fmt.Println(pkg.PackageHtmlUrl)
-	}
 }
 
 func GetPackagesFromRepo(repo, name, pkg_type, dist string, wg *sync.WaitGroup) {
