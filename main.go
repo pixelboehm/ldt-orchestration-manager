@@ -10,10 +10,8 @@ import (
 
 func main() {
 	defer timer()()
-	name := ""
-	pkg_type := ""
-	dist := ""
-	lo.Run(name, pkg_type, dist)
+	var name, pkg_type, dist string
+	lo.GetPackages(name, pkg_type, dist)
 	pkg, err := lo.DownloadPackage("http://localhost:8081/getPackage")
 	if err != nil {
 		log.Fatal(err)
