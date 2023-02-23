@@ -2,35 +2,37 @@ package ldtorchestrator
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
-
-	"github.com/cavaliergopher/grab/v3"
 )
 
 func DownloadPackage(url string) (string, error) {
-	// create client
-	client := grab.NewClient()
-	req, _ := grab.NewRequest(".", url)
+	file, err := os.Create("./resources/child_webserver")
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
 
-	// start download
-	log.Printf("Downloading %v...\n", req.URL())
-	resp := client.Do(req)
-	log.Printf("  %v\n", resp.HTTPResponse.Status)
+	response, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
 
-	// check for errors
-	if err := resp.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "Download failed: %v\n", err)
-		return resp.Filename, err
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		return "", err
 	}
 
-	fmt.Printf("Download saved to ./%v \n", resp.Filename)
-
-	if err := os.Chmod(resp.Filename, 0777); err != nil {
-		log.Fatal(err)
+	if err := os.Chmod(file.Name(), 0755); err != nil {
+		log.Fatalf("Could not set executable flag: %v", err)
 	}
-	return resp.Filename, nil
+
+	log.Printf("Downloaded LDT: %s\n", file.Name())
+	return file.Name(), nil
 }
 
 func StartPackageDetached(pkg string) {
