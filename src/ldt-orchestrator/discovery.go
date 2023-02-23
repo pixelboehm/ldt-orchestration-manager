@@ -9,22 +9,20 @@ import (
 	"github.com/mlafeldt/pkgcloud"
 )
 
-var packageList []pkgcloud.Package
-var repositories []string
-
-func Run(name, pkg_type, dist string) {
-	updateRepositories()
+func GetPackages(name, pkg_type, dist string) {
+	var packageList []pkgcloud.Package
+	repositories := updateRepositories()
 
 	wg := sync.WaitGroup{}
 	for _, repo := range repositories {
 		wg.Add(1)
-		go GetPackagesFromRepo(repo, name, pkg_type, dist, &wg)
+		go FetchPackageProperties(repo, name, pkg_type, dist, &packageList, &wg)
 	}
 	wg.Wait()
 	log.Printf("Found %d packages\n", len(packageList))
 }
 
-func GetPackagesFromRepo(repo, name, pkg_type, dist string, wg *sync.WaitGroup) {
+func FetchPackageProperties(repo, name, pkg_type, dist string, packageList *[]pkgcloud.Package, wg *sync.WaitGroup) {
 	client, _ := setup()
 	client.ShowProgress(true)
 
@@ -34,12 +32,13 @@ func GetPackagesFromRepo(repo, name, pkg_type, dist string, wg *sync.WaitGroup) 
 	}
 
 	for _, pkg := range packages {
-		packageList = append(packageList, pkg)
+		*packageList = append(*packageList, pkg)
 	}
 	wg.Done()
 }
 
-func updateRepositories() {
+func updateRepositories() []string {
+	var repositories []string
 	file, err := os.Open("src/ldt-orchestrator/repositories.list")
 	if err != nil {
 		log.Fatal(err)
@@ -52,14 +51,15 @@ func updateRepositories() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	return repositories
 }
 
-func clearCachedPackages() {
-	packageList = nil
+func clearCachedPackages(packageList *[]pkgcloud.Package) {
+	*packageList = nil
 }
 
-func clearCachedRepositories() {
-	repositories = nil
+func clearCachedRepositories(repositories *[]string) {
+	*repositories = nil
 }
 
 func setup() (*pkgcloud.Client, error) {
