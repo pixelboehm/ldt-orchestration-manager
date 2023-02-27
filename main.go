@@ -1,24 +1,42 @@
 package main
 
 import (
-	. "longevity/src/database"
-	. "longevity/src/rest"
+	"fmt"
+	"log"
+	lo "longevity/src/ldt-orchestrator"
+	"runtime"
+	"time"
 )
 
 func main() {
-	db := SetupPostgresDB("postgres", "foobar", "postgres")
-	// db := SetupSQLiteDB("longevity.db", "longevity")
+	defer timer()()
+	var name, pkg_type, dist string
+	lo.GetPackages(name, pkg_type, dist)
+	pkg, err := lo.DownloadPackage("http://localhost:8081/getPackage")
+	if err != nil {
+		log.Fatal(err)
+	}
+	lo.StartPackageDetached(pkg)
+}
 
-	defer db.Close()
+func timer() func() {
+	name := callerName(1)
+	start := time.Now()
+	return func() {
+		fmt.Printf("%s took %v\n", name, time.Since(start))
+	}
+}
 
-	sample := NewDevice("anker", "01:23:45:67:89", "es-lite", "0.0.1")
-	sample.CreateDevice(db)
-
-	var rest API
-	rest = NewRestInterface(db)
-	go rest.Run(8000)
-
-	var rest2 API
-	rest2 = NewRestInterface(db)
-	rest2.RunWithHTTPS(443)
+func callerName(skip int) string {
+	const unknown = "unknown"
+	pcs := make([]uintptr, 1)
+	n := runtime.Callers(skip+2, pcs)
+	if n < 1 {
+		return unknown
+	}
+	frame, _ := runtime.CallersFrames(pcs).Next()
+	if frame.Function == "" {
+		return unknown
+	}
+	return frame.Function
 }
