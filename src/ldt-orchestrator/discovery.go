@@ -9,20 +9,28 @@ import (
 	"github.com/mlafeldt/pkgcloud"
 )
 
+type PackageList struct {
+	packages []pkgcloud.Package
+	lock     sync.Mutex
+}
+
 func GetPackages(name, pkg_type, dist string) {
-	var packageList []pkgcloud.Package
+	packageList := &PackageList{
+		packages: nil,
+		lock:     sync.Mutex{},
+	}
 	repositories := updateRepositories()
 
 	wg := sync.WaitGroup{}
 	for _, repo := range repositories {
 		wg.Add(1)
-		go FetchPackageProperties(repo, name, pkg_type, dist, &packageList, &wg)
+		go FetchPackageProperties(repo, name, pkg_type, dist, packageList, &wg)
 	}
 	wg.Wait()
-	log.Printf("Found %d packages\n", len(packageList))
+	log.Printf("Found %d packages\n", len(packageList.packages))
 }
 
-func FetchPackageProperties(repo, name, pkg_type, dist string, packageList *[]pkgcloud.Package, wg *sync.WaitGroup) {
+func FetchPackageProperties(repo, name, pkg_type, dist string, packageList *PackageList, wg *sync.WaitGroup) {
 	client, _ := setup()
 	client.ShowProgress(true)
 
@@ -32,7 +40,9 @@ func FetchPackageProperties(repo, name, pkg_type, dist string, packageList *[]pk
 	}
 
 	for _, pkg := range packages {
-		*packageList = append(*packageList, pkg)
+		packageList.lock.Lock()
+		packageList.packages = append(packageList.packages, pkg)
+		packageList.lock.Unlock()
 	}
 	wg.Done()
 }
@@ -54,8 +64,8 @@ func updateRepositories() []string {
 	return repositories
 }
 
-func clearCachedPackages(packageList *[]pkgcloud.Package) {
-	*packageList = nil
+func clearCachedPackages(packageList *PackageList) {
+	packageList.packages = nil
 }
 
 func clearCachedRepositories(repositories *[]string) {
