@@ -213,3 +213,6 @@ Godeps/
 out
 **/*.crt
 **/*.key
+resources/
+*.pdf
+*.deb
