@@ -7,9 +7,20 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 )
 
-func DownloadPackage(url string) (string, error) {
+type Process struct {
+	Pid     int
+	Name    string
+	started time.Time
+}
+
+type ProcessList []Process
+
+var runningProcesses ProcessList
+
+func DownloadLDT(url string) (string, error) {
 	file, err := os.Create("./resources/child_webserver")
 	if err != nil {
 		return "", err
@@ -35,12 +46,38 @@ func DownloadPackage(url string) (string, error) {
 	return file.Name(), nil
 }
 
-func StartPackageDetached(pkg string) {
-	cmd := exec.Command("./" + pkg)
+func StartLDT(name string) ProcessList {
+	cmd := exec.Command("./" + name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-	cmd.Start()
 
-	fmt.Printf("Started child process with PID %d\n", cmd.Process.Pid)
+	if err := cmd.Start(); err != nil {
+		log.Fatal("Could not start LDT\n")
+	}
+
+	fmt.Printf("Started LDT with PID %d\n", cmd.Process.Pid)
+	runningProcesses = append(runningProcesses, Process{
+		Pid:     cmd.Process.Pid,
+		Name:    name,
+		started: time.Now(),
+	})
+	return runningProcesses
+}
+
+func StopLDT(pid int, graceful bool) {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	if graceful == true {
+		err = proc.Signal(os.Interrupt)
+	} else {
+		err = proc.Kill()
+	}
+
+	if err != nil {
+		log.Fatalf("Unable to stop LDT \t graceful? %t", graceful)
+	}
 }

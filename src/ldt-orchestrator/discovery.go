@@ -14,7 +14,7 @@ type PackageList struct {
 	lock     sync.Mutex
 }
 
-func GetPackages(name, pkg_type, dist string) {
+func GetLDTs(name, pkg_type, dist string) {
 	packageList := &PackageList{
 		packages: nil,
 		lock:     sync.Mutex{},

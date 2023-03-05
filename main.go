@@ -4,19 +4,32 @@ import (
 	"fmt"
 	"log"
 	lo "longevity/src/ldt-orchestrator"
+	"os"
 	"runtime"
 	"time"
 )
 
 func main() {
-	defer timer()()
+	switch os.Args[1] {
+	case "run":
+		run()
+	default:
+		panic("Don't know what to do")
+	}
+}
+
+func run() {
 	var name, pkg_type, dist string
-	lo.GetPackages(name, pkg_type, dist)
-	pkg, err := lo.DownloadPackage("http://localhost:8081/getPackage")
+	ticker := time.NewTicker(10 * time.Second)
+
+	lo.GetLDTs(name, pkg_type, dist)
+	ldt, err := lo.DownloadLDT("http://localhost:8081/getPackage")
 	if err != nil {
 		log.Fatal(err)
 	}
-	lo.StartPackageDetached(pkg)
+	processList := lo.StartLDT(ldt)
+	<-ticker.C
+	lo.StopLDT(processList[0].Pid, true)
 }
 
 func timer() func() {
