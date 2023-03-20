@@ -16,11 +16,37 @@ type Process struct {
 	started time.Time
 }
 
+type Manager struct {
+	RunningProcesses ProcessList
+}
+
 type ProcessList []Process
 
-var runningProcesses ProcessList
+func (manager *Manager) Run() {
+	monitor := &Monitor{ldts: make(chan Process)}
+	go monitor.RefreshLDTs()
+	ticker := time.NewTicker(10 * time.Second)
 
-func DownloadLDT(url string) (string, error) {
+	var name, pkg_type, dist string
+	GetLDTs(name, pkg_type, dist)
+	ldt, err := manager.DownloadLDT("http://localhost:8081/getPackage")
+	if err != nil {
+		log.Fatal(err)
+	}
+	process, err := manager.StartLDT(ldt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	manager.RunningProcesses = append(manager.RunningProcesses, *process)
+	monitor.ldts <- *process
+	<-ticker.C
+	if err := manager.StopLDT(process.Pid, true); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Stopped LDT %s with PID %d\n", process.Name, process.Pid)
+}
+
+func (manager *Manager) DownloadLDT(url string) (string, error) {
 	file, err := os.Create("./resources/child_webserver")
 	if err != nil {
 		return "", err
@@ -46,7 +72,7 @@ func DownloadLDT(url string) (string, error) {
 	return file.Name(), nil
 }
 
-func StartLDT(name string) ProcessList {
+func (manager *Manager) StartLDT(name string) (*Process, error) {
 	cmd := exec.Command("./" + name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -54,22 +80,29 @@ func StartLDT(name string) ProcessList {
 
 	if err := cmd.Start(); err != nil {
 		log.Fatal("Could not start LDT\n")
+		return nil, err
 	}
 
 	fmt.Printf("Started LDT with PID %d\n", cmd.Process.Pid)
-	runningProcesses = append(runningProcesses, Process{
+	// runningProcesses = append(runningProcesses, Process{
+	// 	Pid:     cmd.Process.Pid,
+	// 	Name:    name,
+	// 	started: time.Now(),
+	// })
+	// return runningProcesses
+	return &Process{
 		Pid:     cmd.Process.Pid,
 		Name:    name,
 		started: time.Now(),
-	})
-	return runningProcesses
+	}, nil
+
 }
 
-func StopLDT(pid int, graceful bool) {
+func (manager *Manager) StopLDT(pid int, graceful bool) error {
 	proc, err := os.FindProcess(pid)
 	if err != nil {
 		log.Fatal(err)
-		return
+		return err
 	}
 	if graceful == true {
 		err = proc.Signal(os.Interrupt)
@@ -79,5 +112,7 @@ func StopLDT(pid int, graceful bool) {
 
 	if err != nil {
 		log.Fatalf("Unable to stop LDT \t graceful? %t", graceful)
+		return err
 	}
+	return nil
 }
