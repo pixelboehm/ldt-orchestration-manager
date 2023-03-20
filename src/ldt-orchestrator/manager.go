@@ -17,14 +17,11 @@ type Process struct {
 }
 
 type Manager struct {
-	RunningProcesses ProcessList
+	Monitor *Monitor
 }
 
-type ProcessList []Process
-
 func (manager *Manager) Run() {
-	monitor := &Monitor{ldts: make(chan Process)}
-	go monitor.RefreshLDTs()
+	go manager.Monitor.RefreshLDTs()
 	ticker := time.NewTicker(10 * time.Second)
 
 	var name, pkg_type, dist string
@@ -37,8 +34,7 @@ func (manager *Manager) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	manager.RunningProcesses = append(manager.RunningProcesses, *process)
-	monitor.ldts <- *process
+	manager.Monitor.ldts <- *process
 	<-ticker.C
 	if err := manager.StopLDT(process.Pid, true); err != nil {
 		log.Fatal(err)

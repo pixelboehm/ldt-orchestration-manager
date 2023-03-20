@@ -18,7 +18,7 @@ func main() {
 }
 
 func run() {
-	manager := &lo.Manager{RunningProcesses: make([]lo.Process, 0)}
+	manager := &lo.Manager{Monitor: lo.NewMonitor()}
 	manager.Run()
 }
 
