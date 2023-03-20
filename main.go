@@ -2,21 +2,24 @@ package main
 
 import (
 	"fmt"
-	"log"
 	lo "longevity/src/ldt-orchestrator"
+	"os"
 	"runtime"
 	"time"
 )
 
 func main() {
-	defer timer()()
-	var name, pkg_type, dist string
-	lo.GetPackages(name, pkg_type, dist)
-	pkg, err := lo.DownloadPackage("http://localhost:8081/getPackage")
-	if err != nil {
-		log.Fatal(err)
+	switch os.Args[1] {
+	case "run":
+		run()
+	default:
+		panic("Don't know what to do")
 	}
-	lo.StartPackageDetached(pkg)
+}
+
+func run() {
+	manager := &lo.Manager{Monitor: lo.NewMonitor()}
+	manager.Run()
 }
 
 func timer() func() {
