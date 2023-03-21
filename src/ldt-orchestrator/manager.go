@@ -80,12 +80,6 @@ func (manager *Manager) StartLDT(name string) (*Process, error) {
 	}
 
 	fmt.Printf("Started LDT with PID %d\n", cmd.Process.Pid)
-	// runningProcesses = append(runningProcesses, Process{
-	// 	Pid:     cmd.Process.Pid,
-	// 	Name:    name,
-	// 	started: time.Now(),
-	// })
-	// return runningProcesses
 	return &Process{
 		Pid:     cmd.Process.Pid,
 		Name:    name,
