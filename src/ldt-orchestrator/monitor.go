@@ -8,21 +8,26 @@ import (
 	"time"
 )
 
-// todo: seperate channel for started and stopped LDT
 type Monitor struct {
-	ldts      chan Process
+	started   chan Process
+	stopped   chan int
 	processes []Process
 }
 
 func NewMonitor() *Monitor {
-	return &Monitor{ldts: make(chan Process)}
+	return &Monitor{
+		started: make(chan Process),
+		stopped: make(chan int),
+	}
 }
 
 func (m *Monitor) RefreshLDTs() {
 	for {
 		select {
-		case ldt := <-m.ldts:
-			m.RegisterLDT(ldt)
+		case started := <-m.started:
+			m.RegisterLDT(started)
+		case stopped := <-m.stopped:
+			m.RemoveLDT(stopped)
 		default:
 		}
 	}
@@ -30,10 +35,16 @@ func (m *Monitor) RefreshLDTs() {
 
 func (m *Monitor) RegisterLDT(ldt Process) {
 	m.processes = append(m.processes, ldt)
-	if err := m.SerializeLDTs(); err != nil {
-		log.Fatal(err)
-	}
 	log.Printf("New LDT %s with PID %d started at %s\n", ldt.Name, ldt.Pid, ldt.started.Format("02-01-2006 15:04:05"))
+}
+
+func (m *Monitor) RemoveLDT(pid int) {
+	for i, ldt := range m.processes {
+		if ldt.Pid == pid {
+			m.processes = append(m.processes[:i], m.processes[i+1:]...)
+		}
+	}
+	log.Printf("Removing LDT with PID %d\n", pid)
 }
 
 func (m *Monitor) SerializeLDTs() error {
@@ -70,10 +81,11 @@ func (m *Monitor) DeserializeLDTs() error {
 	for scanner.Scan() {
 		var name string
 		var pid int
-		var started string
-		fmt.Sscanf(scanner.Text(), "%s\t%d\t%s", &name, &pid, &started)
+		var day string
+		var hour string
+		fmt.Sscanf(scanner.Text(), "%s\t%d\t%s%s", &name, &pid, &day, &hour)
 
-		time, err := time.Parse("02-01-2006 15:04:05", started)
+		time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
 		if err != nil {
 			log.Fatal(err)
 			return err
