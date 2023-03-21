@@ -22,6 +22,7 @@ type Manager struct {
 
 func (manager *Manager) Run() {
 	go manager.Monitor.RefreshLDTs()
+	manager.setup()
 	ticker := time.NewTicker(10 * time.Second)
 
 	var name, pkg_type, dist string
@@ -34,12 +35,15 @@ func (manager *Manager) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	manager.Monitor.ldts <- *process
+	manager.Monitor.started <- *process
 	<-ticker.C
+
 	if err := manager.StopLDT(process.Pid, true); err != nil {
 		log.Fatal(err)
 	}
+	manager.Monitor.stopped <- process.Pid
 	log.Printf("Stopped LDT %s with PID %d\n", process.Name, process.Pid)
+	manager.shutdown()
 }
 
 func (manager *Manager) DownloadLDT(url string) (string, error) {
@@ -105,4 +109,16 @@ func (manager *Manager) StopLDT(pid int, graceful bool) error {
 		return err
 	}
 	return nil
+}
+
+func (manager *Manager) setup() {
+	if err := manager.Monitor.DeserializeLDTs(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (manager *Manager) shutdown() {
+	if err := manager.Monitor.SerializeLDTs(); err != nil {
+		log.Fatal(err)
+	}
 }
