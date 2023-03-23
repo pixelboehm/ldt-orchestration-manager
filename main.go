@@ -8,9 +8,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
-	"time"
 )
 
 const (
@@ -43,7 +41,7 @@ func run(out io.Writer) error {
 			return err
 		}
 		cmd := getCommand(in)
-		execute(cmd)
+		executeCommand(cmd)
 	}
 }
 
@@ -65,7 +63,7 @@ func getCommand(in net.Conn) string {
 	}
 }
 
-func execute(command string) {
+func executeCommand(command string) {
 	switch command {
 	case "run":
 		runMonitor()
@@ -93,28 +91,5 @@ func checkForShutdown(c chan os.Signal) {
 		if err := run(os.Stdout); err != nil {
 			log.Fatal(err)
 		}
-		// reload functionality
 	}
-}
-
-func timer() func() {
-	name := callerName(1)
-	start := time.Now()
-	return func() {
-		fmt.Printf("%s took %v\n", name, time.Since(start))
-	}
-}
-
-func callerName(skip int) string {
-	const unknown = "unknown"
-	pcs := make([]uintptr, 1)
-	n := runtime.Callers(skip+2, pcs)
-	if n < 1 {
-		return unknown
-	}
-	frame, _ := runtime.CallersFrames(pcs).Next()
-	if frame.Function == "" {
-		return unknown
-	}
-	return frame.Function
 }
