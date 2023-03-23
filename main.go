@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	lo "longevity/src/ldt-orchestrator"
 	"net"
@@ -17,13 +18,21 @@ const (
 )
 
 func main() {
+	if err := run(os.Stdout); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run(out io.Writer) error {
+	log.SetOutput(out)
 	listener, err := net.Listen("unix", socketpath)
 	if err != nil {
 		log.Fatal("error listening on: ", err)
+		return err
 	}
 
 	sigchannel := make(chan os.Signal, 1)
-	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go checkForShutdown(sigchannel)
 
@@ -31,10 +40,16 @@ func main() {
 		in, err := listener.Accept()
 		if err != nil {
 			log.Fatal("error accepting connection: ", err)
+			return err
 		}
 		cmd := getCommand(in)
-		runCommand(cmd)
+		execute(cmd)
 	}
+}
+
+func runMonitor() {
+	manager := &lo.Manager{Monitor: lo.NewMonitor()}
+	manager.Run()
 }
 
 func getCommand(in net.Conn) string {
@@ -50,10 +65,10 @@ func getCommand(in net.Conn) string {
 	}
 }
 
-func runCommand(command string) {
+func execute(command string) {
 	switch command {
 	case "run":
-		run()
+		runMonitor()
 	default:
 		fmt.Println("Dont know what to do")
 	}
@@ -61,18 +76,25 @@ func runCommand(command string) {
 
 func checkForShutdown(c chan os.Signal) {
 	sig := <-c
-	err := syscall.Unlink(socketpath)
-	if err != nil {
-		log.Fatal("error during unlinking: ", err)
+	switch sig {
+	case syscall.SIGINT, syscall.SIGTERM:
+		log.Printf("Caught signal %s: shutting down.", sig)
+		err := syscall.Unlink(socketpath)
+		if err != nil {
+			log.Fatal("error during unlinking: ", err)
+		}
+		os.Exit(1)
+	case syscall.SIGHUP:
+		log.Printf("Caught signal %s: reloading.", sig)
+		err := syscall.Unlink(socketpath)
+		if err != nil {
+			log.Fatal("error during unlinking: ", err)
+		}
+		if err := run(os.Stdout); err != nil {
+			log.Fatal(err)
+		}
+		// reload functionality
 	}
-	fmt.Println()
-	log.Printf("Caught signal %s: shutting down.", sig)
-	os.Exit(0)
-}
-
-func run() {
-	manager := &lo.Manager{Monitor: lo.NewMonitor()}
-	manager.Run()
 }
 
 func timer() func() {
