@@ -1,37 +1,47 @@
-PROJECT_NAME:=longevity
+PROJECT_NAME	:= orchestration-manager
+BIN_NAME		:= $(PROJECT_NAME)
 
+GO_BIN 			:= go
+
+PROJECT_DIR 		:= $(CURDIR)
+PROJECT_BUILD_DIR 	:= $(PROJECT_DIR)/out
+
+.PHONY: build
 build:
-	go build -o out/$(PROJECT_NAME) main.go
+	@printf "%s\n" 'Compiling...'
+	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) main.go
+	@printf "%s\n" 'Done'
 
-run:
-	go run main.go
+run: build
+	@printf "Executing %s\n\n" "$(PROJECT_BUILD_DIR)/$(BIN_NAME)"
+	@$(PROJECT_BUILD_DIR)/$(BIN_NAME) $(if $(RUN_ARGS), $(RUN_ARGS))
 
 .PHONY: test
 test:
-	go test \
+	@$(GO_BIN) test \
 		$(if $(TEST_VERBOSE),-v) \
 		$(if $(TEST_SHORT),--short) \
 		./...
 
 .PHONY: test-c
 test-c:
-	go test ./... -coverprofile=out/coverage.html
+	@$(GO_BIN) test ./... -coverprofile=$(PROJECT_BUILD_DIR)/coverage.html
 
 .PHONY: coverage
 coverage:
-	go tool cover -html=out/coverage.html
+	@$(GO_BIN) tool cover -html=$(PROJECT_BUILD_DIR)/coverage.html
 
 .PHONY: clean
 clean:
-	go clean --cache
+	@$(GO_BIN) clean --cache
+	rm -rf $(PROJECT_BUILD_DIR)
 
-cover: 
-	test-c 
+cover: test-c 
 	coverage
 
 init:
-	go mod init $(PROJECT_NAME)
+	@$(GO_BIN) mod init $(PROJECT_NAME)
 
 setup: 
-	go mod tidy
-	go mod vendor
+	@$(GO_BIN) mod tidy
+	@$(GO_BIN) mod vendor
