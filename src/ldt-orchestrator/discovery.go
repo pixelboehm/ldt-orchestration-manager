@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/mlafeldt/pkgcloud"
+	"github.com/pixelboehm/pkgcloud"
 )
 
 type PackageList struct {
@@ -20,20 +20,20 @@ func GetLDTs(name, pkg_type, dist string) {
 		lock:     sync.Mutex{},
 	}
 	repositories := updateRepositories()
-
 	wg := sync.WaitGroup{}
+
+	client, _ := setup()
+	client.ShowProgress(false)
+
 	for _, repo := range repositories {
 		wg.Add(1)
-		go FetchPackageProperties(repo, name, pkg_type, dist, packageList, &wg)
+		go FetchPackageProperties(client, repo, name, pkg_type, dist, packageList, &wg)
 	}
 	wg.Wait()
 	log.Printf("Found %d packages\n", len(packageList.packages))
 }
 
-func FetchPackageProperties(repo, name, pkg_type, dist string, packageList *PackageList, wg *sync.WaitGroup) {
-	client, _ := setup()
-	client.ShowProgress(true)
-
+func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist string, packageList *PackageList, wg *sync.WaitGroup) {
 	packages, err := client.Search(repo, name, pkg_type, dist, 0)
 	if err != nil {
 		log.Fatal(err)
