@@ -2,10 +2,15 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"time"
+)
+
+const (
+	ldt_list = "src/ldt-orchestrator/ldt.list"
 )
 
 type Monitor struct {
@@ -69,34 +74,39 @@ func (m *Monitor) SerializeLDTs() error {
 }
 
 func (m *Monitor) DeserializeLDTs() error {
-	filename := "src/ldt-orchestrator/ldt.list"
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("Could not open file: %s", filename)
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		var name string
-		var pid int
-		var day string
-		var hour string
-		fmt.Sscanf(scanner.Text(), "%s\t%d\t%s%s", &name, &pid, &day, &hour)
-
-		time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
+	if checkFileExists(ldt_list) {
+		file, err := os.Open(ldt_list)
 		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			var name string
+			var pid int
+			var day string
+			var hour string
+			fmt.Sscanf(scanner.Text(), "%s\t%d\t%s%s", &name, &pid, &day, &hour)
+
+			time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
+			if err != nil {
+				log.Fatal(err)
+				return err
+			}
+
+			m.processes = append(m.processes, Process{Pid: pid, Name: name, started: time})
+		}
+
+		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
 			return err
 		}
-
-		m.processes = append(m.processes, Process{Pid: pid, Name: name, started: time})
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-		return err
 	}
 	return nil
+}
+
+func checkFileExists(filePath string) bool {
+	_, error := os.Stat(filePath)
+	return !errors.Is(error, os.ErrNotExist)
 }
