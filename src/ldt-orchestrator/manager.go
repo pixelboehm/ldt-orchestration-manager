@@ -17,16 +17,24 @@ type Process struct {
 }
 
 type Manager struct {
-	Monitor *Monitor
+	monitor   *Monitor
+	discovery *DiscoveryConfig
+}
+
+func (manager *Manager) Setup(config string) {
+	if err := manager.monitor.DeserializeLDTs(); err != nil {
+		log.Fatal(err)
+	}
+	manager.monitor = NewMonitor()
+	manager.discovery = NewConfig(config)
 }
 
 func (manager *Manager) Run() {
-	go manager.Monitor.RefreshLDTs()
-	manager.setup()
+	go manager.monitor.RefreshLDTs()
 	ticker := time.NewTicker(10 * time.Second)
 
 	var name, pkg_type, dist string
-	GetLDTs(name, pkg_type, dist)
+	manager.discovery.GetLDTs(name, pkg_type, dist)
 	ldt, err := manager.DownloadLDT("http://localhost:8081/getPackage")
 	if err != nil {
 		log.Fatal(err)
@@ -35,13 +43,13 @@ func (manager *Manager) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	manager.Monitor.started <- *process
+	manager.monitor.started <- *process
 	<-ticker.C
 
 	if err := manager.StopLDT(process.Pid, true); err != nil {
 		log.Fatal(err)
 	}
-	manager.Monitor.stopped <- process.Pid
+	manager.monitor.stopped <- process.Pid
 	log.Printf("Stopped LDT %s with PID %d\n", process.Name, process.Pid)
 	manager.shutdown()
 }
@@ -111,14 +119,8 @@ func (manager *Manager) StopLDT(pid int, graceful bool) error {
 	return nil
 }
 
-func (manager *Manager) setup() {
-	if err := manager.Monitor.DeserializeLDTs(); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func (manager *Manager) shutdown() {
-	if err := manager.Monitor.SerializeLDTs(); err != nil {
+	if err := manager.monitor.SerializeLDTs(); err != nil {
 		log.Fatal(err)
 	}
 }

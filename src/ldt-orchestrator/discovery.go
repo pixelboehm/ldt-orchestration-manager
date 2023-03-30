@@ -14,12 +14,22 @@ type PackageList struct {
 	lock     sync.Mutex
 }
 
-func GetLDTs(name, pkg_type, dist string) {
+type DiscoveryConfig struct {
+	repository_file string
+}
+
+func NewConfig(path string) *DiscoveryConfig {
+	return &DiscoveryConfig{
+		repository_file: "/etc/orchestration-manager/repositories.list",
+	}
+}
+
+func (c *DiscoveryConfig) GetLDTs(name, pkg_type, dist string) {
 	packageList := &PackageList{
 		packages: nil,
 		lock:     sync.Mutex{},
 	}
-	repositories := updateRepositories()
+	repositories := c.updateRepositories()
 	wg := sync.WaitGroup{}
 
 	client, _ := setup()
@@ -47,9 +57,9 @@ func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist 
 	wg.Done()
 }
 
-func updateRepositories() []string {
+func (c *DiscoveryConfig) updateRepositories() []string {
 	var repositories []string
-	file, err := os.Open("src/ldt-orchestrator/repositories.list")
+	file, err := os.Open(c.repository_file)
 	if err != nil {
 		log.Fatal(err)
 	}
