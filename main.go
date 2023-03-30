@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -15,13 +16,26 @@ const (
 	socketpath = "/tmp/orchestration-manager.sock"
 )
 
+var repos string
+var ldts string
+
 func main() {
-	if err := run(os.Stdout); err != nil {
+	flag.StringVar(&repos, "repos", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
+	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
+	flag.Parse()
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [OPTIONS]", os.Args[0])
+		fmt.Printf("--repos \t Custom path to the repositories file")
+		fmt.Printf("--ldts \t Custom path to store LDT status")
+	}
+	fmt.Printf("repos: %s\n", repos)
+	fmt.Printf("ldts: %s\n", ldts)
+	if err := runApp(os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run(out io.Writer) error {
+func runApp(out io.Writer) error {
 	log.SetOutput(out)
 	listener, err := net.Listen("unix", socketpath)
 	if err != nil {
@@ -40,17 +54,12 @@ func run(out io.Writer) error {
 			log.Fatal("error accepting connection: ", err)
 			return err
 		}
-		cmd := getCommand(in)
+		cmd := getCommandFromSocket(in)
 		executeCommand(cmd)
 	}
 }
 
-func runMonitor() {
-	manager := &lo.Manager{Monitor: lo.NewMonitor()}
-	manager.Run()
-}
-
-func getCommand(in net.Conn) string {
+func getCommandFromSocket(in net.Conn) string {
 	for {
 		buf := make([]byte, 512)
 		nr, err := in.Read(buf)
@@ -60,15 +69,6 @@ func getCommand(in net.Conn) string {
 
 		data := buf[0:nr]
 		return string(data)
-	}
-}
-
-func executeCommand(command string) {
-	switch command {
-	case "run":
-		runMonitor()
-	default:
-		fmt.Println("Dont know what to do")
 	}
 }
 
@@ -88,8 +88,23 @@ func checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
-		if err := run(os.Stdout); err != nil {
+		if err := runApp(os.Stdout); err != nil {
 			log.Fatal(err)
 		}
 	}
+}
+
+func executeCommand(command string) {
+	switch command {
+	case "run":
+		runManagingService()
+	default:
+		fmt.Println("Dont know what to do")
+	}
+}
+
+func runManagingService() {
+	manager := &lo.Manager{}
+	manager.Setup(repos, ldts)
+	manager.Run()
 }
