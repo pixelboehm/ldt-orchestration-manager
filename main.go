@@ -16,15 +16,20 @@ const (
 	socketpath = "/tmp/orchestration-manager.sock"
 )
 
-var config string
+var repos string
+var ldts string
 
 func main() {
-	flag.StringVar(&config, "config", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
+	flag.StringVar(&repos, "repos", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
+	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
 	flag.Parse()
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s [OPTIONS]", os.Args[0])
-		fmt.Printf("--config \t Custom path to the repositories file")
+		fmt.Printf("--repos \t Custom path to the repositories file")
+		fmt.Printf("--ldts \t Custom path to store LDT status")
 	}
+	fmt.Printf("repos: %s\n", repos)
+	fmt.Printf("ldts: %s\n", ldts)
 	if err := runApp(os.Stdout); err != nil {
 		log.Fatal(err)
 	}
@@ -100,6 +105,6 @@ func executeCommand(command string) {
 
 func runManagingService() {
 	manager := &lo.Manager{}
-	manager.Setup(config)
+	manager.Setup(repos, ldts)
 	manager.Run()
 }

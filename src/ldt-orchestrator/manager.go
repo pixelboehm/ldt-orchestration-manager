@@ -21,12 +21,13 @@ type Manager struct {
 	discovery *DiscoveryConfig
 }
 
-func (manager *Manager) Setup(config string) {
+func (manager *Manager) Setup(config, ldt_list_path string) {
+	manager.monitor = NewMonitor(ldt_list_path)
+	manager.discovery = NewConfig(config)
 	if err := manager.monitor.DeserializeLDTs(); err != nil {
 		log.Fatal(err)
 	}
-	manager.monitor = NewMonitor()
-	manager.discovery = NewConfig(config)
+
 }
 
 func (manager *Manager) Run() {

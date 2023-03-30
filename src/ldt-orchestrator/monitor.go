@@ -9,20 +9,18 @@ import (
 	"time"
 )
 
-const (
-	ldt_list = "src/ldt-orchestrator/ldt.list"
-)
-
 type Monitor struct {
-	started   chan Process
-	stopped   chan int
-	processes []Process
+	started       chan Process
+	stopped       chan int
+	processes     []Process
+	ldt_list_path string
 }
 
-func NewMonitor() *Monitor {
+func NewMonitor(ldt_list_path string) *Monitor {
 	return &Monitor{
-		started: make(chan Process),
-		stopped: make(chan int),
+		started:       make(chan Process),
+		stopped:       make(chan int),
+		ldt_list_path: ldt_list_path,
 	}
 }
 
@@ -53,11 +51,10 @@ func (m *Monitor) RemoveLDT(pid int) {
 }
 
 func (m *Monitor) SerializeLDTs() error {
-	filename := "src/ldt-orchestrator/ldt.list"
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(m.ldt_list_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err != nil {
-		log.Fatalf("Could not create file: %s", filename)
+		log.Fatalf("Could not create file: %s", m.ldt_list_path)
 		return err
 	}
 	defer file.Close()
@@ -74,8 +71,8 @@ func (m *Monitor) SerializeLDTs() error {
 }
 
 func (m *Monitor) DeserializeLDTs() error {
-	if checkFileExists(ldt_list) {
-		file, err := os.Open(ldt_list)
+	if checkFileExists(m.ldt_list_path) {
+		file, err := os.Open(m.ldt_list_path)
 		if err != nil {
 			return err
 		}
