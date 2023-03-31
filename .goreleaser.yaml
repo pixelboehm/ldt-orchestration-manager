@@ -1,14 +1,15 @@
 project_name: orchstration-manager
+
 before:
   hooks:
     - go mod tidy
     - go mod vendor
+
 builds:
   - env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
     flags:
     - -mod=vendor
@@ -22,17 +23,31 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-    - goos: windows
-      format: zip
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
       - '^docs:'
       - '^test:'
+
+brews:
+  name: orchestration-manager
+  homepage: https://github.com/pixelboehm/longevity
+  tap:
+    owner: pixelboehm
+    name: homebrew-ldt
+  commit_author:
+    owner: pixelboehm
+    email: boehnsins@gmail.comA
+  install: |
+    mkdir /etc/orchestration-manager
+    touch /etc/orchestration-manager/repositories.list
+    touch /etc/orchestration-manager/ldt.list
+    bin.install {{- .ProjectName }}
