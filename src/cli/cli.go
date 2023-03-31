@@ -6,8 +6,12 @@ import (
 	"os"
 )
 
+const (
+	socketPath = "/tmp/orchestration-manager.sock"
+)
+
 func main() {
-	c, err := net.Dial("unix", "/tmp/orchestration-manager.sock")
+	c, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal(err)
 	}
