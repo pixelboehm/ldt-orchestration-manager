@@ -2,6 +2,7 @@ project_name: orchstration-manager
 before:
   hooks:
     - go mod tidy
+    - go mod vendor
 builds:
   - env:
       - CGO_ENABLED=0
