@@ -216,4 +216,4 @@ out
 resources/
 *.pdf
 *.deb
-ldt.list
+dist/
