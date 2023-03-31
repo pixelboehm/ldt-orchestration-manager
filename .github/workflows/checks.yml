@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   test:
@@ -35,3 +36,13 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+  lint-commit-messages:
+    name: Lint Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v5
+
