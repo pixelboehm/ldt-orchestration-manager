@@ -38,16 +38,17 @@ changelog:
       - '^test:'
 
 brews:
-  name: orchestration-manager
-  homepage: https://github.com/pixelboehm/longevity
-  tap:
-    owner: pixelboehm
-    name: homebrew-ldt
-  commit_author:
-    owner: pixelboehm
-    email: boehnsins@gmail.comA
-  install: |
-    mkdir /etc/orchestration-manager
-    touch /etc/orchestration-manager/repositories.list
-    touch /etc/orchestration-manager/ldt.list
-    bin.install {{- .ProjectName }}
+  - name: orchestration-manager
+    homepage: https://github.com/pixelboehm/longevity
+    tap:
+      owner: "{{ .Env.MAINTAINER }}"
+      name: homebrew-ldt
+    commit_author:
+      name: "{{ .Env.MAINTAINER }}"
+      email: "{{ .Env.MAIL }}"
+    folder: Formula
+    install: |
+      system, "mkdir", "-p" "/etc/orchestration-manager"
+      system, "touch", "/etc/orchestration-manager/repositories.list"
+      system, "touch", "/etc/orchestration-manager/ldt.list"
+      bin.install {{- .ProjectName }}
