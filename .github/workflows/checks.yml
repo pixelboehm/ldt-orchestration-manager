@@ -1,4 +1,4 @@
-name: Go
+name: Checks
 
 on:
   pull_request:
@@ -22,6 +22,8 @@ jobs:
           --health-retries 5
         ports: 
         - 5432:5432
+    env:
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
