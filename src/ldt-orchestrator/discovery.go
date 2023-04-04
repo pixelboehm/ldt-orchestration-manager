@@ -11,37 +11,44 @@ import (
 )
 
 type PackageList struct {
-	packages []pkgcloud.Package
+	packages []string
 	lock     sync.Mutex
 }
 
 type DiscoveryConfig struct {
 	repository_file string
+	packageList     *PackageList
+	repositories    []string
+}
+
+func NewPackageList() *PackageList {
+	return &PackageList{
+		packages: nil,
+		lock:     sync.Mutex{},
+	}
 }
 
 func NewConfig(path string) *DiscoveryConfig {
 	return &DiscoveryConfig{
-		repository_file: "/etc/orchestration-manager/repositories.list",
+		repository_file: path,
+		packageList:     NewPackageList(),
+		repositories:    make([]string, 0),
 	}
 }
 
 func (c *DiscoveryConfig) GetLDTs(name, pkg_type, dist string) {
-	packageList := &PackageList{
-		packages: nil,
-		lock:     sync.Mutex{},
-	}
-	repositories := c.updateRepositories()
+	c.repositories = c.updateRepositories()
 	wg := sync.WaitGroup{}
 
 	client, _ := setup()
 	client.ShowProgress(false)
 
-	for _, repo := range repositories {
+	for _, repo := range c.repositories {
 		wg.Add(1)
-		go FetchPackageProperties(client, repo, name, pkg_type, dist, packageList, &wg)
+		go FetchPackageProperties(client, repo, name, pkg_type, dist, c.packageList, &wg)
 	}
 	wg.Wait()
-	log.Printf("Found %d packages\n", len(packageList.packages))
+	log.Printf("Found %d packages\n", len(c.packageList.packages))
 }
 
 func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist string, packageList *PackageList, wg *sync.WaitGroup) {
@@ -52,7 +59,7 @@ func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist 
 
 	for _, pkg := range packages {
 		packageList.lock.Lock()
-		packageList.packages = append(packageList.packages, pkg)
+		packageList.packages = append(packageList.packages, pkg.Name)
 		packageList.lock.Unlock()
 	}
 	wg.Done()

@@ -21,9 +21,7 @@ func setupDiscoveryConfig() {
 	if err := os.WriteFile("./config", d1, 0644); err != nil {
 		panic(err)
 	}
-	c = &DiscoveryConfig{
-		repository_file: "./config",
-	}
+	c = NewConfig("./config")
 }
 
 func teardownDiscoveryConfig() {
@@ -42,7 +40,7 @@ func ensureConfigExists(t *testing.T) {
 func Test_UpdateRepositories(t *testing.T) {
 	ensureConfigExists(t)
 	expected := 1
-	repositories := c.updateRepositories()
-	actual := len(repositories)
+	c.repositories = c.updateRepositories()
+	actual := len(c.repositories)
 	require.Equal(t, expected, actual)
 }
