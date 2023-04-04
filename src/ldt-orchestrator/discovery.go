@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/pixelboehm/pkgcloud"
@@ -66,7 +67,9 @@ func (c *DiscoveryConfig) updateRepositories() []string {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		repositories = append(repositories, scanner.Text())
+		if !strings.HasPrefix(scanner.Text(), "#") {
+			repositories = append(repositories, scanner.Text())
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
