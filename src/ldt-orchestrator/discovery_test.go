@@ -38,3 +38,11 @@ func ensureConfigExists(t *testing.T) {
 		require.Fail("DiscoveryConfig is not initialized")
 	}
 }
+
+func Test_UpdateRepositories(t *testing.T) {
+	ensureConfigExists(t)
+	expected := 1
+	repositories := c.updateRepositories()
+	actual := len(repositories)
+	require.Equal(t, expected, actual)
+}
