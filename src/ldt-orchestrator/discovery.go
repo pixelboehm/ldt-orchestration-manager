@@ -2,12 +2,16 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 	"sync"
 
+	"github.com/google/go-github/v38/github"
 	"github.com/pixelboehm/pkgcloud"
+	"golang.org/x/oauth2"
 )
 
 type PackageList struct {
@@ -40,7 +44,7 @@ func (c *DiscoveryConfig) GetLDTs(name, pkg_type, dist string) {
 	c.repositories = c.updateRepositories()
 	wg := sync.WaitGroup{}
 
-	client, _ := setup()
+	client, _ := setupPackagecloudClient()
 	client.ShowProgress(false)
 
 	for _, repo := range c.repositories {
@@ -63,6 +67,24 @@ func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist 
 		packageList.lock.Unlock()
 	}
 	wg.Done()
+}
+
+func FetchLDTProperties() error {
+	client, err := setupGithubClient(os.Getenv("ACCESS_TOKEN"))
+	if err != nil {
+		return err
+	}
+	releases, _, err := client.Repositories.ListReleases(context.Background(), "pixelboehm", "ldt", nil)
+	if err != nil {
+		fmt.Println("Error getting releases:", err)
+		return err
+	}
+
+	for _, release := range releases {
+		fmt.Println(*release.Name)
+		fmt.Printf("%s\n", *release.Assets[1].BrowserDownloadURL)
+	}
+	return nil
 }
 
 func (c *DiscoveryConfig) updateRepositories() []string {
@@ -92,7 +114,17 @@ func clearCachedRepositories(repositories *[]string) {
 	*repositories = nil
 }
 
-func setup() (*pkgcloud.Client, error) {
+func setupGithubClient(github_token string) (*github.Client, error) {
+	token := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: github_token},
+	)
+	oauthClient := oauth2.NewClient(context.Background(), token)
+
+	client := github.NewClient(oauthClient)
+	return client, nil
+}
+
+func setupPackagecloudClient() (*pkgcloud.Client, error) {
 	client, err := pkgcloud.NewClient("")
 	if err != nil {
 		log.Fatal(err)

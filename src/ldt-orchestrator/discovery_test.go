@@ -39,8 +39,17 @@ func ensureConfigExists(t *testing.T) {
 
 func Test_UpdateRepositories(t *testing.T) {
 	ensureConfigExists(t)
+	require := require.New(t)
+
 	expected := 1
 	c.repositories = c.updateRepositories()
 	actual := len(c.repositories)
-	require.Equal(t, expected, actual)
+	require.Equal(expected, actual)
+}
+
+func Test_FetchLDTProperties(t *testing.T) {
+	ensureConfigExists(t)
+	require := require.New(t)
+	res := FetchLDTProperties()
+	require.NoError(res)
 }
