@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -10,15 +12,28 @@ const (
 	socketPath = "/tmp/orchestration-manager.sock"
 )
 
+func waitForAnswer(reader io.Reader) {
+	buffer := make([]byte, 1024)
+	for {
+		n, err := reader.Read(buffer[:])
+		if err != nil {
+			return
+		}
+		fmt.Println(string(buffer[0:n]))
+		return
+	}
+}
+
 func main() {
-	c, err := net.Dial("unix", socketPath)
+	connection, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer c.Close()
+	defer connection.Close()
 
-	_, err = c.Write([]byte(os.Args[1]))
+	_, err = connection.Write([]byte(os.Args[1]))
 	if err != nil {
 		log.Fatal("write error:", err)
 	}
+	waitForAnswer(connection)
 }
