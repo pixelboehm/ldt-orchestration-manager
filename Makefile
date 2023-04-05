@@ -2,6 +2,7 @@ PROJECT_NAME	:= orchestration-manager
 BIN_NAME		:= $(PROJECT_NAME)
 
 GO_BIN 			:= go
+GORELEASER_BIN 	:= goreleaser
 
 PROJECT_DIR 		:= $(CURDIR)
 PROJECT_BUILD_DIR 	:= $(PROJECT_DIR)/out
@@ -45,3 +46,9 @@ init:
 setup: 
 	@$(GO_BIN) mod tidy
 	@$(GO_BIN) mod vendor
+
+release:
+	@$(GORELEASER_BIN) release --clean
+
+releaseLocal:
+	@$(GORELEASER_BIN) release --clean --snapshot
