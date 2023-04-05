@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -55,7 +56,15 @@ func runApp(out io.Writer) error {
 			return err
 		}
 		cmd := getCommandFromSocket(in)
-		executeCommand(cmd)
+		res := executeCommand(cmd)
+		sendResultToSocket(in, res)
+	}
+}
+
+func sendResultToSocket(out net.Conn, res string) {
+	_, err := out.Write([]byte(res))
+	if err != nil {
+		log.Fatal("error writing to socket: ", err)
 	}
 }
 
@@ -94,14 +103,17 @@ func checkForShutdown(c chan os.Signal) {
 	}
 }
 
-func executeCommand(command string) {
+func executeCommand(command string) string {
 	switch command {
 	case "run":
 		runManagingService()
-	case "help":
-		help()
+		return "Running managing service"
 	default:
-		fmt.Println("Dont know what to do")
+		log.Println("Unkown command received: ", command)
+		fallthrough
+	case "help":
+		result := cliHelp()
+		return result.String()
 	}
 }
 
@@ -109,4 +121,13 @@ func runManagingService() {
 	manager := &lo.Manager{}
 	manager.Setup(repos, ldts)
 	manager.Run()
+}
+
+func cliHelp() *bytes.Buffer {
+	var buffer bytes.Buffer
+	buffer.WriteString("Usage: cli [OPTIONS]\n")
+	buffer.WriteString("help \t Show this help\n")
+	buffer.WriteString("run \t Run the managing service\n")
+	log.Println(buffer.String())
+	return &buffer
 }
