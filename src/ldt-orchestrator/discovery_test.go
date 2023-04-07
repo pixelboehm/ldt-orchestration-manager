@@ -48,11 +48,11 @@ func Test_UpdateRepositories(t *testing.T) {
 	assert.Equal(expected, actual)
 }
 
-func Test_FetchingLDTsFromGithub(t *testing.T) {
-	t.Skip("unfinished implementation")
-	ensureConfigExists(t)
-	assert := assert.New(t)
+// func Test_FetchingLDTsFromGithub(t *testing.T) {
+// 	t.Skip("unfinished implementation")
+// 	ensureConfigExists(t)
+// 	assert := assert.New(t)
 
-	c.FetchGithubReleases()
-	assert.NotEmpty(c.ldtList.ldt)
-}
+// 	c.FetchGithubReleases()
+// 	assert.NotEmpty(c.ldtList.ldt)
+// }

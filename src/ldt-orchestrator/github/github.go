@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	. "longevity/src/ldt-orchestrator"
+
 	"github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )
@@ -51,11 +53,24 @@ func (gd *GithubDiscoverer) GetReleasesFromRepository(owner, repo string) []*git
 	return releases
 }
 
-func (gd *GithubDiscoverer) filterLDTsFromReleases() bool {
+func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.RepositoryRelease) bool {
+	ldt_list := NewLDTList()
+	for _, release := range releases {
+		for _, asset := range release.Assets {
+			url := asset.GetBrowserDownloadURL()
+			name, version, os, arch := filterURL(url)
+			ldt := LDT{
+				Name:    name,
+				Version: version,
+				Os:      os,
+				Arch:    arch,
+				Url:     url,
+			}
+			ldt_list.Ldts = append(ldt_list.Ldts, ldt)
+		}
+	}
 	return false
 }
-
-func 
 
 func filterURL(address string) (string, string, string, string) {
 	u, _ := url.Parse(address)

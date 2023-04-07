@@ -3,23 +3,22 @@ package ldtorchestrator
 import (
 	"bufio"
 	"log"
-	"longevity/src/ldt-orchestrator/github"
 	"os"
 	"strings"
 	"sync"
 )
 
 type LDTList struct {
-	ldt  []LDT
+	Ldts []LDT
 	lock sync.Mutex
 }
 
 type LDT struct {
-	name    string
-	version string
-	os      string
-	arch    string
-	url     string
+	Name    string
+	Version string
+	Os      string
+	Arch    string
+	Url     string
 }
 
 type DiscoveryConfig struct {
@@ -28,9 +27,9 @@ type DiscoveryConfig struct {
 	repositories    []string
 }
 
-func NewPackageList() *LDTList {
+func NewLDTList() *LDTList {
 	return &LDTList{
-		ldt:  nil,
+		Ldts: nil,
 		lock: sync.Mutex{},
 	}
 }
@@ -38,28 +37,28 @@ func NewPackageList() *LDTList {
 func NewConfig(path string) *DiscoveryConfig {
 	return &DiscoveryConfig{
 		repository_file: path,
-		ldtList:         NewPackageList(),
+		ldtList:         NewLDTList(),
 		repositories:    make([]string, 0),
 	}
 }
 
-func (c *DiscoveryConfig) FetchGithubReleases() {
-	c.repositories = c.updateRepositories()
-	for _, repo := range c.repositories {
-		if isGithubRepository(repo) {
-			owner, repo := parseRepository(repo)
-			_, err := github.GetReleasesFromRepository(owner, repo)
-			if err != nil {
-				log.Println(err)
-			}
-			// for _, release := range releases {
-			// 	c.ldtList.lock.Lock()
-			// 	c.filterLDTs(release)
-			// 	c.ldtList.lock.Unlock()
-			// }
-		}
-	}
-}
+// func (c *DiscoveryConfig) FetchGithubReleases() {
+// 	c.repositories = c.updateRepositories()
+// 	for _, repo := range c.repositories {
+// 		if isGithubRepository(repo) {
+// 			owner, repo := parseRepository(repo)
+// 			_, err := github.GetReleasesFromRepository(owner, repo)
+// 			if err != nil {
+// 				log.Println(err)
+// 			}
+// 			// for _, release := range releases {
+// 			// 	c.ldtList.lock.Lock()
+// 			// 	c.filterLDTs(release)
+// 			// 	c.ldtList.lock.Unlock()
+// 			// }
+// 		}
+// 	}
+// }
 
 func parseRepository(repo string) (string, string) {
 	split := strings.Split(repo, "/")
