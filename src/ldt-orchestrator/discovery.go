@@ -13,14 +13,6 @@ type LDTList struct {
 	lock sync.Mutex
 }
 
-type LDT struct {
-	Name    string
-	Version string
-	Os      string
-	Arch    string
-	Url     string
-}
-
 type DiscoveryConfig struct {
 	repository_file string
 	ldtList         *LDTList
