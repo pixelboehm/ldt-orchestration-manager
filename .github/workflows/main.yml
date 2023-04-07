@@ -1,4 +1,4 @@
-name: Test and Publish
+name: test and publish
 on:
   push:
     branches:
@@ -23,6 +23,6 @@ jobs:
           hooks: goreleaser
           allow-initial-development-versions: true
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           MAINTAINER: ${{ vars.MAINTAINER }}
           MAIL: ${{ vars.MAIL }}

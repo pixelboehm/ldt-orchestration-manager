@@ -2,59 +2,48 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"fmt"
 	"log"
+	"longevity/src/ldt-orchestrator/github"
+	. "longevity/src/types"
+	"net/url"
 	"os"
-	"sync"
-
-	"github.com/pixelboehm/pkgcloud"
+	"strings"
 )
-
-type PackageList struct {
-	packages []pkgcloud.Package
-	lock     sync.Mutex
-}
 
 type DiscoveryConfig struct {
 	repository_file string
+	ldtList         *LDTList
+	repositories    []string
 }
 
 func NewConfig(path string) *DiscoveryConfig {
 	return &DiscoveryConfig{
-		repository_file: "/etc/orchestration-manager/repositories.list",
+		repository_file: path,
+		ldtList:         NewLDTList(),
+		repositories:    make([]string, 0),
 	}
 }
 
-func (c *DiscoveryConfig) GetLDTs(name, pkg_type, dist string) {
-	packageList := &PackageList{
-		packages: nil,
-		lock:     sync.Mutex{},
+func (c *DiscoveryConfig) DiscoverLDTs() {
+	newLDTs := github.FetchGithubReleases(c.repositories)
+	c.ldtList.LDTs = append(c.ldtList.LDTs, newLDTs.LDTs...)
+	for _, ldt := range c.ldtList.LDTs {
+		fmt.Printf("Name: %s \t OS: %s \t Architecture: %s\n", ldt.Name, ldt.Os, ldt.Arch)
 	}
-	repositories := c.updateRepositories()
-	wg := sync.WaitGroup{}
-
-	client, _ := setup()
-	client.ShowProgress(false)
-
-	for _, repo := range repositories {
-		wg.Add(1)
-		go FetchPackageProperties(client, repo, name, pkg_type, dist, packageList, &wg)
-	}
-	wg.Wait()
-	log.Printf("Found %d packages\n", len(packageList.packages))
 }
 
-func FetchPackageProperties(client *pkgcloud.Client, repo, name, pkg_type, dist string, packageList *PackageList, wg *sync.WaitGroup) {
-	packages, err := client.Search(repo, name, pkg_type, dist, 0)
-	if err != nil {
-		log.Fatal(err)
+func isGithubRepository(repo string) bool {
+	stuff, _ := url.Parse(repo)
+	if stuff.Host != "" {
+		return strings.Contains(stuff.Host, "github.com")
+	} else if strings.HasPrefix(stuff.Path, "www.github.com") {
+		return true
+	} else if strings.HasPrefix(stuff.Path, "github.com") {
+		return true
+	} else {
+		return false
 	}
-
-	for _, pkg := range packages {
-		packageList.lock.Lock()
-		packageList.packages = append(packageList.packages, pkg)
-		packageList.lock.Unlock()
-	}
-	wg.Done()
 }
 
 func (c *DiscoveryConfig) updateRepositories() []string {
@@ -66,26 +55,12 @@ func (c *DiscoveryConfig) updateRepositories() []string {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		repositories = append(repositories, scanner.Text())
+		if !strings.HasPrefix(scanner.Text(), "#") {
+			repositories = append(repositories, scanner.Text())
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 	return repositories
-}
-
-func clearCachedPackages(packageList *PackageList) {
-	packageList.packages = nil
-}
-
-func clearCachedRepositories(repositories *[]string) {
-	*repositories = nil
-}
-
-func setup() (*pkgcloud.Client, error) {
-	client, err := pkgcloud.NewClient("")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return client, err
 }

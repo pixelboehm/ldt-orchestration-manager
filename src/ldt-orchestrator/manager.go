@@ -34,8 +34,8 @@ func (manager *Manager) Run() {
 	go manager.monitor.RefreshLDTs()
 	ticker := time.NewTicker(10 * time.Second)
 
-	var name, pkg_type, dist string
-	manager.discovery.GetLDTs(name, pkg_type, dist)
+	// var name, pkg_type, dist string
+	// manager.discovery.GetLDTs(name, pkg_type, dist)
 	ldt, err := manager.DownloadLDT("http://localhost:8081/getPackage")
 	if err != nil {
 		log.Fatal(err)
