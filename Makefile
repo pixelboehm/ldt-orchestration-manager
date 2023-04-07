@@ -37,8 +37,7 @@ clean:
 	@$(GO_BIN) clean --cache
 	rm -rf $(PROJECT_BUILD_DIR)
 
-cover: test-c 
-	coverage
+cover: test-c coverage
 
 init:
 	@$(GO_BIN) mod init $(PROJECT_NAME)
