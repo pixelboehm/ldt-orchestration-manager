@@ -58,21 +58,15 @@ func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.Repository
 	for _, release := range releases {
 		for _, asset := range release.Assets {
 			url := asset.GetBrowserDownloadURL()
-			name, version, os, arch := filterURL(url)
-			ldt := LDT{
-				Name:    name,
-				Version: version,
-				Os:      os,
-				Arch:    arch,
-				Url:     url,
-			}
+			ldt := filterLDTInformationFromURL(url)
+
 			ldt_list.Ldts = append(ldt_list.Ldts, ldt)
 		}
 	}
 	return false
 }
 
-func filterURL(address string) (string, string, string, string) {
+func filterLDTInformationFromURL(address string) LDT {
 	u, _ := url.Parse(address)
 	user := strings.Split(u.Path, "/")[1]
 
@@ -86,6 +80,14 @@ func filterURL(address string) (string, string, string, string) {
 
 	fmt.Println(withoutSuffix)
 
-	return user + "/" + ldtname, version, os, arch
+	ldt := LDT{
+		Name:    user + "/" + ldtname,
+		Version: version,
+		Os:      os,
+		Arch:    arch,
+		Url:     address,
+	}
+
+	return ldt
 
 }
