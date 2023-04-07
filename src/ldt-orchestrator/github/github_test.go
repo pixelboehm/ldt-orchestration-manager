@@ -6,6 +6,7 @@ import (
 	. "longevity/src/types"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_CreateGithubDiscovererWithoutToken(t *testing.T) {
@@ -24,8 +25,10 @@ func TestCreateGithubDiscovererWithToken(t *testing.T) {
 
 func Test_FilterLDTsFromReleases(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
-	var gd = NewGithubClient("GH_ACCESS_TOKEN")
+	gd := NewGithubClient("GH_ACCESS_TOKEN")
+	require.True(gd.Authenticated)
 	releases := gd.GetReleasesFromRepository("pixelboehm", "ldt")
 	assert.NotEmpty(releases)
 
