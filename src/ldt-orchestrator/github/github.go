@@ -24,8 +24,8 @@ type Release struct {
 }
 
 type GithubDiscoverer struct {
-	client       *github.Client
-	autenticated bool
+	client        *github.Client
+	authenticated bool
 }
 
 func NewGithubDiscoverer(token string) *GithubDiscoverer {

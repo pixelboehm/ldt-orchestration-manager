@@ -14,14 +14,14 @@ func Test_CreateGithubDiscovererWithoutToken(t *testing.T) {
 	assert := assert.New(t)
 	token := "NOT_EXISTING_TOKEN"
 	gd := NewGithubDiscoverer(token)
-	assert.False(gd.autenticated, false)
+	assert.False(gd.authenticated)
 }
 
 func TestCreateGithubDiscovererWithToken(t *testing.T) {
 	assert := assert.New(t)
 	token := "GH_ACCESS_TOKEN"
 	gd := NewGithubDiscoverer(token)
-	assert.False(gd.autenticated, true)
+	assert.True(gd.authenticated)
 }
 
 func Test_GetReleasesFromRepository(t *testing.T) {
