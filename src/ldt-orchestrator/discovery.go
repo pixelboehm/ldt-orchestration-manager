@@ -2,28 +2,19 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"fmt"
 	"log"
+	"longevity/src/ldt-orchestrator/github"
+	. "longevity/src/types"
+	"net/url"
 	"os"
 	"strings"
-	"sync"
 )
-
-type LDTList struct {
-	Ldts []LDT
-	lock sync.Mutex
-}
 
 type DiscoveryConfig struct {
 	repository_file string
 	ldtList         *LDTList
 	repositories    []string
-}
-
-func NewLDTList() *LDTList {
-	return &LDTList{
-		Ldts: nil,
-		lock: sync.Mutex{},
-	}
 }
 
 func NewConfig(path string) *DiscoveryConfig {
@@ -34,31 +25,25 @@ func NewConfig(path string) *DiscoveryConfig {
 	}
 }
 
-// func (c *DiscoveryConfig) FetchGithubReleases() {
-// 	c.repositories = c.updateRepositories()
-// 	for _, repo := range c.repositories {
-// 		if isGithubRepository(repo) {
-// 			owner, repo := parseRepository(repo)
-// 			_, err := github.GetReleasesFromRepository(owner, repo)
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			// for _, release := range releases {
-// 			// 	c.ldtList.lock.Lock()
-// 			// 	c.filterLDTs(release)
-// 			// 	c.ldtList.lock.Unlock()
-// 			// }
-// 		}
-// 	}
-// }
-
-func parseRepository(repo string) (string, string) {
-	split := strings.Split(repo, "/")
-	return split[3], split[4]
+func (c *DiscoveryConfig) DiscoverLDTs() {
+	newLDTs := github.FetchGithubReleases(c.repositories)
+	c.ldtList.LDTs = append(c.ldtList.LDTs, newLDTs.LDTs...)
+	for _, ldt := range c.ldtList.LDTs {
+		fmt.Printf("Name: %s \t OS: %s \t Architecture: %s\n", ldt.Name, ldt.Os, ldt.Arch)
+	}
 }
 
 func isGithubRepository(repo string) bool {
-	return strings.HasPrefix(repo, "https://github.com")
+	stuff, _ := url.Parse(repo)
+	if stuff.Host != "" {
+		return strings.Contains(stuff.Host, "github.com")
+	} else if strings.HasPrefix(stuff.Path, "www.github.com") {
+		return true
+	} else if strings.HasPrefix(stuff.Path, "github.com") {
+		return true
+	} else {
+		return false
+	}
 }
 
 func (c *DiscoveryConfig) updateRepositories() []string {

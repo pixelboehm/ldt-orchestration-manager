@@ -48,11 +48,47 @@ func Test_UpdateRepositories(t *testing.T) {
 	assert.Equal(expected, actual)
 }
 
-// func Test_FetchingLDTsFromGithub(t *testing.T) {
-// 	t.Skip("unfinished implementation")
-// 	ensureConfigExists(t)
-// 	assert := assert.New(t)
+func Test_IsGithubRepository(t *testing.T) {
+	assert := assert.New(t)
+	testCases := []struct {
+		desc  string
+		input string
+		want  bool
+	}{
+		{
+			desc:  "github url with HTTPS",
+			input: "https://github.com/foobar",
+			want:  true,
+		}, {
+			desc:  "github url with HTTPS and www",
+			input: "https://www.github.com/foobar",
+			want:  true,
+		}, {
+			desc:  "github url without HTTPS but with www",
+			input: "www.github.com/foobar",
+			want:  true,
+		}, {
+			desc:  "github url without HTTPS and without www",
+			input: "github.com/foobar",
+			want:  true,
+		}, {
+			desc:  "some URL that is not related to github",
+			input: "https://www.google.com/foobar",
+			want:  false,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got := isGithubRepository(tC.input)
+			assert.Equal(tC.want, got)
+		})
+	}
+}
 
-// 	c.FetchGithubReleases()
-// 	assert.NotEmpty(c.ldtList.ldt)
-// }
+func Test_DiscoverLDTs(t *testing.T) {
+	ensureConfigExists(t)
+	assert := assert.New(t)
+
+	c.DiscoverLDTs()
+	assert.NotNil(len(c.ldtList.LDTs))
+}
