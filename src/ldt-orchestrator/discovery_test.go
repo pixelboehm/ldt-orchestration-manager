@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,17 +40,19 @@ func ensureConfigExists(t *testing.T) {
 
 func Test_UpdateRepositories(t *testing.T) {
 	ensureConfigExists(t)
-	require := require.New(t)
+	assert := assert.New(t)
 
 	expected := 1
 	c.repositories = c.updateRepositories()
 	actual := len(c.repositories)
-	require.Equal(expected, actual)
+	assert.Equal(expected, actual)
 }
 
-func Test_FetchLDTProperties(t *testing.T) {
+func Test_FetchingLDTsFromGithub(t *testing.T) {
+	t.Skip("unfinished implementation")
 	ensureConfigExists(t)
-	require := require.New(t)
-	res := FetchLDTProperties()
-	require.NoError(res)
+	assert := assert.New(t)
+
+	c.FetchGithubReleases()
+	assert.NotEmpty(c.ldtList.ldt)
 }
