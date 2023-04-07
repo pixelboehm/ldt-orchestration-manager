@@ -41,7 +41,7 @@ func Test_FilteringReleases(t *testing.T) {
 	// assert.True(res)
 }
 
-func Test_FilteringURL(t *testing.T) {
+func Test_FilteringLDTInformationFromURL(t *testing.T) {
 	assert := assert.New(t)
 
 	var tests = []struct {

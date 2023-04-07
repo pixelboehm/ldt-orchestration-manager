@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -58,9 +57,10 @@ func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.Repository
 	for _, release := range releases {
 		for _, asset := range release.Assets {
 			url := asset.GetBrowserDownloadURL()
-			ldt := filterLDTInformationFromURL(url)
-
-			ldt_list.Ldts = append(ldt_list.Ldts, ldt)
+			if isArchive(url) {
+				ldt := filterLDTInformationFromURL(url)
+				ldt_list.Ldts = append(ldt_list.Ldts, ldt)
+			}
 		}
 	}
 	return false
@@ -78,8 +78,6 @@ func filterLDTInformationFromURL(address string) LDT {
 	ldtname, rest, _ := strings.Cut(withoutSuffix, "_")
 	os, arch, _ := strings.Cut(rest, "_")
 
-	fmt.Println(withoutSuffix)
-
 	ldt := LDT{
 		Name:    user + "/" + ldtname,
 		Version: version,
@@ -89,5 +87,8 @@ func filterLDTInformationFromURL(address string) LDT {
 	}
 
 	return ldt
+}
 
+func isArchive(file string) bool {
+	return strings.HasSuffix(file, ".tar.gz") || strings.HasSuffix(file, ".zip")
 }
