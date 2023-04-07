@@ -23,7 +23,7 @@ jobs:
         ports: 
         - 5432:5432
     env:
-      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3

@@ -23,6 +23,6 @@ jobs:
           hooks: goreleaser
           allow-initial-development-versions: true
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           MAINTAINER: ${{ vars.MAINTAINER }}
           MAIL: ${{ vars.MAIL }}
