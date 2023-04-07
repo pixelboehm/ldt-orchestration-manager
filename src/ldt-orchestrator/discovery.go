@@ -2,7 +2,6 @@ package ldtorchestrator
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
 	. "longevity/src/types"
@@ -28,9 +27,9 @@ func NewConfig(path string) *DiscoveryConfig {
 func (c *DiscoveryConfig) DiscoverLDTs() {
 	newLDTs := github.FetchGithubReleases(c.repositories)
 	c.ldtList.LDTs = append(c.ldtList.LDTs, newLDTs.LDTs...)
-	for _, ldt := range c.ldtList.LDTs {
-		fmt.Printf("Name: %s \t OS: %s \t Architecture: %s\n", ldt.Name, ldt.Os, ldt.Arch)
-	}
+	// for _, ldt := range c.ldtList.LDTs {
+	// 	fmt.Printf("Name: %s \t OS: %s \t Architecture: %s\n", ldt.Name, ldt.Os, ldt.Arch)
+	// }
 }
 
 func isGithubRepository(repo string) bool {

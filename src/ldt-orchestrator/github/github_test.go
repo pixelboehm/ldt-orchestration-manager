@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var gd = NewGithubClient("GH_ACCESS_TOKEN")
-
 func Test_CreateGithubDiscovererWithoutToken(t *testing.T) {
 	assert := assert.New(t)
 	token := "NOT_EXISTING_TOKEN"
@@ -27,6 +25,7 @@ func TestCreateGithubDiscovererWithToken(t *testing.T) {
 func Test_FilterLDTsFromReleases(t *testing.T) {
 	assert := assert.New(t)
 
+	var gd = NewGithubClient("GH_ACCESS_TOKEN")
 	releases := gd.GetReleasesFromRepository("pixelboehm", "ldt")
 	assert.NotEmpty(releases)
 
