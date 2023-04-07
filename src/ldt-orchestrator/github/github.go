@@ -41,7 +41,7 @@ func NewGithubDiscoverer(token string) *GithubDiscoverer {
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
-	return &GithubDiscoverer{client: github.NewClient(tc), autenticated: present}
+	return &GithubDiscoverer{client: github.NewClient(tc), authenticated: present}
 }
 
 func (gd *GithubDiscoverer) GetReleasesFromRepository(owner, repo string) []*github.RepositoryRelease {
@@ -52,7 +52,7 @@ func (gd *GithubDiscoverer) GetReleasesFromRepository(owner, repo string) []*git
 	return releases
 }
 
-func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.RepositoryRelease) bool {
+func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.RepositoryRelease) *LDTList {
 	ldt_list := NewLDTList()
 	for _, release := range releases {
 		for _, asset := range release.Assets {
@@ -63,7 +63,7 @@ func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.Repository
 			}
 		}
 	}
-	return false
+	return ldt_list
 }
 
 func filterLDTInformationFromURL(address string) LDT {

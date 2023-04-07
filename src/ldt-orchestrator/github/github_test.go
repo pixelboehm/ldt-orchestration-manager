@@ -24,21 +24,14 @@ func TestCreateGithubDiscovererWithToken(t *testing.T) {
 	assert.True(gd.authenticated)
 }
 
-func Test_GetReleasesFromRepository(t *testing.T) {
-	t.Skip()
+func Test_FilterLDTsFromReleases(t *testing.T) {
 	assert := assert.New(t)
+
 	releases := gd.GetReleasesFromRepository("pixelboehm", "ldt")
 	assert.NotEmpty(releases)
-}
 
-func Test_FilteringReleases(t *testing.T) {
-	t.Skip("not implemented yet")
-	// assert := assert.New(t)
-	// releases := gd.GetReleasesFromRepository("pixelboehm", "ldt")
-	// release := releases[0]
-	// res := filterLDTs(release)
-
-	// assert.True(res)
+	ldt_list := gd.filterLDTsFromReleases(releases)
+	assert.NotEmpty(ldt_list.Ldts)
 }
 
 func Test_FilteringLDTInformationFromURL(t *testing.T) {
