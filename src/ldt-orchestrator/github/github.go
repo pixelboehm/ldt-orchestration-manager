@@ -7,18 +7,18 @@ import (
 	"os"
 	"strings"
 
-	. "longevity/src/ldt-orchestrator"
+	. "longevity/src/types"
 
 	"github.com/google/go-github/v51/github"
 	"golang.org/x/oauth2"
 )
 
-type GithubDiscoverer struct {
-	client        *github.Client
-	authenticated bool
+type GithubClient struct {
+	Client        *github.Client
+	Authenticated bool
 }
 
-func NewGithubDiscoverer(token string) *GithubDiscoverer {
+func NewGithubClient(token string) *GithubClient {
 	ctx := context.Background()
 	val, present := os.LookupEnv(token)
 
@@ -31,25 +31,38 @@ func NewGithubDiscoverer(token string) *GithubDiscoverer {
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
-	return &GithubDiscoverer{client: github.NewClient(tc), authenticated: present}
+	return &GithubClient{Client: github.NewClient(tc), Authenticated: present}
 }
 
-func (gd *GithubDiscoverer) GetReleasesFromRepository(owner, repo string) []*github.RepositoryRelease {
-	releases, _, err := gd.client.Repositories.ListReleases(context.Background(), owner, repo, nil)
+func FetchGithubReleases(repositories []string) *LDTList {
+	gh := NewGithubClient("GH_ACCESS_TOKEN")
+	ldt_list := NewLDTList()
+
+	for _, repo := range repositories {
+		owner, repo := parseRepository(repo)
+		releases := gh.GetReleasesFromRepository(owner, repo)
+		currentLDTs := gh.FilterLDTsFromReleases(releases)
+		ldt_list.LDTs = append(ldt_list.LDTs, currentLDTs.LDTs...)
+	}
+	return ldt_list
+}
+
+func (gd *GithubClient) GetReleasesFromRepository(owner, repo string) []*github.RepositoryRelease {
+	releases, _, err := gd.Client.Repositories.ListReleases(context.Background(), owner, repo, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return releases
 }
 
-func (gd *GithubDiscoverer) filterLDTsFromReleases(releases []*github.RepositoryRelease) *LDTList {
+func (gd *GithubClient) FilterLDTsFromReleases(releases []*github.RepositoryRelease) *LDTList {
 	ldt_list := NewLDTList()
 	for _, release := range releases {
 		for _, asset := range release.Assets {
 			url := asset.GetBrowserDownloadURL()
 			if isArchive(url) {
 				ldt := filterLDTInformationFromURL(url)
-				ldt_list.Ldts = append(ldt_list.Ldts, ldt)
+				ldt_list.LDTs = append(ldt_list.LDTs, ldt)
 			}
 		}
 	}
@@ -81,4 +94,9 @@ func filterLDTInformationFromURL(address string) LDT {
 
 func isArchive(file string) bool {
 	return strings.HasSuffix(file, ".tar.gz") || strings.HasSuffix(file, ".zip")
+}
+
+func parseRepository(repo string) (string, string) {
+	split := strings.Split(repo, "/")
+	return split[3], split[4]
 }
