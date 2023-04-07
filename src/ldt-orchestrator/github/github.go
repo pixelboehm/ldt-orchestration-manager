@@ -1,11 +1,15 @@
 package github
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"net/http"
+	"log"
 	"net/url"
+	"os"
 	"strings"
+
+	"github.com/google/go-github/v51/github"
+	"golang.org/x/oauth2"
 )
 
 type Asset struct {
@@ -18,26 +22,40 @@ type Release struct {
 	Assets  []Asset `json:"assets"`
 }
 
-func GetReleasesFromRepository(owner, repo string) ([]Release, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var releases []Release
-	err = json.NewDecoder(resp.Body).Decode(&releases)
-	if err != nil {
-		fmt.Println("Error decoding releases: ", err)
-		return nil, err
-	}
-	return releases, nil
+type GithubDiscoverer struct {
+	client       *github.Client
+	autenticated bool
 }
 
-func filterLDTs(release Release) bool {
+func NewGithubDiscoverer(token string) *GithubDiscoverer {
+	ctx := context.Background()
+	val, present := os.LookupEnv(token)
+
+	if !present {
+		log.Println("Github token not found. Requests will be limited to 60 per hour.")
+	}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: val},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	return &GithubDiscoverer{client: github.NewClient(tc), autenticated: present}
+}
+
+func (gd *GithubDiscoverer) GetReleasesFromRepository(owner, repo string) []*github.RepositoryRelease {
+	releases, _, err := gd.client.Repositories.ListReleases(context.Background(), owner, repo, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return releases
+}
+
+func (gd *GithubDiscoverer) filterLDTsFromReleases() bool {
 	return false
 }
+
+func 
 
 func filterURL(address string) (string, string, string, string) {
 	u, _ := url.Parse(address)
