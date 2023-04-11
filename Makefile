@@ -36,6 +36,7 @@ coverage:
 clean:
 	@$(GO_BIN) clean --cache
 	rm -rf $(PROJECT_BUILD_DIR)
+	rm -rf $(PROJECT_DIR)/dist
 
 cover: test-c coverage
 
