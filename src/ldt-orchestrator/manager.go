@@ -32,27 +32,14 @@ func (manager *Manager) Setup(config, ldt_list_path string) {
 
 func (manager *Manager) Run() {
 	go manager.monitor.RefreshLDTs()
-	ticker := time.NewTicker(10 * time.Second)
 
-	// var name, pkg_type, dist string
-	// manager.discovery.GetLDTs(name, pkg_type, dist)
-	ldt, err := manager.DownloadLDT("http://localhost:8081/getPackage")
-	if err != nil {
-		log.Fatal(err)
-	}
-	process, err := manager.StartLDT(ldt)
-	if err != nil {
-		log.Fatal(err)
-	}
-	manager.monitor.started <- *process
-	<-ticker.C
-
-	if err := manager.StopLDT(process.Pid, true); err != nil {
-		log.Fatal(err)
-	}
-	manager.monitor.stopped <- process.Pid
-	log.Printf("Stopped LDT %s with PID %d\n", process.Name, process.Pid)
+	manager.discovery.DiscoverLDTs()
 	manager.shutdown()
+}
+
+func (manager *Manager) GetAvailableLDTs() string {
+	manager.discovery.DiscoverLDTs()
+	return manager.discovery.supportedLDTs.String()
 }
 
 func (manager *Manager) DownloadLDT(url string) (string, error) {
