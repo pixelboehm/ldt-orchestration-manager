@@ -83,10 +83,15 @@ func filterLDTInformationFromURL(address string) LDT {
 	ldtname, rest, _ := strings.Cut(withoutSuffix, "_")
 	os, arch, _ := strings.Cut(rest, "_")
 
+	switch arch {
+	case "x86_64":
+		arch = "amd64"
+	}
+
 	ldt := LDT{
 		Name:    user + "/" + ldtname,
 		Version: version,
-		Os:      os,
+		Os:      strings.ToLower(os),
 		Arch:    arch,
 		Url:     address,
 	}
