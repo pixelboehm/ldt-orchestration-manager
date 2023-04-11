@@ -8,6 +8,7 @@ import (
 	"log"
 	comms "longevity/src/communication"
 	lo "longevity/src/ldt-orchestrator"
+	"longevity/src/ldt-orchestrator/unarchive"
 	"net"
 	"os"
 	"os/signal"
@@ -110,7 +111,15 @@ func (app *App) executeCommand(input string) string {
 				log.Fatal(err)
 			}
 			url := app.manager.GetURLFromLDTByID(id)
-			app.manager.DownloadLDTArchive(url)
+			file, err := app.manager.DownloadLDTArchive(url)
+			if err != nil {
+				log.Fatal(err)
+			}
+			ldt, err := unarchive.Untar(file, "resources")
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("LDT: ", ldt)
 		}
 
 		return res
