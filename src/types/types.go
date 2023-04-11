@@ -34,9 +34,9 @@ func (l *LDT) String() string {
 func (ll *LDTList) String() string {
 	var result strings.Builder
 	writer := tabwriter.NewWriter(&result, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(writer, "Name\tVersion\tOS\tArch")
-	for _, ldt := range ll.LDTs {
-		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\n", ldt.Name, ldt.Version, ldt.Os, ldt.Arch)
+	fmt.Fprintln(writer, "\tName\tVersion\tOS\tArch")
+	for i, ldt := range ll.LDTs {
+		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\n", i, ldt.Name, ldt.Version, ldt.Os, ldt.Arch)
 	}
 	writer.Flush()
 
