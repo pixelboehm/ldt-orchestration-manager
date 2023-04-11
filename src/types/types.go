@@ -16,14 +16,16 @@ type LDT struct {
 }
 
 type LDTList struct {
-	LDTs []LDT
-	Lock sync.Mutex
+	LDTs   []LDT
+	Hashes []string
+	Lock   sync.Mutex
 }
 
 func NewLDTList() *LDTList {
 	return &LDTList{
-		LDTs: nil,
-		Lock: sync.Mutex{},
+		LDTs:   nil,
+		Hashes: nil,
+		Lock:   sync.Mutex{},
 	}
 }
 

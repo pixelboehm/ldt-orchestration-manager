@@ -2,7 +2,9 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
 	. "longevity/src/types"
@@ -43,10 +45,15 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 	c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
 	for _, ldt := range newLDTs.LDTs {
+		hash := string(createHash(&ldt))
 		if ldt.Os == c.os && ldt.Arch == c.arch {
-			c.supportedLDTs.LDTs = append(c.supportedLDTs.LDTs, ldt)
+			if !hashAlreadyExists(hash, c.supportedLDTs.LDTs) {
+				c.supportedLDTs.LDTs = append(c.supportedLDTs.LDTs, ldt)
+			}
 		} else {
-			c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+			if !hashAlreadyExists(hash, c.otherLDTs.LDTs) {
+				c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+			}
 		}
 	}
 }
@@ -57,6 +64,21 @@ func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
 	}
 	return c.supportedLDTs.LDTs[id].Url, nil
 
+}
+
+func createHash(l *LDT) []byte {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%v", l)))
+	return h.Sum(nil)
+}
+
+func hashAlreadyExists(hash string, ldt []LDT) bool {
+	for _, ldt := range ldt {
+		if hash == string(createHash(&ldt)) {
+			return true
+		}
+	}
+	return false
 }
 
 func isGithubRepository(repo string) bool {
