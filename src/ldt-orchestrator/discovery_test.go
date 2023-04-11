@@ -90,5 +90,5 @@ func Test_DiscoverLDTs(t *testing.T) {
 	assert := assert.New(t)
 
 	c.DiscoverLDTs()
-	assert.NotNil(len(c.ldtList.LDTs))
+	assert.NotNil(len(c.supportedLDTs.LDTs))
 }

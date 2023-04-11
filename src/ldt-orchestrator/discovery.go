@@ -7,29 +7,46 @@ import (
 	. "longevity/src/types"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 )
 
 type DiscoveryConfig struct {
 	repository_file string
-	ldtList         *LDTList
+	supportedLDTs   *LDTList
+	otherLDTs       *LDTList
 	repositories    []string
+	os              string
+	arch            string
 }
 
 func NewConfig(path string) *DiscoveryConfig {
+	os, arch := getRuntimeInformation()
 	return &DiscoveryConfig{
 		repository_file: path,
-		ldtList:         NewLDTList(),
+		supportedLDTs:   NewLDTList(),
+		otherLDTs:       NewLDTList(),
 		repositories:    make([]string, 0),
+		os:              os,
+		arch:            arch,
 	}
+}
+
+func getRuntimeInformation() (string, string) {
+	os := runtime.GOOS
+	arch := runtime.GOARCH
+	return os, arch
 }
 
 func (c *DiscoveryConfig) DiscoverLDTs() {
 	newLDTs := github.FetchGithubReleases(c.repositories)
-	c.ldtList.LDTs = append(c.ldtList.LDTs, newLDTs.LDTs...)
-	// for _, ldt := range c.ldtList.LDTs {
-	// 	fmt.Printf("Name: %s \t OS: %s \t Architecture: %s\n", ldt.Name, ldt.Os, ldt.Arch)
-	// }
+	for _, ldt := range newLDTs.LDTs {
+		if ldt.Os == c.os && ldt.Arch == c.arch {
+			c.supportedLDTs.LDTs = append(c.supportedLDTs.LDTs, ldt)
+		} else {
+			c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+		}
+	}
 }
 
 func isGithubRepository(repo string) bool {

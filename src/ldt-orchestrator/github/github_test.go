@@ -40,20 +40,53 @@ func Test_FilteringLDTInformationFromURL(t *testing.T) {
 	assert := assert.New(t)
 
 	var testCases = []struct {
-		name  string
+		desc  string
 		input string
 		want  LDT
 	}{
-		{".tar.gz with x86_64 architecture", "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.tar.gz", LDT{Name: "pixelboehm/switch", Version: "v0.2.1", Os: "Darwin", Arch: "x86_64", Url: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.tar.gz"}},
-
-		{".tar.gz with arm64 architecture", "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.tar.gz", LDT{Name: "pixelboehm/switch", Version: "v0.2.1", Os: "Darwin", Arch: "arm64", Url: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.tar.gz"}},
-
-		{".zip with x86_64 architecture", "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.zip", LDT{Name: "pixelboehm/switch", Version: "v0.2.1", Os: "Darwin", Arch: "x86_64", Url: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.zip"}},
-
-		{".zip with arm64 architecture", "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.zip", LDT{Name: "pixelboehm/switch", Version: "v0.2.1", Os: "Darwin", Arch: "arm64", Url: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.zip"}},
+		{
+			desc:  ".tar.gz with x86_64 (amd) architecture",
+			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.tar.gz",
+			want: LDT{
+				Name:    "pixelboehm/switch",
+				Version: "v0.2.1",
+				Os:      "darwin",
+				Arch:    "amd64",
+				Url:     "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.tar.gz"},
+		},
+		{
+			desc:  ".tar.gz with arm64 architecture",
+			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.tar.gz",
+			want: LDT{
+				Name:    "pixelboehm/switch",
+				Version: "v0.2.1",
+				Os:      "darwin",
+				Arch:    "arm64",
+				Url:     "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.tar.gz"},
+		},
+		{
+			desc:  ".zip with x86_64 (amd64) architecture",
+			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.zip",
+			want: LDT{
+				Name:    "pixelboehm/switch",
+				Version: "v0.2.1",
+				Os:      "darwin",
+				Arch:    "amd64",
+				Url:     "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.zip"},
+		},
+		{
+			desc:  ".zip with arm64 architecture",
+			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.zip",
+			want: LDT{
+				Name:    "pixelboehm/switch",
+				Version: "v0.2.1",
+				Os:      "darwin",
+				Arch:    "arm64",
+				Url:     "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.zip"},
+		},
 	}
 	for _, tC := range testCases {
-		t.Run(tC.name, func(t *testing.T) {
+		t.Run(tC.desc, func(t *testing.T) {
 			got := filterLDTInformationFromURL(tC.input)
 			assert.Equal(tC.want, got)
 		})
