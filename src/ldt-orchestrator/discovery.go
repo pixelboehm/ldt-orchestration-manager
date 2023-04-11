@@ -2,6 +2,7 @@ package ldtorchestrator
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
 	. "longevity/src/types"
@@ -48,6 +49,14 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 			c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
 		}
 	}
+}
+
+func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
+	if id > len(c.supportedLDTs.LDTs) {
+		return "", errors.New("Failed to map ID to LDT")
+	}
+	return c.supportedLDTs.LDTs[id].Url, nil
+
 }
 
 func isGithubRepository(repo string) bool {
