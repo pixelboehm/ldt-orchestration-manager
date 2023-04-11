@@ -43,7 +43,7 @@ func Test_UpdateRepositories(t *testing.T) {
 	assert := assert.New(t)
 
 	expected := 1
-	c.repositories = c.updateRepositories()
+	c.updateRepositories()
 	actual := len(c.repositories)
 	assert.Equal(expected, actual)
 }

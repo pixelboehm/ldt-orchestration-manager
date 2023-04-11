@@ -39,6 +39,7 @@ func getRuntimeInformation() (string, string) {
 }
 
 func (c *DiscoveryConfig) DiscoverLDTs() {
+	c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
 	for _, ldt := range newLDTs.LDTs {
 		if ldt.Os == c.os && ldt.Arch == c.arch {
@@ -62,8 +63,7 @@ func isGithubRepository(repo string) bool {
 	}
 }
 
-func (c *DiscoveryConfig) updateRepositories() []string {
-	var repositories []string
+func (c *DiscoveryConfig) updateRepositories() {
 	file, err := os.Open(c.repository_file)
 	if err != nil {
 		log.Fatal(err)
@@ -72,11 +72,10 @@ func (c *DiscoveryConfig) updateRepositories() []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		if !strings.HasPrefix(scanner.Text(), "#") {
-			repositories = append(repositories, scanner.Text())
+			c.repositories = append(c.repositories, scanner.Text())
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return repositories
 }
