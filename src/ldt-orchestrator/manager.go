@@ -5,8 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -37,6 +39,39 @@ func NewManager(config, ldt_list_path string) *Manager {
 func (manager *Manager) GetAvailableLDTs() string {
 	manager.discovery.DiscoverLDTs()
 	return manager.discovery.supportedLDTs.String()
+}
+
+func (manager *Manager) GetURLFromLDTByID(id int) string {
+	url, err := manager.discovery.GetUrlFromLDT(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return url
+}
+
+func (manager *Manager) DownloadLDTArchive(address string) error {
+	url, _ := url.Parse(address)
+	filename := strings.Split(url.Path, "/")[6]
+
+	file, err := os.Create("resources/" + filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	response, err := http.Get(address)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Downloaded LDT Archive: %s\n", file.Name())
+	return nil
 }
 
 func (manager *Manager) DownloadLDT(url string) (string, error) {
