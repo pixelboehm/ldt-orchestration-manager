@@ -49,29 +49,31 @@ func (manager *Manager) GetURLFromLDTByID(id int) string {
 	return url
 }
 
-func (manager *Manager) DownloadLDTArchive(address string) error {
+func (manager *Manager) DownloadLDTArchive(address string) (string, error) {
 	url, _ := url.Parse(address)
 	filename := strings.Split(url.Path, "/")[6]
 
 	file, err := os.Create("resources/" + filename)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
 
 	response, err := http.Get(address)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer response.Body.Close()
 
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	log.Printf("Downloaded LDT Archive: %s\n", file.Name())
-	return nil
+	name := file.Name()
+
+	log.Printf("Downloaded LDT Archive: %s\n", name)
+	return name, nil
 }
 
 func (manager *Manager) DownloadLDT(url string) (string, error) {

@@ -11,6 +11,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -96,14 +98,27 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 	}
 }
 
-func (app *App) executeCommand(command string) string {
-	switch command {
+func (app *App) executeCommand(input string) string {
+	command := strings.Fields(input)
+	switch command[0] {
 	case "get":
 		res := app.manager.GetAvailableLDTs()
+
+		if len(command) > 1 {
+			id, err := strconv.Atoi(command[1])
+			if err != nil {
+				log.Fatal(err)
+			}
+			url := app.manager.GetURLFromLDTByID(id)
+			app.manager.DownloadLDTArchive(url)
+		}
+
 		return res
+
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
+
 	case "help":
 		result := cliHelp()
 		return result.String()
