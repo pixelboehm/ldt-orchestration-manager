@@ -59,7 +59,7 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 }
 
 func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
-	if id > len(c.SupportedLDTs.LDTs) {
+	if id >= len(c.SupportedLDTs.LDTs) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
 	return c.SupportedLDTs.LDTs[id].Url, nil

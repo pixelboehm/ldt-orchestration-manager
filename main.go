@@ -8,7 +8,6 @@ import (
 	"log"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
-	"longevity/src/ldt-orchestrator/unarchive"
 	"net"
 	"os"
 	"os/signal"
@@ -110,15 +109,7 @@ func (app *App) executeCommand(input string) string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		url := app.manager.GetURLFromLDTByID(id)
-		file, err := app.manager.DownloadLDTArchive(url)
-		if err != nil {
-			log.Fatal(err)
-		}
-		ldt, err := unarchive.Untar(file, "resources")
-		if err != nil {
-			log.Fatal(err)
-		}
+		ldt := app.manager.DownloadLDT(id)
 		return ldt
 	default:
 		log.Println("Unkown command received: ", command)
