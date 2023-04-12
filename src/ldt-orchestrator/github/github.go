@@ -26,8 +26,6 @@ func NewGithubClient(token string) *GithubClient {
 		log.Println("Github token not found. Requests will be limited to 60 per hour.")
 	}
 
-	log.Printf("Token: %s \t Authenticated: %t\n", val, present)
-
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: val},
 	)
@@ -83,19 +81,23 @@ func filterLDTInformationFromURL(address string) LDT {
 	ldtname, rest, _ := strings.Cut(withoutSuffix, "_")
 	os, arch, _ := strings.Cut(rest, "_")
 
+	switch arch {
+	case "x86_64":
+		arch = "amd64"
+	}
+
 	ldt := LDT{
 		Name:    user + "/" + ldtname,
 		Version: version,
-		Os:      os,
+		Os:      strings.ToLower(os),
 		Arch:    arch,
 		Url:     address,
 	}
-
 	return ldt
 }
 
 func isArchive(file string) bool {
-	return strings.HasSuffix(file, ".tar.gz") || strings.HasSuffix(file, ".zip")
+	return strings.HasSuffix(file, ".tar.gz")
 }
 
 func parseRepository(repo string) (string, string) {

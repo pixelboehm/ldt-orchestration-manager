@@ -31,7 +31,12 @@ func main() {
 	}
 	defer connection.Close()
 
-	_, err = connection.Write([]byte(os.Args[1]))
+	var res string
+	for _, arg := range os.Args[1:] {
+		res += arg + " "
+	}
+
+	_, err = connection.Write([]byte(res))
 	if err != nil {
 		log.Fatal("write error:", err)
 	}

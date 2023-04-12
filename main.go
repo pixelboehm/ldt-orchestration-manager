@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"io"
 	"log"
-	lo "longevity/src/ldt-orchestrator"
+	comms "longevity/src/communication"
+	man "longevity/src/ldt-orchestrator/manager"
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -20,23 +23,35 @@ const (
 var repos string
 var ldts string
 
+type App struct {
+	manager *man.Manager
+}
+
 func main() {
-	flag.StringVar(&repos, "repos", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
-	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
-	flag.Parse()
-	flag.Usage = help
-	if err := runApp(os.Stdout); err != nil {
+	parseFlags()
+	app := &App{
+		manager: man.NewManager(repos, ldts),
+	}
+
+	if err := app.run(os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func help() {
+func parseFlags() {
+	flag.StringVar(&repos, "repos", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
+	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
+	flag.Parse()
+	flag.Usage = flagHelp
+}
+
+func flagHelp() {
 	fmt.Printf("Usage: %s [OPTIONS]", os.Args[0])
 	fmt.Printf("--repos \t Custom path to the repositories file")
 	fmt.Printf("--ldts \t Custom path to store LDT status")
 }
 
-func runApp(out io.Writer) error {
+func (app *App) run(out io.Writer) error {
 	log.SetOutput(out)
 	listener, err := net.Listen("unix", socketpath)
 	if err != nil {
@@ -47,7 +62,7 @@ func runApp(out io.Writer) error {
 	sigchannel := make(chan os.Signal, 1)
 	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	go checkForShutdown(sigchannel)
+	go app.checkForShutdown(sigchannel)
 
 	for {
 		in, err := listener.Accept()
@@ -55,33 +70,13 @@ func runApp(out io.Writer) error {
 			log.Fatal("error accepting connection: ", err)
 			return err
 		}
-		cmd := getCommandFromSocket(in)
-		res := executeCommand(cmd)
-		sendResultToSocket(in, res)
+		cmd := comms.GetCommandFromSocket(in)
+		res := app.executeCommand(cmd)
+		comms.SendResultToSocket(in, res)
 	}
 }
 
-func sendResultToSocket(out net.Conn, res string) {
-	_, err := out.Write([]byte(res))
-	if err != nil {
-		log.Fatal("error writing to socket: ", err)
-	}
-}
-
-func getCommandFromSocket(in net.Conn) string {
-	for {
-		buf := make([]byte, 512)
-		nr, err := in.Read(buf)
-		if err != nil {
-			return "help"
-		}
-
-		data := buf[0:nr]
-		return string(data)
-	}
-}
-
-func checkForShutdown(c chan os.Signal) {
+func (app *App) checkForShutdown(c chan os.Signal) {
 	sig := <-c
 	switch sig {
 	case syscall.SIGINT, syscall.SIGTERM:
@@ -97,30 +92,36 @@ func checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
-		if err := runApp(os.Stdout); err != nil {
+		if err := app.run(os.Stdout); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func executeCommand(command string) string {
-	switch command {
+func (app *App) executeCommand(input string) string {
+	command := strings.Fields(input)
+	switch command[0] {
+	case "get":
+		res := app.manager.GetAvailableLDTs()
+		return res
+	case "pull":
+		id, err := strconv.Atoi(command[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+		ldt := app.manager.DownloadLDT(id)
+		return ldt
 	case "run":
-		runManagingService()
-		return "Running managing service"
+		process, _ := app.manager.StartLDT(command[1])
+		return process.Name
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
+
 	case "help":
 		result := cliHelp()
 		return result.String()
 	}
-}
-
-func runManagingService() {
-	manager := &lo.Manager{}
-	manager.Setup(repos, ldts)
-	manager.Run()
 }
 
 func cliHelp() *bytes.Buffer {

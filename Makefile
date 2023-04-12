@@ -13,6 +13,13 @@ build:
 	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) main.go
 	@printf "%s\n" 'Done'
 
+.PHONY: cli
+cli:
+	@printf "%s\n" 'Compiling CLI...'
+	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/odm src/cli/cli.go
+	@printf "%s\n" 'Done'
+
+
 run: build
 	@printf "Executing %s\n\n" "$(PROJECT_BUILD_DIR)/$(BIN_NAME)"
 	@$(PROJECT_BUILD_DIR)/$(BIN_NAME) $(if $(RUN_ARGS), $(RUN_ARGS))
@@ -36,6 +43,7 @@ coverage:
 clean:
 	@$(GO_BIN) clean --cache
 	rm -rf $(PROJECT_BUILD_DIR)
+	rm -rf $(PROJECT_DIR)/dist
 
 cover: test-c coverage
 

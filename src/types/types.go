@@ -1,6 +1,12 @@
 package types
 
-import "sync"
+import (
+	"fmt"
+	"strings"
+	"sync"
+	"text/tabwriter"
+	"time"
+)
 
 type LDT struct {
 	Name    string
@@ -11,13 +17,45 @@ type LDT struct {
 }
 
 type LDTList struct {
-	LDTs []LDT
-	Lock sync.Mutex
+	LDTs   []LDT
+	Hashes []string
+	Lock   sync.Mutex
 }
 
 func NewLDTList() *LDTList {
 	return &LDTList{
-		LDTs: nil,
-		Lock: sync.Mutex{},
+		LDTs:   nil,
+		Hashes: nil,
+		Lock:   sync.Mutex{},
 	}
+}
+
+type Process struct {
+	Pid     int
+	Name    string
+	Started time.Time
+}
+
+func NewProcess(pid int, name string) *Process {
+	return &Process{
+		Pid:     pid,
+		Name:    name,
+		Started: time.Now(),
+	}
+}
+
+func (l *LDT) String() string {
+	return fmt.Sprintf("%s \t %s \t %s \t %s \t %s", l.Name, l.Version, l.Os, l.Arch, l.Url)
+}
+
+func (ll *LDTList) String() string {
+	var result strings.Builder
+	writer := tabwriter.NewWriter(&result, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(writer, "\tName\tVersion\tOS\tArch")
+	for i, ldt := range ll.LDTs {
+		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\n", i, ldt.Name, ldt.Version, ldt.Os, ldt.Arch)
+	}
+	writer.Flush()
+
+	return result.String()
 }

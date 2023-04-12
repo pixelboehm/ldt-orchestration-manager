@@ -1,4 +1,4 @@
-package ldtorchestrator
+package discovery
 
 import (
 	"os"
@@ -43,7 +43,7 @@ func Test_UpdateRepositories(t *testing.T) {
 	assert := assert.New(t)
 
 	expected := 1
-	c.repositories = c.updateRepositories()
+	c.updateRepositories()
 	actual := len(c.repositories)
 	assert.Equal(expected, actual)
 }
@@ -90,5 +90,5 @@ func Test_DiscoverLDTs(t *testing.T) {
 	assert := assert.New(t)
 
 	c.DiscoverLDTs()
-	assert.NotNil(len(c.ldtList.LDTs))
+	assert.NotNil(len(c.SupportedLDTs.LDTs))
 }
