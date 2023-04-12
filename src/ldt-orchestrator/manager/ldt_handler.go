@@ -5,15 +5,16 @@ import (
 	. "longevity/src/types"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 func start(ldt string) (*Process, error) {
 	makeExecutable(ldt)
 
 	cmd := exec.Command("./" + ldt)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
 
 	if err := cmd.Start(); err != nil {
 		return nil, err

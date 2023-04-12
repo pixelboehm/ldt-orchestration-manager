@@ -43,3 +43,23 @@ The postgres database needs to expose port `5432` and is currently accessible vi
 
 Easiest way to get the database started is via docker:
 `docker run -d --rm -p 5432:5432 -e POSTGRES_PASSWORD=foobar --name longevity-db postgres`
+
+## Commands
+
+This section lists useful commands which help during execution and debugging of the project.
+
+### Stdout / Stderr from LDT
+
+In case the ODM does not redirect the output during process creation, the output of LDTs can be accessed like this:
+
+Getting stdout from an LDT on macOS:
+```bash
+dtrace -p $LDT_PID -qn 'syscall::write*:entry /pid ==  && (arg0 == 1 || arg0 == 2)/ { printf(%s, copyinstr(arg1, arg2)); }'
+```
+
+Getting stdout from an LDT on Linux:
+1: stdout
+2: stderr
+```bash
+tail -f /proc/$LDT_PID/fd/1
+```
