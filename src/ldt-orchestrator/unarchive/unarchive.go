@@ -3,6 +3,7 @@ package unarchive
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -10,19 +11,25 @@ import (
 )
 
 func Untar(src, dest string) (string, error) {
-	folder := strings.Split(strings.Split(src, "/")[1], ".")[0]
-	if err := os.Mkdir(dest+"/"+folder, 0777); err != nil {
-		log.Fatal(err)
+	subfolder := strings.Split(strings.Split(src, "/")[1], ".")[0]
+	folder := dest + "/" + subfolder
+
+	if _, err := os.Stat(folder); os.IsNotExist(err) {
+		if err := os.Mkdir(folder, 0777); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	file, err := os.Open(src)
 	if err != nil {
+		fmt.Println("Unable to open source file")
 		return "", err
 	}
 	defer file.Close()
 
 	gzip, err := gzip.NewReader(file)
 	if err != nil {
+		fmt.Println("unable to create reader")
 		return "", err
 	}
 	defer gzip.Close()
@@ -40,7 +47,7 @@ func Untar(src, dest string) (string, error) {
 			log.Println("failed to read next tar entry")
 			return "", err
 		}
-		dest := dest + "/" + folder + "/" + nextFile.Name
+		dest := dest + "/" + subfolder + "/" + nextFile.Name
 		files = append(files, dest)
 		unpacked, err := os.Create(dest)
 		if err != nil {
