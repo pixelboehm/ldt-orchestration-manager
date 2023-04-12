@@ -93,12 +93,11 @@ func filterLDTInformationFromURL(address string) LDT {
 		Arch:    arch,
 		Url:     address,
 	}
-
 	return ldt
 }
 
 func isArchive(file string) bool {
-	return strings.HasSuffix(file, ".tar.gz") || strings.HasSuffix(file, ".zip")
+	return strings.HasSuffix(file, ".tar.gz")
 }
 
 func parseRepository(repo string) (string, string) {
