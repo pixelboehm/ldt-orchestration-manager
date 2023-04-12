@@ -1,4 +1,4 @@
-package ldtorchestrator
+package discovery
 
 import (
 	"os"
@@ -90,5 +90,5 @@ func Test_DiscoverLDTs(t *testing.T) {
 	assert := assert.New(t)
 
 	c.DiscoverLDTs()
-	assert.NotNil(len(c.supportedLDTs.LDTs))
+	assert.NotNil(len(c.SupportedLDTs.LDTs))
 }

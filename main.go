@@ -7,7 +7,7 @@ import (
 	"io"
 	"log"
 	comms "longevity/src/communication"
-	lo "longevity/src/ldt-orchestrator"
+	man "longevity/src/ldt-orchestrator/manager"
 	"longevity/src/ldt-orchestrator/unarchive"
 	"net"
 	"os"
@@ -25,13 +25,13 @@ var repos string
 var ldts string
 
 type App struct {
-	manager *lo.Manager
+	manager *man.Manager
 }
 
 func main() {
 	parseFlags()
 	app := &App{
-		manager: lo.NewManager(repos, ldts),
+		manager: man.NewManager(repos, ldts),
 	}
 
 	if err := app.run(os.Stdout); err != nil {
@@ -104,26 +104,22 @@ func (app *App) executeCommand(input string) string {
 	switch command[0] {
 	case "get":
 		res := app.manager.GetAvailableLDTs()
-
-		if len(command) > 1 {
-			id, err := strconv.Atoi(command[1])
-			if err != nil {
-				log.Fatal(err)
-			}
-			url := app.manager.GetURLFromLDTByID(id)
-			file, err := app.manager.DownloadLDTArchive(url)
-			if err != nil {
-				log.Fatal(err)
-			}
-			ldt, err := unarchive.Untar(file, "resources")
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("LDT: ", ldt)
-		}
-
 		return res
-
+	case "pull":
+		id, err := strconv.Atoi(command[1])
+		if err != nil {
+			log.Fatal(err)
+		}
+		url := app.manager.GetURLFromLDTByID(id)
+		file, err := app.manager.DownloadLDTArchive(url)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ldt, err := unarchive.Untar(file, "resources")
+		if err != nil {
+			log.Fatal(err)
+		}
+		return ldt
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough

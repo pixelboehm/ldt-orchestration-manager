@@ -1,32 +1,28 @@
-package ldtorchestrator
+package manager
 
 import (
 	"fmt"
 	"io"
 	"log"
+	di "longevity/src/ldt-orchestrator/discovery"
+	mo "longevity/src/ldt-orchestrator/monitor"
+	. "longevity/src/types"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 )
 
-type Process struct {
-	Pid     int
-	Name    string
-	started time.Time
-}
-
 type Manager struct {
-	monitor   *Monitor
-	discovery *DiscoveryConfig
+	monitor   *mo.Monitor
+	discovery *di.DiscoveryConfig
 }
 
 func NewManager(config, ldt_list_path string) *Manager {
 	manager := &Manager{
-		monitor:   NewMonitor(ldt_list_path),
-		discovery: NewConfig(config),
+		monitor:   mo.NewMonitor(ldt_list_path),
+		discovery: di.NewConfig(config),
 	}
 
 	if err := manager.monitor.DeserializeLDTs(); err != nil {
@@ -38,7 +34,7 @@ func NewManager(config, ldt_list_path string) *Manager {
 
 func (manager *Manager) GetAvailableLDTs() string {
 	manager.discovery.DiscoverLDTs()
-	return manager.discovery.supportedLDTs.String()
+	return manager.discovery.SupportedLDTs.String()
 }
 
 func (manager *Manager) GetURLFromLDTByID(id int) string {
@@ -114,11 +110,9 @@ func (manager *Manager) StartLDT(name string) (*Process, error) {
 	}
 
 	fmt.Printf("Started LDT with PID %d\n", cmd.Process.Pid)
-	return &Process{
-		Pid:     cmd.Process.Pid,
-		Name:    name,
-		started: time.Now(),
-	}, nil
+
+	process := NewProcess(cmd.Process.Pid, name)
+	return process, nil
 
 }
 

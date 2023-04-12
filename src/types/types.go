@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"text/tabwriter"
+	"time"
 )
 
 type LDT struct {
@@ -26,6 +27,20 @@ func NewLDTList() *LDTList {
 		LDTs:   nil,
 		Hashes: nil,
 		Lock:   sync.Mutex{},
+	}
+}
+
+type Process struct {
+	Pid     int
+	Name    string
+	Started time.Time
+}
+
+func NewProcess(pid int, name string) *Process {
+	return &Process{
+		Pid:     pid,
+		Name:    name,
+		Started: time.Now(),
 	}
 }
 

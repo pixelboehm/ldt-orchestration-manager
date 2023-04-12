@@ -1,4 +1,4 @@
-package ldtorchestrator
+package discovery
 
 import (
 	"bufio"
@@ -16,7 +16,7 @@ import (
 
 type DiscoveryConfig struct {
 	repository_file string
-	supportedLDTs   *LDTList
+	SupportedLDTs   *LDTList
 	otherLDTs       *LDTList
 	repositories    []string
 	os              string
@@ -27,7 +27,7 @@ func NewConfig(path string) *DiscoveryConfig {
 	os, arch := getRuntimeInformation()
 	return &DiscoveryConfig{
 		repository_file: path,
-		supportedLDTs:   NewLDTList(),
+		SupportedLDTs:   NewLDTList(),
 		otherLDTs:       NewLDTList(),
 		repositories:    make([]string, 0),
 		os:              os,
@@ -47,8 +47,8 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 	for _, ldt := range newLDTs.LDTs {
 		hash := string(createHash(&ldt))
 		if ldt.Os == c.os && ldt.Arch == c.arch {
-			if !hashAlreadyExists(hash, c.supportedLDTs.LDTs) {
-				c.supportedLDTs.LDTs = append(c.supportedLDTs.LDTs, ldt)
+			if !hashAlreadyExists(hash, c.SupportedLDTs.LDTs) {
+				c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, ldt)
 			}
 		} else {
 			if !hashAlreadyExists(hash, c.otherLDTs.LDTs) {
@@ -59,10 +59,10 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 }
 
 func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
-	if id > len(c.supportedLDTs.LDTs) {
+	if id > len(c.SupportedLDTs.LDTs) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
-	return c.supportedLDTs.LDTs[id].Url, nil
+	return c.SupportedLDTs.LDTs[id].Url, nil
 
 }
 

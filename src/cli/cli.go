@@ -32,7 +32,6 @@ func main() {
 	defer connection.Close()
 
 	var res string
-	fmt.Println(os.Args)
 	for _, arg := range os.Args[1:] {
 		res += arg + " "
 	}

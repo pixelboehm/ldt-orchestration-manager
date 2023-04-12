@@ -1,10 +1,11 @@
-package ldtorchestrator
+package monitor
 
 import (
 	"bufio"
 	"errors"
 	"fmt"
 	"log"
+	. "longevity/src/types"
 	"os"
 	"time"
 )
@@ -38,7 +39,7 @@ func (m *Monitor) RefreshLDTs() {
 
 func (m *Monitor) RegisterLDT(ldt Process) {
 	m.processes = append(m.processes, ldt)
-	log.Printf("New LDT %s with PID %d started at %s\n", ldt.Name, ldt.Pid, ldt.started.Format("02-01-2006 15:04:05"))
+	log.Printf("New LDT %s with PID %d started at %s\n", ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
 }
 
 func (m *Monitor) RemoveLDT(pid int) {
@@ -62,7 +63,7 @@ func (m *Monitor) SerializeLDTs() error {
 	template := "%s\t%d\t%s\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Name, ldt.Pid, ldt.started.Format("02-01-2006 15:04:05"))
+		res := fmt.Sprintf(template, ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
 		writer.WriteString(res)
 	}
 
@@ -92,7 +93,7 @@ func (m *Monitor) DeserializeLDTs() error {
 				return err
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Name: name, started: time})
+			m.processes = append(m.processes, Process{Pid: pid, Name: name, Started: time})
 		}
 
 		if err := scanner.Err(); err != nil {
