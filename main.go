@@ -111,6 +111,9 @@ func (app *App) executeCommand(input string) string {
 		}
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
+	case "run":
+		process, _ := app.manager.StartLDT(command[1])
+		return process.Name
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
