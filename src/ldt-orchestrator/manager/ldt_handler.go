@@ -3,12 +3,13 @@ package manager
 import (
 	"log"
 	. "longevity/src/types"
+	"net"
 	"os"
 	"os/exec"
 	"syscall"
 )
 
-func start(ldt string) (*Process, error) {
+func run(ldt string) (*Process, error) {
 	makeExecutable(ldt)
 
 	cmd := exec.Command("./" + ldt)
@@ -21,6 +22,26 @@ func start(ldt string) (*Process, error) {
 	}
 
 	process := NewProcess(cmd.Process.Pid, ldt)
+	return process, nil
+}
+
+func start(ldt string, in *net.Conn) (*Process, error) {
+	makeExecutable(ldt)
+
+	cmd := exec.Command("./" + ldt)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+
+	cmd.Stdout = *in
+	cmd.Stderr = *in
+	cmd.Stdin = *in
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	process := NewProcess(cmd.Process.Pid, ldt)
+
 	return process, nil
 }
 

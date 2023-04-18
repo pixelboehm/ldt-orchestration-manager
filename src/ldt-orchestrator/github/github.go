@@ -2,6 +2,8 @@ package github
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -62,14 +64,15 @@ func (gd *GithubClient) FilterLDTsFromReleases(releases []*github.RepositoryRele
 			url := asset.GetBrowserDownloadURL()
 			if isArchive(url) {
 				ldt := filterLDTInformationFromURL(url)
-				ldt_list.LDTs = append(ldt_list.LDTs, ldt)
+				finalizeLDT(ldt)
+				ldt_list.LDTs = append(ldt_list.LDTs, *ldt)
 			}
 		}
 	}
 	return ldt_list
 }
 
-func filterLDTInformationFromURL(address string) LDT {
+func filterLDTInformationFromURL(address string) *LDT {
 	u, _ := url.Parse(address)
 	user := strings.Split(u.Path, "/")[1]
 
@@ -86,7 +89,7 @@ func filterLDTInformationFromURL(address string) LDT {
 		arch = "amd64"
 	}
 
-	ldt := LDT{
+	ldt := &LDT{
 		Name:    user + "/" + ldtname,
 		Version: version,
 		Os:      strings.ToLower(os),
@@ -94,6 +97,16 @@ func filterLDTInformationFromURL(address string) LDT {
 		Url:     address,
 	}
 	return ldt
+}
+
+func finalizeLDT(ldt *LDT) {
+	ldt.Hash = createHash(ldt)
+}
+
+func createHash(l *LDT) []byte {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%v", l)))
+	return h.Sum(nil)
 }
 
 func isArchive(file string) bool {

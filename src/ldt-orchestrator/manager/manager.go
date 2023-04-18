@@ -6,6 +6,7 @@ import (
 	mo "longevity/src/ldt-orchestrator/monitor"
 	"longevity/src/ldt-orchestrator/unarchive"
 	. "longevity/src/types"
+	"net"
 )
 
 type Manager struct {
@@ -66,8 +67,8 @@ func (manager *Manager) DownloadLDT(id int) string {
 	return ldt
 }
 
-func (manager *Manager) StartLDT(ldt string) (*Process, error) {
-	process, err := start(ldt)
+func (manager *Manager) RunLDT(ldt string) (*Process, error) {
+	process, err := run(ldt)
 	if err != nil {
 		log.Fatal("Failed to start LDT: ", err)
 		return nil, err
@@ -75,6 +76,17 @@ func (manager *Manager) StartLDT(ldt string) (*Process, error) {
 
 	log.Printf("Successfully started LDT with PID: %d\n", process.Pid)
 	return process, nil
+}
+
+func (manager *Manager) StartLDT(ldt string, in *net.Conn) error {
+	process, err := start(ldt, in)
+	if err != nil {
+		log.Fatal("Failed to start LDT: ", err)
+		return err
+	}
+
+	log.Printf("Successfully started LDT with PID: %d\n", process.Pid)
+	return nil
 }
 
 func (manager *Manager) StopLDT(pid int, graceful bool) bool {

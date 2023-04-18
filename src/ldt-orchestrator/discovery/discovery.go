@@ -2,36 +2,38 @@ package discovery
 
 import (
 	"bufio"
-	"crypto/sha256"
 	"errors"
-	"fmt"
+	"io"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
+	"longevity/src/types"
 	. "longevity/src/types"
+	"net/http"
 	"net/url"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 )
 
 type DiscoveryConfig struct {
-	repository_file string
-	SupportedLDTs   *LDTList
-	otherLDTs       *LDTList
-	repositories    []string
-	os              string
-	arch            string
+	repository_source string
+	SupportedLDTs     *LDTList
+	otherLDTs         *LDTList
+	repositories      []string
+	os                string
+	arch              string
 }
 
 func NewConfig(path string) *DiscoveryConfig {
 	os, arch := getRuntimeInformation()
 	return &DiscoveryConfig{
-		repository_file: path,
-		SupportedLDTs:   NewLDTList(),
-		otherLDTs:       NewLDTList(),
-		repositories:    make([]string, 0),
-		os:              os,
-		arch:            arch,
+		repository_source: path,
+		SupportedLDTs:     NewLDTList(),
+		otherLDTs:         NewLDTList(),
+		repositories:      make([]string, 0),
+		os:                os,
+		arch:              arch,
 	}
 }
 
@@ -42,20 +44,64 @@ func getRuntimeInformation() (string, string) {
 }
 
 func (c *DiscoveryConfig) DiscoverLDTs() {
-	c.updateRepositories()
+	_ = c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
+	var update_latest_tag_supported bool = false
+	var update_latest_tag_other bool = false
 	for _, ldt := range newLDTs.LDTs {
-		hash := string(createHash(&ldt))
 		if ldt.Os == c.os && ldt.Arch == c.arch {
-			if !hashAlreadyExists(hash, c.SupportedLDTs.LDTs) {
+			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
 				c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, ldt)
+				update_latest_tag_supported = true
 			}
 		} else {
-			if !hashAlreadyExists(hash, c.otherLDTs.LDTs) {
+			if !ldtAlreadyExists(&ldt, c.otherLDTs) {
 				c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+				update_latest_tag_supported = true
 			}
 		}
 	}
+	if update_latest_tag_supported {
+		updateLatestTag(&c.SupportedLDTs.LDTs)
+	}
+	if update_latest_tag_other {
+		updateLatestTag(&c.otherLDTs.LDTs)
+	}
+}
+
+func updateLatestTag(ldts *[]LDT) {
+	sortLDTsByName(*ldts)
+
+	var last_ldt_name string
+	var current_latest_version string
+	var latest_ldt_changed bool = false
+	var latest_ldt *LDT
+
+	for _, ldt := range *ldts {
+		if ldt.Name != last_ldt_name {
+			last_ldt_name = ldt.Name
+			current_latest_version = ldt.Version
+			latest_ldt = &ldt
+			latest_ldt_changed = true
+		} else if ldt.Name == last_ldt_name {
+			latest_ldt_changed = false
+			if ldt.Version > current_latest_version {
+				current_latest_version = ldt.Version
+				latest_ldt = &ldt
+				latest_ldt_changed = true
+			}
+		}
+		if latest_ldt_changed {
+			latest_ldt.Version = "latest"
+			*ldts = append([]types.LDT{*latest_ldt}, *ldts...)
+		}
+	}
+}
+
+func sortLDTsByName(ldts []LDT) {
+	sort.Slice(ldts, func(i, j int) bool {
+		return ldts[i].Name > ldts[j].Name
+	})
 }
 
 func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
@@ -63,18 +109,11 @@ func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
 	return c.SupportedLDTs.LDTs[id].Url, nil
-
 }
 
-func createHash(l *LDT) []byte {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%v", l)))
-	return h.Sum(nil)
-}
-
-func hashAlreadyExists(hash string, ldt []LDT) bool {
-	for _, ldt := range ldt {
-		if hash == string(createHash(&ldt)) {
+func ldtAlreadyExists(ldt *LDT, ldt_list *LDTList) bool {
+	for _, existingLDT := range ldt_list.LDTs {
+		if string(ldt.Hash) == string(existingLDT.Hash) {
 			return true
 		}
 	}
@@ -94,13 +133,24 @@ func isGithubRepository(repo string) bool {
 	}
 }
 
-func (c *DiscoveryConfig) updateRepositories() {
-	file, err := os.Open(c.repository_file)
-	if err != nil {
-		log.Fatal(err)
+func (c *DiscoveryConfig) updateRepositories() error {
+	var content io.Reader
+	if isURL(c.repository_source) {
+		resp, err := http.Get(c.repository_source)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		content = resp.Body
+	} else {
+		file, err := os.Open(c.repository_source)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		content = file
 	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(content)
 	for scanner.Scan() {
 		if !strings.HasPrefix(scanner.Text(), "#") {
 			c.repositories = append(c.repositories, scanner.Text())
@@ -109,4 +159,13 @@ func (c *DiscoveryConfig) updateRepositories() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	return nil
+}
+
+func isURL(input string) bool {
+	u, err := url.Parse(input)
+	if err != nil {
+		return false
+	}
+	return u.Scheme != "" && u.Host != ""
 }
