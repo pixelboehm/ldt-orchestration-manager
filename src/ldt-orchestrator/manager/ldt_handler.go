@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"io"
 	"log"
 	. "longevity/src/types"
 	"net"
@@ -26,7 +25,7 @@ func run(ldt string) (*Process, error) {
 	return process, nil
 }
 
-func start(ldt string, in *net.Conn) (*Process, *io.Writer, error) {
+func start(ldt string, in *net.Conn) (*Process, error) {
 	makeExecutable(ldt)
 
 	cmd := exec.Command("./" + ldt)
@@ -39,11 +38,11 @@ func start(ldt string, in *net.Conn) (*Process, *io.Writer, error) {
 	cmd.Stdin = *in
 
 	if err := cmd.Start(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	process := NewProcess(cmd.Process.Pid, ldt)
 
-	return process, &cmd.Stdout, nil
+	return process, nil
 }
 
 func stop(pid int, graceful bool) bool {

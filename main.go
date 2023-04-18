@@ -71,7 +71,7 @@ func (app *App) run(out io.Writer) error {
 			return err
 		}
 		cmd := comms.GetCommandFromSocket(in)
-		res := app.executeCommand(cmd)
+		res := app.executeCommand(cmd, &in)
 		comms.SendResultToSocket(in, res)
 	}
 }
@@ -98,7 +98,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 	}
 }
 
-func (app *App) executeCommand(input string) string {
+func (app *App) executeCommand(input string, in *net.Conn) string {
 	command := strings.Fields(input)
 	switch command[0] {
 	case "get":
@@ -112,8 +112,11 @@ func (app *App) executeCommand(input string) string {
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
 	case "run":
-		process, _ := app.manager.StartLDT(command[1])
+		process, _ := app.manager.RunLDT(command[1])
 		return process.Name
+	case "start":
+		_ = app.manager.StartLDT(command[1], in)
+		return "start"
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
