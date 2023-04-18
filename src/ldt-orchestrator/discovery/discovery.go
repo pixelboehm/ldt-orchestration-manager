@@ -3,7 +3,6 @@ package discovery
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
@@ -47,29 +46,38 @@ func getRuntimeInformation() (string, string) {
 func (c *DiscoveryConfig) DiscoverLDTs() {
 	_ = c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
+	var update_latest_tag_supported bool = false
+	var update_latest_tag_other bool = false
 	for _, ldt := range newLDTs.LDTs {
 		if ldt.Os == c.os && ldt.Arch == c.arch {
 			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
 				c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, ldt)
+				update_latest_tag_supported = true
 			}
 		} else {
-			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
+			if !ldtAlreadyExists(&ldt, c.otherLDTs) {
 				c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+				update_latest_tag_supported = true
 			}
 		}
 	}
-	c.addLatestTag()
+	if update_latest_tag_supported {
+		updateLatestTag(&c.SupportedLDTs.LDTs)
+	}
+	if update_latest_tag_other {
+		updateLatestTag(&c.otherLDTs.LDTs)
+	}
 }
 
-func (c *DiscoveryConfig) addLatestTag() {
-	sortLDTsByName(c.SupportedLDTs.LDTs)
+func updateLatestTag(ldts *[]LDT) {
+	sortLDTsByName(*ldts)
 
 	var last_ldt_name string
 	var current_latest_version string
 	var latest_ldt_changed bool = false
 	var latest_ldt *LDT
 
-	for _, ldt := range c.SupportedLDTs.LDTs {
+	for _, ldt := range *ldts {
 		if ldt.Name != last_ldt_name {
 			last_ldt_name = ldt.Name
 			current_latest_version = ldt.Version
@@ -85,10 +93,9 @@ func (c *DiscoveryConfig) addLatestTag() {
 		}
 		if latest_ldt_changed {
 			latest_ldt.Version = "latest"
-			c.SupportedLDTs.LDTs = append([]types.LDT{*latest_ldt}, c.SupportedLDTs.LDTs...)
+			*ldts = append([]types.LDT{*latest_ldt}, *ldts...)
 		}
 	}
-	fmt.Println(c.SupportedLDTs)
 }
 
 func sortLDTsByName(ldts []LDT) {
