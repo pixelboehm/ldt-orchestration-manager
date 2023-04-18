@@ -19,8 +19,21 @@ func waitForAnswer(reader io.Reader) {
 		if err != nil {
 			return
 		}
-		fmt.Println(string(buffer[0:n]))
+		val := string(buffer[0:n])
+		fmt.Println(val)
 		return
+	}
+}
+
+func blockingWaitForAnswer(reader io.Reader) {
+	buffer := make([]byte, 1024)
+	for {
+		n, err := reader.Read(buffer[:])
+		if err != nil {
+			return
+		}
+		val := string(buffer[0:n])
+		fmt.Println(val)
 	}
 }
 
@@ -40,5 +53,10 @@ func main() {
 	if err != nil {
 		log.Fatal("write error:", err)
 	}
-	waitForAnswer(connection)
+
+	if os.Args[1] == "start" {
+		blockingWaitForAnswer(connection)
+	} else {
+		waitForAnswer(connection)
+	}
 }
