@@ -55,6 +55,5 @@ func (ll *LDTList) String() string {
 		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\t%x\n", i, ldt.Name, ldt.Version, ldt.Os, ldt.Arch, ldt.Hash[:6])
 	}
 	writer.Flush()
-
 	return result.String()
 }
