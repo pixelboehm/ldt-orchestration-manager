@@ -41,10 +41,12 @@ func ensureConfigExists(t *testing.T) {
 func Test_UpdateRepositories(t *testing.T) {
 	ensureConfigExists(t)
 	assert := assert.New(t)
+	require := require.New(t)
 
 	expected := 1
-	c.updateRepositories()
+	err := c.updateRepositories()
 	actual := len(c.repositories)
+	require.NoError(err)
 	assert.Equal(expected, actual)
 }
 

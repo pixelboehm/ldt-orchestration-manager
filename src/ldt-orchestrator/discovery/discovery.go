@@ -45,7 +45,7 @@ func getRuntimeInformation() (string, string) {
 }
 
 func (c *DiscoveryConfig) DiscoverLDTs() {
-	c.updateRepositories()
+	_ = c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
 	for _, ldt := range newLDTs.LDTs {
 		if ldt.Os == c.os && ldt.Arch == c.arch {
@@ -126,10 +126,13 @@ func isGithubRepository(repo string) bool {
 	}
 }
 
-func (c *DiscoveryConfig) updateRepositories() {
+func (c *DiscoveryConfig) updateRepositories() error {
 	var content io.Reader
 	if isURL(c.repository_source) {
-		resp, _ := http.Get(c.repository_source)
+		resp, err := http.Get(c.repository_source)
+		if err != nil {
+			return err
+		}
 		defer resp.Body.Close()
 		content = resp.Body
 	} else {
@@ -149,6 +152,7 @@ func (c *DiscoveryConfig) updateRepositories() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	return nil
 }
 
 func isURL(input string) bool {
