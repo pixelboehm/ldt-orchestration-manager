@@ -5,9 +5,11 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
 	. "longevity/src/types"
+	"net/http"
 	"net/url"
 	"os"
 	"runtime"
@@ -15,23 +17,23 @@ import (
 )
 
 type DiscoveryConfig struct {
-	repository_file string
-	SupportedLDTs   *LDTList
-	otherLDTs       *LDTList
-	repositories    []string
-	os              string
-	arch            string
+	repository_source string
+	SupportedLDTs     *LDTList
+	otherLDTs         *LDTList
+	repositories      []string
+	os                string
+	arch              string
 }
 
 func NewConfig(path string) *DiscoveryConfig {
 	os, arch := getRuntimeInformation()
 	return &DiscoveryConfig{
-		repository_file: path,
-		SupportedLDTs:   NewLDTList(),
-		otherLDTs:       NewLDTList(),
-		repositories:    make([]string, 0),
-		os:              os,
-		arch:            arch,
+		repository_source: path,
+		SupportedLDTs:     NewLDTList(),
+		otherLDTs:         NewLDTList(),
+		repositories:      make([]string, 0),
+		os:                os,
+		arch:              arch,
 	}
 }
 
@@ -95,12 +97,20 @@ func isGithubRepository(repo string) bool {
 }
 
 func (c *DiscoveryConfig) updateRepositories() {
-	file, err := os.Open(c.repository_file)
-	if err != nil {
-		log.Fatal(err)
+	var content io.Reader
+	if isURL(c.repository_source) {
+		resp, _ := http.Get(c.repository_source)
+		defer resp.Body.Close()
+		content = resp.Body
+	} else {
+		file, err := os.Open(c.repository_source)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		content = file
 	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(content)
 	for scanner.Scan() {
 		if !strings.HasPrefix(scanner.Text(), "#") {
 			c.repositories = append(c.repositories, scanner.Text())
@@ -109,4 +119,12 @@ func (c *DiscoveryConfig) updateRepositories() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func isURL(input string) bool {
+	u, err := url.Parse(input)
+	if err != nil {
+		return false
+	}
+	return u.Scheme != "" && u.Host != ""
 }

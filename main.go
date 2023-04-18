@@ -39,7 +39,7 @@ func main() {
 }
 
 func parseFlags() {
-	flag.StringVar(&repos, "repos", "/etc/orchestration-manager/repositories.list", "Path to the repositories file")
+	flag.StringVar(&repos, "repos", "https://raw.githubusercontent.com/pixelboehm/meta-ldt/main/repositories.list", "Path to the repositories file")
 	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
 	flag.Parse()
 	flag.Usage = flagHelp

@@ -32,7 +32,7 @@ func teardownDiscoveryConfig() {
 func ensureConfigExists(t *testing.T) {
 	require := require.New(t)
 	if c != nil {
-		require.FileExists(c.repository_file)
+		require.FileExists(c.repository_source)
 	} else {
 		require.Fail("DiscoveryConfig is not initialized")
 	}
@@ -91,4 +91,30 @@ func Test_DiscoverLDTs(t *testing.T) {
 
 	c.DiscoverLDTs()
 	assert.NotNil(len(c.SupportedLDTs.LDTs))
+}
+
+func Test_isURL(t *testing.T) {
+	assert := assert.New(t)
+	testCases := []struct {
+		desc  string
+		input string
+		want  bool
+	}{
+		{
+			desc:  "is a github URL",
+			input: "https://github.com/pixelboehm/ldt",
+			want:  true,
+		},
+		{
+			desc:  "is a filepath",
+			input: "$HOME/.local/etc/orchstration-manager/repositories.list",
+			want:  false,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			res := isURL(tC.input)
+			assert.Equal(tC.want, res)
+		})
+	}
 }
