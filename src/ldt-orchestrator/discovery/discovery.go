@@ -61,10 +61,39 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 }
 
 func (c *DiscoveryConfig) addLatestTag() {
-	sort.Slice(c.SupportedLDTs.LDTs, func(i, j int) bool {
-		return c.SupportedLDTs.LDTs[i].Version > c.SupportedLDTs.LDTs[j].Version
-	})
+	sortLDTsByName(c.SupportedLDTs.LDTs)
+
+	var last_ldt_name string
+	var current_latest_version string
+	var latest_ldt_changed bool = false
+	var latest_ldt *LDT
+
+	for _, ldt := range c.SupportedLDTs.LDTs {
+		if ldt.Name != last_ldt_name {
+			last_ldt_name = ldt.Name
+			current_latest_version = ldt.Version
+			latest_ldt = &ldt
+			latest_ldt_changed = true
+		} else if ldt.Name == last_ldt_name {
+			latest_ldt_changed = false
+			if ldt.Version > current_latest_version {
+				current_latest_version = ldt.Version
+				latest_ldt = &ldt
+				latest_ldt_changed = true
+			}
+		}
+		if latest_ldt_changed {
+			latest_ldt.Version = "latest"
+			c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, *latest_ldt)
+		}
+	}
 	fmt.Println(c.SupportedLDTs)
+}
+
+func sortLDTsByName(ldts []LDT) {
+	sort.Slice(ldts, func(i, j int) bool {
+		return ldts[i].Name > ldts[j].Name
+	})
 }
 
 func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
