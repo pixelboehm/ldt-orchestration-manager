@@ -2,7 +2,6 @@ package discovery
 
 import (
 	"bufio"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -47,17 +47,24 @@ func (c *DiscoveryConfig) DiscoverLDTs() {
 	c.updateRepositories()
 	newLDTs := github.FetchGithubReleases(c.repositories)
 	for _, ldt := range newLDTs.LDTs {
-		hash := string(createHash(&ldt))
 		if ldt.Os == c.os && ldt.Arch == c.arch {
-			if !hashAlreadyExists(hash, c.SupportedLDTs.LDTs) {
+			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
 				c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, ldt)
 			}
 		} else {
-			if !hashAlreadyExists(hash, c.otherLDTs.LDTs) {
+			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
 				c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
 			}
 		}
 	}
+	c.addLatestTag()
+}
+
+func (c *DiscoveryConfig) addLatestTag() {
+	sort.Slice(c.SupportedLDTs.LDTs, func(i, j int) bool {
+		return c.SupportedLDTs.LDTs[i].Version > c.SupportedLDTs.LDTs[j].Version
+	})
+	fmt.Println(c.SupportedLDTs)
 }
 
 func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
@@ -65,18 +72,11 @@ func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
 	return c.SupportedLDTs.LDTs[id].Url, nil
-
 }
 
-func createHash(l *LDT) []byte {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%v", l)))
-	return h.Sum(nil)
-}
-
-func hashAlreadyExists(hash string, ldt []LDT) bool {
-	for _, ldt := range ldt {
-		if hash == string(createHash(&ldt)) {
+func ldtAlreadyExists(ldt *LDT, ldt_list *LDTList) bool {
+	for _, existingLDT := range ldt_list.LDTs {
+		if string(ldt.Hash) == string(existingLDT.Hash) {
 			return true
 		}
 	}

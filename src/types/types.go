@@ -14,19 +14,18 @@ type LDT struct {
 	Os      string
 	Arch    string
 	Url     string
+	Hash    []byte
 }
 
 type LDTList struct {
-	LDTs   []LDT
-	Hashes []string
-	Lock   sync.Mutex
+	LDTs []LDT
+	Lock sync.Mutex
 }
 
 func NewLDTList() *LDTList {
 	return &LDTList{
-		LDTs:   nil,
-		Hashes: nil,
-		Lock:   sync.Mutex{},
+		LDTs: nil,
+		Lock: sync.Mutex{},
 	}
 }
 
@@ -45,15 +44,15 @@ func NewProcess(pid int, name string) *Process {
 }
 
 func (l *LDT) String() string {
-	return fmt.Sprintf("%s \t %s \t %s \t %s \t %s", l.Name, l.Version, l.Os, l.Arch, l.Url)
+	return fmt.Sprintf("%s \t %s \t %s \t %s \t %s \t %x", l.Name, l.Version, l.Os, l.Arch, l.Url, l.Hash)
 }
 
 func (ll *LDTList) String() string {
 	var result strings.Builder
 	writer := tabwriter.NewWriter(&result, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(writer, "\tName\tVersion\tOS\tArch")
+	fmt.Fprintln(writer, "\tName\tVersion\tOS\tArch\tHash")
 	for i, ldt := range ll.LDTs {
-		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\n", i, ldt.Name, ldt.Version, ldt.Os, ldt.Arch)
+		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\t%x\n", i, ldt.Name, ldt.Version, ldt.Os, ldt.Arch, ldt.Hash[:6])
 	}
 	writer.Flush()
 
