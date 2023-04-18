@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"longevity/src/ldt-orchestrator/github"
+	"longevity/src/types"
 	. "longevity/src/types"
 	"net/http"
 	"net/url"
@@ -84,7 +85,7 @@ func (c *DiscoveryConfig) addLatestTag() {
 		}
 		if latest_ldt_changed {
 			latest_ldt.Version = "latest"
-			c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, *latest_ldt)
+			c.SupportedLDTs.LDTs = append([]types.LDT{*latest_ldt}, c.SupportedLDTs.LDTs...)
 		}
 	}
 	fmt.Println(c.SupportedLDTs)
