@@ -45,7 +45,14 @@ func SetupPostgresDB(user string, password string, db_name string) *sql.DB {
 	return db
 }
 
+func CleanUpDatabase(db *sql.DB) {
+	DeleteTable(db, tableDropQuery)
+}
+
 func (d *Device) Device(db *sql.DB) error {
+	if d.ID < 1 {
+		return errors.New("Invalid Device ID set: ")
+	}
 	return db.QueryRow(getDeviceByIDQuery, d.ID).Scan(&d.Name, &d.MacAddress, &d.Twin, &d.Version)
 }
 
@@ -103,6 +110,16 @@ func CreateTable(db *sql.DB, query string) {
 	} else {
 		statement.Exec()
 		log.Println("Created Table devices")
+	}
+}
+
+func DeleteTable(db *sql.DB, query string) {
+	statement, err := db.Prepare(query)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		statement.Exec()
+		log.Println("Dropped Table devices")
 	}
 }
 
