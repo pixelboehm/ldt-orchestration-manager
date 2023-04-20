@@ -10,6 +10,8 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS devices
 	CONSTRAINT devices_pkey PRIMARY KEY (id)
 )`
 
+const tableDropQuery = `DROP TABLE IF EXISTS devices`
+
 const tableCreationQuerySQLite = `CREATE TABLE IF NOT EXISTS devices
 (
 	id INTEGER PRIMARY KEY, 
