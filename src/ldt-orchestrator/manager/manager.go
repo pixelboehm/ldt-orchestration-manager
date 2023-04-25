@@ -70,7 +70,7 @@ func (manager *Manager) DownloadLDT(id int) string {
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	process, err := run(ldt)
 	if err != nil {
-		log.Fatal("Failed to start LDT: ", err)
+		log.Fatal("Failed to run LDT: ", err)
 		return nil, err
 	}
 

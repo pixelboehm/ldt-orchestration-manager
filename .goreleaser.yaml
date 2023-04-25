@@ -51,7 +51,6 @@ brews:
       email: "{{ .Env.MAIL }}"
     folder: Formula
     install: |
-      system, "mkdir", "-p" "/etc/orchestration-manager"
-      system, "touch", "/etc/orchestration-manager/repositories.list"
-      system, "touch", "/etc/orchestration-manager/ldt.list"
+      system "mkdir", "-p" "/usr/local/etc/orchestration-manager"
+      system "touch", "/usr/local/etc/orchestration-manager/ldt.list"
       bin.install {{- .ProjectName }}
