@@ -52,7 +52,7 @@ func FetchGithubReleases(repositories []string) *LDTList {
 func (gd *GithubClient) GetReleasesFromRepository(owner, repo string) []*github.RepositoryRelease {
 	releases, _, err := gd.Client.Repositories.ListReleases(context.Background(), owner, repo, nil)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return releases
 }

@@ -1,14 +1,14 @@
 package communication
 
 import (
-	"log"
+	"fmt"
 	"net"
 )
 
 func SendResultToSocket(out net.Conn, res string) {
 	_, err := out.Write([]byte(res))
 	if err != nil {
-		log.Fatal("error writing to socket: ", err)
+		panic(fmt.Sprintf("error writing to socket: %v\n", err))
 	}
 }
 

@@ -21,7 +21,7 @@ func NewManager(config, ldt_list_path string) *Manager {
 	}
 
 	if err := manager.monitor.DeserializeLDTs(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return manager
@@ -70,7 +70,7 @@ func (manager *Manager) DownloadLDT(id int) string {
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	process, err := run(ldt)
 	if err != nil {
-		log.Fatal("Failed to run LDT: ", err)
+		log.Println("Failed to run LDT: ", err)
 		return nil, err
 	}
 
@@ -81,7 +81,7 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 func (manager *Manager) StartLDT(ldt string, in *net.Conn) error {
 	process, err := start(ldt, in)
 	if err != nil {
-		log.Fatal("Failed to start LDT: ", err)
+		log.Println("Failed to start LDT: ", err)
 		return err
 	}
 
@@ -103,6 +103,6 @@ func (manager *Manager) optionalScan() {
 
 func (manager *Manager) shutdown() {
 	if err := manager.monitor.SerializeLDTs(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

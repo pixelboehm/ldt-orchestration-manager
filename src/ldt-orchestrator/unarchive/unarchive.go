@@ -3,6 +3,7 @@ package unarchive
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,7 +13,7 @@ import (
 func Untar(src, dest string) (string, error) {
 	folder, err := prepareFolder(src, dest)
 	if err != nil {
-		log.Fatal("Unable to create folder", err)
+		panic(fmt.Sprintf("Unable to create folder %v\n", err))
 	}
 
 	file, err := os.Open(src)

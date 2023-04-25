@@ -55,7 +55,7 @@ func (m *Monitor) SerializeLDTs() error {
 	file, err := os.OpenFile(m.ldt_list_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err != nil {
-		log.Fatalf("Could not create file: %s", m.ldt_list_path)
+		log.Printf("Could not create file: %s\n", m.ldt_list_path)
 		return err
 	}
 	defer file.Close()
@@ -89,7 +89,7 @@ func (m *Monitor) DeserializeLDTs() error {
 
 			time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 				return err
 			}
 
@@ -97,7 +97,7 @@ func (m *Monitor) DeserializeLDTs() error {
 		}
 
 		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			return err
 		}
 	}

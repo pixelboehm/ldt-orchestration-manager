@@ -115,10 +115,16 @@ func (app *App) executeCommand(input string, in *net.Conn) string {
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
 	case "run":
-		process, _ := app.manager.RunLDT(command[1])
+		process, err := app.manager.RunLDT(command[1])
+		if err != nil {
+			panic(err)
+		}
 		return process.Name
 	case "start":
-		_ = app.manager.StartLDT(command[1], in)
+		err := app.manager.StartLDT(command[1], in)
+		if err != nil {
+			panic(err)
+		}
 		return "start"
 	default:
 		log.Println("Unkown command received: ", command)
