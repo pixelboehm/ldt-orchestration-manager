@@ -1,22 +1,38 @@
 package manager
 
 import (
+	"fmt"
 	"log"
 	. "longevity/src/types"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
 	"syscall"
+	"time"
 )
 
-func run(ldt string) (*Process, error) {
+var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassionate", "creative", "enthusiastic", "energetic", "gracious", "generous", "honest", "kind,", "lively", "passionate", "resourceful", "strong", "vibrant", "wise", "witty", "zealous"}
+
+var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "bearded_collie", "bernese_mountain_dog", "border_collie", "boxer", "bulldog", "cavalier_king_charles_spaniel", "chihuahua", "dachshund", "english_cocker_spaniel", "german_shepherd_dog", "golden_retriever", "jack_russell_terrier", "labrador_retriever", "poodle", "pug", "siberian_husky", "west_highland_white_terrier"}
+
+func prepareCommand(ldt, name string) *exec.Cmd {
 	makeExecutable(ldt)
 
-	cmd := exec.Command("./" + ldt)
+	if name == "" {
+		name = generateRandomName()
+	}
+
+	cmd := exec.Command("./"+ldt, name)
+	fmt.Println(cmd)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
+	return cmd
+}
 
+func run(ldt string) (*Process, error) {
+	cmd := prepareCommand(ldt, "")
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -26,13 +42,7 @@ func run(ldt string) (*Process, error) {
 }
 
 func start(ldt string, in *net.Conn) (*Process, error) {
-	makeExecutable(ldt)
-
-	cmd := exec.Command("./" + ldt)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-
+	cmd := prepareCommand(ldt, "")
 	cmd.Stdout = *in
 	cmd.Stderr = *in
 	cmd.Stdin = *in
@@ -73,8 +83,12 @@ func makeExecutable(ldt string) {
 	if err != nil {
 		log.Fatal("Failed to open LDT: ", err)
 	}
-
 	if err := os.Chmod(file.Name(), 0755); err != nil {
 		log.Fatal("Failed to set executable Flag: ", err)
 	}
+}
+
+func generateRandomName() string {
+	rand.Seed(time.Now().UnixNano())
+	return adjectives[rand.Intn(len(adjectives))] + "_" + dogs[rand.Intn((len(dogs)))]
 }
