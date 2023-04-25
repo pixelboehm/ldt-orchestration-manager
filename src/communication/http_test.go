@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +14,7 @@ import (
 	. "longevity/src/database"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var rest API
@@ -34,6 +34,7 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 	clearTable()
+	CleanUpDatabase(db)
 	os.Exit(code)
 }
 
@@ -72,11 +73,11 @@ func Test_GetNonExistentDevice(t *testing.T) {
 
 func Test_GetDevice(t *testing.T) {
 	clearTable()
+
+	require := require.New(t)
 	err := addTestDevices(1)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(err)
 
 	req, _ := http.NewRequest("GET", "/device/1", nil)
 	response := executeRequest(req)
@@ -111,11 +112,10 @@ func Test_CreateDevice(t *testing.T) {
 func Test_UpdateDevice(t *testing.T) {
 	clearTable()
 	assert := assert.New(t)
+	require := require.New(t)
 
 	err := addTestDevices(1)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(err)
 
 	req, _ := http.NewRequest("GET", "/device/1", nil)
 	response := executeRequest(req)
@@ -146,11 +146,10 @@ func Test_UpdateDevice(t *testing.T) {
 
 func Test_DeleteDevice(t *testing.T) {
 	clearTable()
+	require := require.New(t)
 
 	err := addTestDevices(1)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(err)
 
 	req, _ := http.NewRequest("GET", "/device/1", nil)
 	response := executeRequest(req)

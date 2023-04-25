@@ -11,13 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// var sample = &Device{
-// 	ID:         1,
-// 	Name:       "Foo",
-// 	MacAddress: "00:11:22:33:44",
-// 	Twin:       "general",
-// 	Version:    "0.0.1"}
-
 var sqlite_db string = "./test_db.db"
 var db *sql.DB
 
@@ -30,8 +23,8 @@ func TestMain(m *testing.M) {
 	defer db.Close()
 
 	code := m.Run()
-	// clearTable()
-	// CleanUpDatabase(db)
+	clearTable()
+	CleanUpDatabase(db)
 	os.Exit(code)
 }
 
@@ -100,7 +93,7 @@ func Test_GetDevice(t *testing.T) {
 	var result_device = NewDevice("", "", "", "")
 	result_device.ID = 1
 
-	_ = result_device.Device(db)
+	err = result_device.Device(db)
 	require.NoError(err)
 
 	assert.Equal("Foo", result_device.Name)
