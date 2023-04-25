@@ -28,6 +28,9 @@ type App struct {
 }
 
 func main() {
+	defer func() {
+		syscall.Unlink(socketpath)
+	}()
 	parseFlags()
 	app := &App{
 		manager: man.NewManager(repos, ldts),
@@ -107,7 +110,7 @@ func (app *App) executeCommand(input string, in *net.Conn) string {
 	case "pull":
 		id, err := strconv.Atoi(command[1])
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
@@ -120,7 +123,6 @@ func (app *App) executeCommand(input string, in *net.Conn) string {
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
-
 	case "help":
 		result := cliHelp()
 		return result.String()
