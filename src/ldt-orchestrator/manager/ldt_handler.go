@@ -24,7 +24,6 @@ func prepareCommand(ldt, name string) *exec.Cmd {
 	}
 
 	cmd := exec.Command("./"+ldt, name)
-	fmt.Println(cmd)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
