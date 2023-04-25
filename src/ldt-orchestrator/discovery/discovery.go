@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"longevity/src/ldt-orchestrator/github"
 	"longevity/src/types"
 	. "longevity/src/types"
@@ -145,7 +144,7 @@ func (c *DiscoveryConfig) updateRepositories() error {
 	} else {
 		file, err := os.Open(c.repository_source)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		defer file.Close()
 		content = file
@@ -157,7 +156,7 @@ func (c *DiscoveryConfig) updateRepositories() error {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return nil
 }

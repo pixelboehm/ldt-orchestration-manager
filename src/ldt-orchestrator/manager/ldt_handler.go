@@ -24,7 +24,6 @@ func prepareCommand(ldt, name string) *exec.Cmd {
 	}
 
 	cmd := exec.Command("./"+ldt, name)
-	fmt.Println(cmd)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -81,10 +80,10 @@ func makeExecutable(ldt string) {
 	}
 	file, err := os.Open(ldt)
 	if err != nil {
-		log.Fatal("Failed to open LDT: ", err)
+		panic(fmt.Sprintf("Failed to open LDT: %v\n", err))
 	}
 	if err := os.Chmod(file.Name(), 0755); err != nil {
-		log.Fatal("Failed to set executable Flag: ", err)
+		panic(fmt.Sprintf("Failed to set executable Flag: %v\n", err))
 	}
 }
 
