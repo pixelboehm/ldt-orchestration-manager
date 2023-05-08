@@ -67,7 +67,7 @@ func (app *App) run(out io.Writer) error {
 
 	go app.checkForShutdown(sigchannel)
 
-	commands := make(chan string, 512)
+	commands := make(chan string)
 	for {
 		in, err := listener.Accept()
 		if err != nil {
@@ -75,10 +75,8 @@ func (app *App) run(out io.Writer) error {
 			return err
 		}
 		go comms.GetCommandFromSocket(in, commands)
-		for cmd := range commands {
-			res := app.executeCommand(cmd, in)
-			comms.SendResultToSocket(in, res)
-		}
+		result := app.executeCommand(<-commands, in)
+		comms.SendResultToSocket(in, result)
 	}
 }
 
