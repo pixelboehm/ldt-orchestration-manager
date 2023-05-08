@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres
+        image: postgres:latest
         env:
           POSTGRES_PASSWORD: foobar
         # Set health checks to wait until postgres has started
