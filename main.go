@@ -67,7 +67,7 @@ func (app *App) run(out io.Writer) error {
 
 	go app.checkForShutdown(sigchannel)
 
-	commands := make(chan string)
+	commands := make(chan string, 512)
 	for {
 		in, err := listener.Accept()
 		if err != nil {
@@ -124,11 +124,11 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		}
 		return process.Name
 	case "start":
-		err := app.manager.StartLDT(command[1], in)
+		process, err := app.manager.StartLDT(command[1], in)
 		if err != nil {
 			panic(err)
 		}
-		return "start"
+		return fmt.Sprint(process.Pid)
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
