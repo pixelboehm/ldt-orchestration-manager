@@ -73,8 +73,8 @@ func (app *App) run(out io.Writer) error {
 			log.Fatal("error accepting connection: ", err)
 			return err
 		}
-		cmd := comms.GetCommandFromSocket(in)
-		res := app.executeCommand(cmd, &in)
+		go comms.GetCommandFromSocket(in, commands)
+			res := app.executeCommand(cmd, in)
 		comms.SendResultToSocket(in, res)
 	}
 }

@@ -78,7 +78,7 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	return process, nil
 }
 
-func (manager *Manager) StartLDT(ldt string, in *net.Conn) error {
+func (manager *Manager) StartLDT(ldt string, in net.Conn) error {
 	process, err := start(ldt, in)
 	if err != nil {
 		log.Println("Failed to start LDT: ", err)
