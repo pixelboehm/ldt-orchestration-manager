@@ -2,20 +2,22 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 const (
 	socketPath = "/tmp/orchestration-manager.sock"
 )
 
-func waitForAnswer(reader io.Reader) {
+func waitForAnswer(connection net.Conn) {
 	buffer := make([]byte, 1024)
 	for {
-		n, err := reader.Read(buffer[:])
+		n, err := connection.Read(buffer[:])
 		if err != nil {
 			return
 		}
@@ -25,10 +27,10 @@ func waitForAnswer(reader io.Reader) {
 	}
 }
 
-func blockingWaitForAnswer(reader io.Reader) {
+func blockingWaitForAnswer(connection net.Conn) {
 	buffer := make([]byte, 1024)
 	for {
-		n, err := reader.Read(buffer[:])
+		n, err := connection.Read(buffer[:])
 		if err != nil {
 			return
 		}
@@ -40,23 +42,38 @@ func blockingWaitForAnswer(reader io.Reader) {
 func main() {
 	connection, err := net.Dial("unix", socketPath)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer connection.Close()
 
-	var res string
+	var command string
 	for _, arg := range os.Args[1:] {
-		res += arg + " "
+		command += arg + " "
 	}
 
-	_, err = connection.Write([]byte(res))
+	_, err = connection.Write([]byte(command))
 	if err != nil {
 		log.Fatal("write error:", err)
 	}
 
 	if os.Args[1] == "start" {
+		go checkForShutdown(connection)
 		blockingWaitForAnswer(connection)
 	} else {
 		waitForAnswer(connection)
 	}
+}
+
+func checkForShutdown(connection net.Conn) {
+	ticker := time.NewTicker(10 * time.Second)
+	channel := make(chan os.Signal, 1)
+	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-channel
+	log.Printf("Caught signal, shutting down")
+	_, err := connection.Write([]byte("shutdown"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-ticker.C
+	os.Exit(0)
 }
