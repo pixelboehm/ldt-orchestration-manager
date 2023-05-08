@@ -40,11 +40,11 @@ func run(ldt string) (*Process, error) {
 	return process, nil
 }
 
-func start(ldt string, in *net.Conn) (*Process, error) {
+func start(ldt string, in net.Conn) (*Process, error) {
 	cmd := prepareCommand(ldt, "")
-	cmd.Stdout = *in
-	cmd.Stderr = *in
-	cmd.Stdin = *in
+	cmd.Stdout = in
+	cmd.Stderr = in
+	cmd.Stdin = in
 
 	if err := cmd.Start(); err != nil {
 		return nil, err
