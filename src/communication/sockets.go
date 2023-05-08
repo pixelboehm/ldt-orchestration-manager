@@ -12,15 +12,15 @@ func SendResultToSocket(out net.Conn, res string) {
 	}
 }
 
-func GetCommandFromSocket(in net.Conn) string {
+func GetCommandFromSocket(in net.Conn, commands chan string) {
 	for {
 		buf := make([]byte, 512)
 		nr, err := in.Read(buf)
 		if err != nil {
-			return "help"
+			return
 		}
 
 		data := buf[0:nr]
-		return string(data)
+		commands <- string(data)
 	}
 }

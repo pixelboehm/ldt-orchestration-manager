@@ -78,15 +78,15 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	return process, nil
 }
 
-func (manager *Manager) StartLDT(ldt string, in *net.Conn) error {
+func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
 	process, err := start(ldt, in)
 	if err != nil {
 		log.Println("Failed to start LDT: ", err)
-		return err
+		return nil, err
 	}
 
 	log.Printf("Successfully started LDT with PID: %d\n", process.Pid)
-	return nil
+	return process, nil
 }
 
 func (manager *Manager) StopLDT(pid int, graceful bool) bool {

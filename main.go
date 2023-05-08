@@ -67,15 +67,16 @@ func (app *App) run(out io.Writer) error {
 
 	go app.checkForShutdown(sigchannel)
 
+	commands := make(chan string)
 	for {
 		in, err := listener.Accept()
 		if err != nil {
 			log.Fatal("error accepting connection: ", err)
 			return err
 		}
-		cmd := comms.GetCommandFromSocket(in)
-		res := app.executeCommand(cmd, &in)
-		comms.SendResultToSocket(in, res)
+		go comms.GetCommandFromSocket(in, commands)
+		result := app.executeCommand(<-commands, in)
+		comms.SendResultToSocket(in, result)
 	}
 }
 
@@ -101,7 +102,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 	}
 }
 
-func (app *App) executeCommand(input string, in *net.Conn) string {
+func (app *App) executeCommand(input string, in net.Conn) string {
 	command := strings.Fields(input)
 	switch command[0] {
 	case "get":
@@ -121,11 +122,11 @@ func (app *App) executeCommand(input string, in *net.Conn) string {
 		}
 		return process.Name
 	case "start":
-		err := app.manager.StartLDT(command[1], in)
+		process, err := app.manager.StartLDT(command[1], in)
 		if err != nil {
 			panic(err)
 		}
-		return "start"
+		return fmt.Sprint(process.Pid)
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
