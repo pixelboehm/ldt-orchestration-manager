@@ -2,44 +2,59 @@ package monitor
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
 	. "longevity/src/types"
 	"os"
+	"syscall"
 	"time"
 )
 
 type Monitor struct {
-	started       chan Process
-	stopped       chan int
+	Started       chan *Process
+	Stopped       chan int
 	processes     []Process
 	ldt_list_path string
 }
 
 func NewMonitor(ldt_list_path string) *Monitor {
 	return &Monitor{
-		started:       make(chan Process),
-		stopped:       make(chan int),
+		Started:       make(chan *Process),
+		Stopped:       make(chan int),
 		ldt_list_path: ldt_list_path,
+	}
+}
+
+func (m *Monitor) DoKeepAlive() {
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		log.Printf("Monitor: Currently Active LDTs %d\n", len(m.processes))
+		for _, ldt := range m.processes {
+			if !ldtIsRunning(ldt.Pid) {
+				m.Stopped <- ldt.Pid
+			}
+		}
+		<-ticker.C
 	}
 }
 
 func (m *Monitor) RefreshLDTs() {
 	for {
 		select {
-		case started := <-m.started:
+		case started := <-m.Started:
 			m.RegisterLDT(started)
-		case stopped := <-m.stopped:
+		case stopped := <-m.Stopped:
 			m.RemoveLDT(stopped)
 		default:
 		}
 	}
 }
 
-func (m *Monitor) RegisterLDT(ldt Process) {
-	m.processes = append(m.processes, ldt)
-	log.Printf("New LDT %s with PID %d started at %s\n", ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
+func (m *Monitor) RegisterLDT(ldt *Process) {
+	m.processes = append(m.processes, *ldt)
+	log.Printf("Monitor: New LDT %s with PID %d registered at %s\n", ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
 }
 
 func (m *Monitor) RemoveLDT(pid int) {
@@ -48,7 +63,19 @@ func (m *Monitor) RemoveLDT(pid int) {
 			m.processes = append(m.processes[:i], m.processes[i+1:]...)
 		}
 	}
-	log.Printf("Removing LDT with PID %d\n", pid)
+	log.Printf("Monitor: Removing LDT with PID %d\n", pid)
+}
+
+func (m *Monitor) ListLDTs() string {
+	if len(m.processes) > 0 {
+		var buffer bytes.Buffer
+		for _, process := range m.processes {
+			line := fmt.Sprintf("%d \t %s \t %v\n", process.Pid, process.Name, process.Started)
+			buffer.WriteString(line)
+		}
+		return buffer.String()
+	}
+	return " "
 }
 
 func (m *Monitor) SerializeLDTs() error {
@@ -100,6 +127,7 @@ func (m *Monitor) DeserializeLDTs() error {
 			log.Println(err)
 			return err
 		}
+		os.Remove(m.ldt_list_path)
 	}
 	return nil
 }
@@ -107,4 +135,17 @@ func (m *Monitor) DeserializeLDTs() error {
 func checkFileExists(filePath string) bool {
 	_, error := os.Stat(filePath)
 	return !errors.Is(error, os.ErrNotExist)
+}
+
+func ldtIsRunning(pid int) bool {
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		return false
+	}
+	return true
 }

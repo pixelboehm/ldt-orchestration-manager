@@ -36,6 +36,8 @@ func run(ldt string) (*Process, error) {
 		return nil, err
 	}
 
+	go waitOnProcess(cmd)
+
 	process := NewProcess(cmd.Process.Pid, ldt)
 	return process, nil
 }
@@ -49,6 +51,9 @@ func start(ldt string, in net.Conn) (*Process, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
+
+	go waitOnProcess(cmd)
+
 	process := NewProcess(cmd.Process.Pid, ldt)
 
 	return process, nil
@@ -90,4 +95,11 @@ func makeExecutable(ldt string) {
 func generateRandomName() string {
 	rand.Seed(time.Now().UnixNano())
 	return adjectives[rand.Intn(len(adjectives))] + "_" + dogs[rand.Intn((len(dogs)))]
+}
+
+func waitOnProcess(cmd *exec.Cmd) {
+	err := cmd.Wait()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

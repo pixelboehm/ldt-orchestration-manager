@@ -8,6 +8,7 @@ import (
 	"log"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
+	mon "longevity/src/ldt-orchestrator/monitor"
 	"net"
 	"os"
 	"os/signal"
@@ -25,6 +26,7 @@ var ldts string
 
 type App struct {
 	manager *man.Manager
+	monitor *mon.Monitor
 }
 
 func main() {
@@ -34,6 +36,11 @@ func main() {
 	parseFlags()
 	app := &App{
 		manager: man.NewManager(repos, ldts),
+		monitor: mon.NewMonitor(ldts),
+	}
+
+	if err := app.monitor.DeserializeLDTs(); err != nil {
+		panic(err)
 	}
 
 	if err := app.run(os.Stdout); err != nil {
@@ -43,7 +50,7 @@ func main() {
 
 func parseFlags() {
 	flag.StringVar(&repos, "repos", "https://raw.githubusercontent.com/pixelboehm/meta-ldt/main/repositories.list", "Path to the repositories file")
-	flag.StringVar(&ldts, "ldts", "/etc/orchestration-manager/ldt.list", "Path to store LDT status")
+	flag.StringVar(&ldts, "ldts", "/usr/local/etc/orchestration-manager/ldt.list", "Path to store LDT status")
 	flag.Parse()
 	flag.Usage = flagHelp
 }
@@ -66,6 +73,8 @@ func (app *App) run(out io.Writer) error {
 	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go app.checkForShutdown(sigchannel)
+	go app.monitor.DoKeepAlive()
+	go app.monitor.RefreshLDTs()
 
 	commands := make(chan string)
 	for {
@@ -89,6 +98,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
+		app.shutdown()
 		os.Exit(1)
 	case syscall.SIGHUP:
 		log.Printf("Caught signal %s: reloading.", sig)
@@ -96,6 +106,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
+		app.shutdown()
 		if err := app.run(os.Stdout); err != nil {
 			log.Fatal(err)
 		}
@@ -115,18 +126,30 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		}
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
+	case "ps":
+		res := app.monitor.ListLDTs()
+		return res
 	case "run":
 		process, err := app.manager.RunLDT(command[1])
 		if err != nil {
 			panic(err)
 		}
+		app.monitor.Started <- process
 		return process.Name
 	case "start":
 		process, err := app.manager.StartLDT(command[1], in)
 		if err != nil {
 			panic(err)
 		}
+		app.monitor.Started <- process
 		return fmt.Sprint(process.Pid)
+	case "stop":
+		pid, err := strconv.Atoi(command[1])
+		if err != nil {
+			panic(err)
+		}
+		res := app.manager.StopLDT(pid, true)
+		return res
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
@@ -143,4 +166,10 @@ func cliHelp() *bytes.Buffer {
 	buffer.WriteString("run \t Run the managing service\n")
 	log.Println(buffer.String())
 	return &buffer
+}
+
+func (app *App) shutdown() {
+	if err := app.monitor.SerializeLDTs(); err != nil {
+		panic(err)
+	}
 }
