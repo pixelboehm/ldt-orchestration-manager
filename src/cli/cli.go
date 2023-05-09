@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -24,7 +25,7 @@ func waitForAnswer(connection net.Conn) {
 		}
 		if n > 1 {
 			val := string(buffer[0:n])
-			fmt.Println(val)
+			fmt.Println(strings.Trim(val, "\n"))
 		}
 		return
 	}
@@ -42,7 +43,6 @@ func blockingWaitForAnswer(connection net.Conn, process chan int) {
 			fmt.Println("LDT PID: ", pid)
 			process <- pid
 		}
-
 	}
 }
 
