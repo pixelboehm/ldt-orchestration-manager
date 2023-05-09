@@ -73,6 +73,8 @@ func (app *App) run(out io.Writer) error {
 	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go app.checkForShutdown(sigchannel)
+	go app.monitor.DoKeepAlive()
+	go app.monitor.RefreshLDTs()
 
 	commands := make(chan string)
 	for {
@@ -129,12 +131,14 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		if err != nil {
 			panic(err)
 		}
+		app.monitor.Started <- process
 		return process.Name
 	case "start":
 		process, err := app.manager.StartLDT(command[1], in)
 		if err != nil {
 			panic(err)
 		}
+		app.monitor.Started <- process
 		return fmt.Sprint(process.Pid)
 	default:
 		log.Println("Unkown command received: ", command)

@@ -36,10 +36,10 @@ func downloadLDTArchive(address string) string {
 	name, err := download(address)
 
 	if err != nil {
-		log.Println("Failed to download LDT archive: ", err)
+		log.Println("Manager: Failed to download LDT archive: ", err)
 		return ""
 	}
-	log.Printf("Downloaded LDT Archive: %s\n", name)
+	log.Printf("Manager: Downloaded LDT Archive: %s\n", name)
 	return name
 }
 
@@ -54,7 +54,7 @@ func (manager *Manager) DownloadLDT(id int) string {
 	ldtArchive := downloadLDTArchive(url)
 	ldt, err := unarchive.Untar(ldtArchive, "resources")
 	if err != nil {
-		log.Println("Failed to unpack LDT: ", err)
+		log.Println("Manager: Failed to unpack LDT: ", err)
 	}
 	return ldt
 }
@@ -62,22 +62,22 @@ func (manager *Manager) DownloadLDT(id int) string {
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	process, err := run(ldt)
 	if err != nil {
-		log.Println("Failed to run LDT: ", err)
+		log.Println("Manager: Failed to run LDT: ", err)
 		return nil, err
 	}
 
-	log.Printf("Successfully started LDT with PID: %d\n", process.Pid)
+	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
 	return process, nil
 }
 
 func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
 	process, err := start(ldt, in)
 	if err != nil {
-		log.Println("Failed to start LDT: ", err)
+		log.Println("Manager: Failed to start LDT: ", err)
 		return nil, err
 	}
 
-	log.Printf("Successfully started LDT with PID: %d\n", process.Pid)
+	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
 	return process, nil
 }
 
