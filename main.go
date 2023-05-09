@@ -8,6 +8,7 @@ import (
 	"log"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
+	mon "longevity/src/ldt-orchestrator/monitor"
 	"net"
 	"os"
 	"os/signal"
@@ -25,6 +26,7 @@ var ldts string
 
 type App struct {
 	manager *man.Manager
+	monitor *mon.Monitor
 }
 
 func main() {
@@ -34,6 +36,11 @@ func main() {
 	parseFlags()
 	app := &App{
 		manager: man.NewManager(repos, ldts),
+		monitor: mon.NewMonitor(ldts),
+	}
+
+	if err := app.monitor.DeserializeLDTs(); err != nil {
+		panic(err)
 	}
 
 	if err := app.run(os.Stdout); err != nil {
@@ -89,6 +96,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
+		app.shutdown()
 		os.Exit(1)
 	case syscall.SIGHUP:
 		log.Printf("Caught signal %s: reloading.", sig)
@@ -96,6 +104,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
+		app.shutdown()
 		if err := app.run(os.Stdout); err != nil {
 			log.Fatal(err)
 		}
@@ -143,4 +152,10 @@ func cliHelp() *bytes.Buffer {
 	buffer.WriteString("run \t Run the managing service\n")
 	log.Println(buffer.String())
 	return &buffer
+}
+
+func (app *App) shutdown() {
+	if err := app.monitor.SerializeLDTs(); err != nil {
+		panic(err)
+	}
 }

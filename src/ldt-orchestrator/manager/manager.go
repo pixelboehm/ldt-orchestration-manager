@@ -3,27 +3,19 @@ package manager
 import (
 	"log"
 	di "longevity/src/ldt-orchestrator/discovery"
-	mo "longevity/src/ldt-orchestrator/monitor"
 	"longevity/src/ldt-orchestrator/unarchive"
 	. "longevity/src/types"
 	"net"
 )
 
 type Manager struct {
-	monitor   *mo.Monitor
 	discovery *di.DiscoveryConfig
 }
 
 func NewManager(config, ldt_list_path string) *Manager {
 	manager := &Manager{
-		monitor:   mo.NewMonitor(ldt_list_path),
 		discovery: di.NewConfig(config),
 	}
-
-	if err := manager.monitor.DeserializeLDTs(); err != nil {
-		panic(err)
-	}
-
 	return manager
 }
 
@@ -98,11 +90,5 @@ func (manager *Manager) StopLDT(pid int, graceful bool) bool {
 func (manager *Manager) optionalScan() {
 	if len(manager.discovery.SupportedLDTs.LDTs) < 1 {
 		manager.GetAvailableLDTs()
-	}
-}
-
-func (manager *Manager) shutdown() {
-	if err := manager.monitor.SerializeLDTs(); err != nil {
-		panic(err)
 	}
 }
