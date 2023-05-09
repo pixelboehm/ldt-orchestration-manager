@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -65,6 +66,18 @@ func (m *Monitor) RemoveLDT(pid int) {
 	log.Printf("Monitor: Removing LDT with PID %d\n", pid)
 }
 
+func (m *Monitor) ListLDTs() string {
+	if len(m.processes) > 0 {
+		var buffer bytes.Buffer
+		for _, process := range m.processes {
+			line := fmt.Sprintf("%d \t %s \t %v\n", process.Pid, process.Name, process.Started)
+			buffer.WriteString(line)
+		}
+		return buffer.String()
+	}
+	return " "
+}
+
 func (m *Monitor) SerializeLDTs() error {
 	file, err := os.OpenFile(m.ldt_list_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
@@ -114,6 +127,7 @@ func (m *Monitor) DeserializeLDTs() error {
 			log.Println(err)
 			return err
 		}
+		os.Remove(m.ldt_list_path)
 	}
 	return nil
 }

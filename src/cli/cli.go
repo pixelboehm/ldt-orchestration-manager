@@ -22,8 +22,10 @@ func waitForAnswer(connection net.Conn) {
 		if err != nil {
 			return
 		}
-		val := string(buffer[0:n])
-		fmt.Println(val)
+		if n > 1 {
+			val := string(buffer[0:n])
+			fmt.Println(val)
+		}
 		return
 	}
 }

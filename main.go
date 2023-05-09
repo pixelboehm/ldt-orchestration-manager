@@ -126,6 +126,9 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		}
 		ldt := app.manager.DownloadLDT(id)
 		return ldt
+	case "ps":
+		res := app.monitor.ListLDTs()
+		return res
 	case "run":
 		process, err := app.manager.RunLDT(command[1])
 		if err != nil {
