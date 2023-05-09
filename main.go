@@ -143,6 +143,13 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		}
 		app.monitor.Started <- process
 		return fmt.Sprint(process.Pid)
+	case "stop":
+		pid, err := strconv.Atoi(command[1])
+		if err != nil {
+			panic(err)
+		}
+		res := app.manager.StopLDT(pid, true)
+		return res
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough

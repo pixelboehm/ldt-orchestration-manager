@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"fmt"
 	"log"
 	di "longevity/src/ldt-orchestrator/discovery"
 	"longevity/src/ldt-orchestrator/unarchive"
@@ -81,10 +82,15 @@ func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
 	return process, nil
 }
 
-func (manager *Manager) StopLDT(pid int, graceful bool) bool {
+func (manager *Manager) StopLDT(pid int, graceful bool) string {
+	var result string
 	success := stop(pid, graceful)
-	return success
-
+	if success {
+		result = fmt.Sprintf("Successfully stopped LDT with PID %d\n", pid)
+	} else {
+		result = fmt.Sprintf("Failed to stop LDT with PID %d\n", pid)
+	}
+	return result
 }
 
 func (manager *Manager) optionalScan() {
