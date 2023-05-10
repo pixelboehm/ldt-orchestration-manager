@@ -115,41 +115,54 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 
 func (app *App) executeCommand(input string, in net.Conn) string {
 	command := strings.Fields(input)
+
 	switch command[0] {
 	case "get":
 		res := app.manager.GetAvailableLDTs()
 		return res
 	case "pull":
-		id, err := strconv.Atoi(command[1])
-		if err != nil {
-			panic(err)
+		if len(command) > 1 {
+			id, err := strconv.Atoi(command[1])
+			if err != nil {
+				panic(err)
+			}
+			ldt := app.manager.DownloadLDT(id)
+			return ldt
 		}
-		ldt := app.manager.DownloadLDT(id)
-		return ldt
+		return " "
 	case "ps":
 		res := app.monitor.ListLDTs()
 		return res
 	case "run":
-		process, err := app.manager.RunLDT(command[1])
-		if err != nil {
-			panic(err)
+		if len(command) > 1 {
+			process, err := app.manager.RunLDT(command[1])
+			if err != nil {
+				panic(err)
+			}
+			app.monitor.Started <- process
+			return process.Name
 		}
-		app.monitor.Started <- process
-		return process.Name
+		return " "
 	case "start":
-		process, err := app.manager.StartLDT(command[1], in)
-		if err != nil {
-			panic(err)
+		if len(command) > 1 {
+			process, err := app.manager.StartLDT(command[1], in)
+			if err != nil {
+				panic(err)
+			}
+			app.monitor.Started <- process
+			return fmt.Sprint(process.Pid)
 		}
-		app.monitor.Started <- process
-		return fmt.Sprint(process.Pid)
+		return " "
 	case "stop":
-		pid, err := strconv.Atoi(command[1])
-		if err != nil {
-			panic(err)
+		if len(command) > 1 {
+			pid, err := strconv.Atoi(command[1])
+			if err != nil {
+				panic(err)
+			}
+			res := app.manager.StopLDT(pid, true)
+			return res
 		}
-		res := app.manager.StopLDT(pid, true)
-		return res
+		return " "
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
