@@ -30,8 +30,8 @@ func prepareCommand(ldt, name string) (*exec.Cmd, string) {
 	return cmd, name
 }
 
-func run(ldt string) (*Process, error) {
-	cmd, name := prepareCommand(ldt, "")
+func run(ldt_full, ldt string) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, "")
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -42,8 +42,8 @@ func run(ldt string) (*Process, error) {
 	return process, nil
 }
 
-func start(ldt string, in net.Conn) (*Process, error) {
-	cmd, name := prepareCommand(ldt, "")
+func start(ldt_full, ldt string, in net.Conn) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, "")
 	cmd.Stdout = in
 	cmd.Stderr = in
 	cmd.Stdin = in

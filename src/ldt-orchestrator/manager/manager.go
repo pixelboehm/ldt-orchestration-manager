@@ -87,8 +87,8 @@ func (manager *Manager) DownloadLDT(name string) string {
 
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 	infos := manager.SplitLDTInfos(ldt)
-	ldt = manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
-	process, err := run(ldt)
+	ldt_full := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
+	process, err := run(ldt_full, ldt)
 	if err != nil {
 		log.Println("Manager: Failed to run LDT: ", err)
 		return nil, err
@@ -100,8 +100,8 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 
 func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
 	infos := manager.SplitLDTInfos(ldt)
-	ldt = manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
-	process, err := start(ldt, in)
+	ldt_full := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
+	process, err := start(ldt_full, ldt, in)
 	if err != nil {
 		log.Println("Manager: Failed to start LDT: ", err)
 		return nil, err
