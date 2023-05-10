@@ -70,7 +70,7 @@ func (m *Monitor) ListLDTs() string {
 	if len(m.processes) > 0 {
 		var buffer bytes.Buffer
 		for _, process := range m.processes {
-			line := fmt.Sprintf("%d \t %s \t %v\n", process.Pid, process.Name, process.Started)
+			line := fmt.Sprintf("%d \t %s \t %s \t %v\n", process.Pid, process.Ldt, process.Name, process.Started)
 			buffer.WriteString(line)
 		}
 		return buffer.String()
@@ -87,10 +87,10 @@ func (m *Monitor) SerializeLDTs() error {
 	}
 	defer file.Close()
 
-	template := "%s\t%d\t%s\n"
+	template := "%s\t%d\t%s\t%s\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started.Format("02-01-2006 15:04:05"))
 		writer.WriteString(res)
 	}
 
@@ -108,11 +108,12 @@ func (m *Monitor) DeserializeLDTs() error {
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			var name string
+			var ldt string
 			var pid int
+			var name string
 			var day string
 			var hour string
-			fmt.Sscanf(scanner.Text(), "%s\t%d\t%s%s", &name, &pid, &day, &hour)
+			fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
 
 			time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
 			if err != nil {
@@ -120,7 +121,7 @@ func (m *Monitor) DeserializeLDTs() error {
 				return err
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Name: name, Started: time})
+			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: time})
 		}
 
 		if err := scanner.Err(); err != nil {
