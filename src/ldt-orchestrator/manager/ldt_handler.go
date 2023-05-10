@@ -23,11 +23,10 @@ func prepareCommand(ldt, name string) (*exec.Cmd, string) {
 		name = generateRandomName()
 	}
 
-	cmd := exec.Command("./"+ldt, name)
+	cmd := exec.Command(ldt, name)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
-	log.Println("Name: ", name)
 	return cmd, name
 }
 
