@@ -90,7 +90,8 @@ func filterLDTInformationFromURL(address string) *LDT {
 	}
 
 	ldt := &LDT{
-		Name:    user + "/" + ldtname,
+		Name:    ldtname,
+		User:    user,
 		Version: version,
 		Os:      strings.ToLower(os),
 		Arch:    arch,
