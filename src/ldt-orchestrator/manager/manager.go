@@ -12,11 +12,13 @@ import (
 
 type Manager struct {
 	discovery *di.DiscoveryConfig
+	storage   string
 }
 
-func NewManager(config, ldt_list_path string) *Manager {
+func NewManager(config, storage string) *Manager {
 	manager := &Manager{
 		discovery: di.NewConfig(config),
+		storage:   storage,
 	}
 	return manager
 }
@@ -34,20 +36,23 @@ func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
 	return url, nil
 }
 
-func (manager *Manager) GetURLFromLDTByName(name string) (string, error) {
+func (manager *Manager) GetURLFromLDTByName(name []string) (string, error) {
+	url, err := manager.discovery.GetURLFromLDTByName(name)
+	if err != nil {
+		return "", err
+	}
+
+	return url, nil
+}
+
+func (manager *Manager) SplitLDTInfos(name string) []string {
 	reg, _ := regexp.Compile("[\\/\\:]+")
 	result := reg.Split(name, -1)
 
 	if result[2] != "latest" {
 		result[2] = "v" + result[2]
 	}
-
-	url, err := manager.discovery.GetURLFromLDTByName(result)
-	if err != nil {
-		return "", err
-	}
-
-	return url, nil
+	return result
 }
 
 func downloadLDTArchive(address string) string {
@@ -57,23 +62,26 @@ func downloadLDTArchive(address string) string {
 		log.Println("Manager: Failed to download LDT archive: ", err)
 		return ""
 	}
-	log.Printf("Manager: Downloaded LDT Archive: %s\n", name)
 	return name
 }
 
 func (manager *Manager) DownloadLDT(name string) string {
 	manager.optionalScan()
-	url, err := manager.GetURLFromLDTByName(name)
+	infos := manager.SplitLDTInfos(name)
+	url, err := manager.GetURLFromLDTByName(infos)
 
 	if err != nil {
 		return err.Error()
 	}
 
 	ldtArchive := downloadLDTArchive(url)
-	ldt, err := unarchive.Untar(ldtArchive, "resources")
+	location := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2]
+	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
 	}
+
+	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", infos[0], infos[1], infos[2])
 	return ldt
 }
 

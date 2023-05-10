@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func Untar(src, dest string) (string, error) {
@@ -60,11 +59,10 @@ func Untar(src, dest string) (string, error) {
 }
 
 func prepareFolder(src, dest string) (string, error) {
-	subfolder := strings.Split(strings.Split(src, "/")[1], ".")[0]
-	folder := dest + "/" + subfolder
+	folder := dest
 
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		if err := os.Mkdir(folder, 0777); err != nil {
+		if err := os.MkdirAll(folder, 0777); err != nil {
 			return "", err
 		}
 	}

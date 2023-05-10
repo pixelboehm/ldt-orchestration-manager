@@ -23,6 +23,7 @@ const (
 
 var repos string
 var ldts string
+var storage string
 
 type App struct {
 	manager *man.Manager
@@ -35,7 +36,7 @@ func main() {
 	}()
 	parseFlags()
 	app := &App{
-		manager: man.NewManager(repos, ldts),
+		manager: man.NewManager(repos, storage),
 		monitor: mon.NewMonitor(ldts),
 	}
 
@@ -52,6 +53,7 @@ func parseFlags() {
 	flag.StringVar(&repos, "repos", "https://raw.githubusercontent.com/pixelboehm/meta-ldt/main/repositories.list", "Path to the repositories file")
 	flag.StringVar(&ldts, "ldts", "/usr/local/etc/orchestration-manager/ldt.list", "Path to store LDT status")
 	flag.Parse()
+	storage = ldts[:strings.LastIndex(ldts, "/")]
 	flag.Usage = flagHelp
 }
 
