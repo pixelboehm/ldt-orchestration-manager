@@ -122,11 +122,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return res
 	case "pull":
 		if len(command) > 1 {
-			id, err := strconv.Atoi(command[1])
-			if err != nil {
-				panic(err)
-			}
-			ldt := app.manager.DownloadLDT(id)
+			ldt := app.manager.DownloadLDT(command[1])
 			return ldt
 		}
 		return " "

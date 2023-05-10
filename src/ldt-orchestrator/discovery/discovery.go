@@ -3,6 +3,7 @@ package discovery
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"longevity/src/ldt-orchestrator/github"
 	"longevity/src/types"
@@ -108,6 +109,17 @@ func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
 	return c.SupportedLDTs.LDTs[id].Url, nil
+}
+
+func (c *DiscoveryConfig) GetURLFromLDTByName(val []string) (string, error) {
+	var ldt string = val[1]
+	var tag string = val[2]
+	for _, entry := range c.SupportedLDTs.LDTs {
+		if entry.Name == ldt && entry.Version == tag {
+			return entry.Url, nil
+		}
+	}
+	return "", errors.New(fmt.Sprintf("Unable to find LDT: %s", val[1]))
 }
 
 func ldtAlreadyExists(ldt *LDT, ldt_list *LDTList) bool {

@@ -120,3 +120,17 @@ func Test_isURL(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetURLFromLDTByName(t *testing.T) {
+	ensureConfigExists(t)
+
+	assert := assert.New(t)
+	require := require.New(t)
+
+	in := []string{"pixelboehm", "lightbulb", "v0.5.0"}
+	want := "https://github.com/pixelboehm/ldt/releases/download/v0.5.0/lightbulb_Darwin_x86_64.tar.gz"
+	got, err := c.GetURLFromLDTByName(in)
+	require.NoError(err)
+
+	assert.Equal(want, got)
+}

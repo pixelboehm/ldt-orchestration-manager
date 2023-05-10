@@ -7,6 +7,7 @@ import (
 	"longevity/src/ldt-orchestrator/unarchive"
 	. "longevity/src/types"
 	"net"
+	"regexp"
 )
 
 type Manager struct {
@@ -33,6 +34,22 @@ func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
 	return url, nil
 }
 
+func (manager *Manager) GetURLFromLDTByName(name string) (string, error) {
+	reg, _ := regexp.Compile("[\\/\\:]+")
+	result := reg.Split(name, -1)
+
+	if result[2] != "latest" {
+		result[2] = "v" + result[2]
+	}
+
+	url, err := manager.discovery.GetURLFromLDTByName(result)
+	if err != nil {
+		return "", err
+	}
+
+	return url, nil
+}
+
 func downloadLDTArchive(address string) string {
 	name, err := download(address)
 
@@ -44,9 +61,9 @@ func downloadLDTArchive(address string) string {
 	return name
 }
 
-func (manager *Manager) DownloadLDT(id int) string {
+func (manager *Manager) DownloadLDT(name string) string {
 	manager.optionalScan()
-	url, err := manager.GetURLFromLDTByID(id)
+	url, err := manager.GetURLFromLDTByName(name)
 
 	if err != nil {
 		return err.Error()
