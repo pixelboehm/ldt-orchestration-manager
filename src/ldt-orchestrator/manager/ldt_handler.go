@@ -12,38 +12,38 @@ import (
 	"time"
 )
 
-var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassionate", "creative", "enthusiastic", "energetic", "gracious", "generous", "honest", "kind,", "lively", "passionate", "resourceful", "strong", "vibrant", "wise", "witty", "zealous"}
+var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassionate", "creative", "enthusiastic", "energetic", "gracious", "generous", "honest", "kind", "lively", "passionate", "resourceful", "strong", "vibrant", "wise", "witty", "zealous"}
 
 var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "bearded_collie", "bernese_mountain_dog", "border_collie", "boxer", "bulldog", "cavalier_king_charles_spaniel", "chihuahua", "dachshund", "english_cocker_spaniel", "german_shepherd_dog", "golden_retriever", "jack_russell_terrier", "labrador_retriever", "poodle", "pug", "siberian_husky", "west_highland_white_terrier"}
 
-func prepareCommand(ldt, name string) *exec.Cmd {
+func prepareCommand(ldt, name string) (*exec.Cmd, string) {
 	makeExecutable(ldt)
 
 	if name == "" {
 		name = generateRandomName()
 	}
 
-	cmd := exec.Command("./"+ldt, name)
+	cmd := exec.Command(ldt, name)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
-	return cmd
+	return cmd, name
 }
 
-func run(ldt string) (*Process, error) {
-	cmd := prepareCommand(ldt, "")
+func run(ldt_full, ldt string) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, "")
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
 
 	go waitOnProcess(cmd)
 
-	process := NewProcess(cmd.Process.Pid, ldt)
+	process := NewProcess(cmd.Process.Pid, ldt, name)
 	return process, nil
 }
 
-func start(ldt string, in net.Conn) (*Process, error) {
-	cmd := prepareCommand(ldt, "")
+func start(ldt_full, ldt string, in net.Conn) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, "")
 	cmd.Stdout = in
 	cmd.Stderr = in
 	cmd.Stdin = in
@@ -54,7 +54,7 @@ func start(ldt string, in net.Conn) (*Process, error) {
 
 	go waitOnProcess(cmd)
 
-	process := NewProcess(cmd.Process.Pid, ldt)
+	process := NewProcess(cmd.Process.Pid, ldt, name)
 
 	return process, nil
 }
