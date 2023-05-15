@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"log"
+	wotm "longevity/src/wot-manager"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -34,14 +36,25 @@ type Process struct {
 	Pid     int
 	Ldt     string
 	Name    string
+	Desc    wotm.WoTDescription
 	Started time.Time
 }
 
 func NewProcess(pid int, ldt string, name string) *Process {
+	wotm, err := wotm.NewWoTmanager(ldt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	desc, err := wotm.FetchWoTDescription()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &Process{
 		Pid:     pid,
 		Ldt:     ldt,
 		Name:    name,
+		Desc:    desc,
 		Started: time.Now(),
 	}
 }

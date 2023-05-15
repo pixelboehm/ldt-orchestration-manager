@@ -3,6 +3,7 @@ package wotmanager
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 )
 
 type WoTDescription struct {
@@ -64,7 +65,11 @@ type WoTManager struct {
 	description_raw string
 }
 
-func NewWoTmanager(path string) (*WoTManager, error) {
+func NewWoTmanager(ldt_path string) (*WoTManager, error) {
+	var base string = "/usr/local/etc/orchestration-manager/"
+	var replaced string = strings.Replace(ldt_path, ":", "/v", 1)
+	const location string = "/wotm/description.json"
+	var path string = base + replaced + location
 	buffer, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -75,7 +80,7 @@ func NewWoTmanager(path string) (*WoTManager, error) {
 	}, nil
 }
 
-func (wotm *WoTManager) fetchWoTDescription() (WoTDescription, error) {
+func (wotm *WoTManager) FetchWoTDescription() (WoTDescription, error) {
 	var desc WoTDescription
 	if err := json.Unmarshal([]byte(wotm.description_raw), &desc); err != nil {
 		return WoTDescription{}, err

@@ -66,7 +66,7 @@ func Test_fetchWoTDescription(t *testing.T) {
 	require := require.New(t)
 
 	wotm := &WoTManager{description_raw: input}
-	got, err := wotm.fetchWoTDescription()
+	got, err := wotm.FetchWoTDescription()
 	require.NoError(err)
 
 	assert.Equal(got.Context[0], "http://w3.org/ns/td")
