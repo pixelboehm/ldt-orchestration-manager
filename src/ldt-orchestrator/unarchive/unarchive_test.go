@@ -1,7 +1,6 @@
 package unarchive
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -29,8 +28,6 @@ func Test_Untar(t *testing.T) {
 func download_helper(address string) (string, error) {
 	url, _ := url.Parse(address)
 	filename := strings.Split(url.Path, "/")[6]
-	wd, _ := os.Getwd()
-	fmt.Printf("DLH Current Dir: %s\n", wd)
 	file, err := create("./resources/" + filename)
 	if err != nil {
 		return "", err
