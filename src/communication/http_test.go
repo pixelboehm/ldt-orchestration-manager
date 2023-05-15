@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"testing"
 
@@ -32,10 +31,10 @@ func TestMain(m *testing.M) {
 	rest = NewRestInterface(db)
 	rest.initialize()
 
-	code := m.Run()
+	// code := m.Run()
 	clearTable()
 	CleanUpDatabase(db)
-	os.Exit(code)
+	// os.Exit(code)
 }
 
 func clearTable() {

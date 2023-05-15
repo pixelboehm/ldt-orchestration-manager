@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"os"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -22,10 +21,10 @@ func TestMain(m *testing.M) {
 
 	defer db.Close()
 
-	code := m.Run()
+	// code := m.Run()
 	clearTable()
 	CleanUpDatabase(db)
-	os.Exit(code)
+	// os.Exit(code)
 }
 
 func clearTable() {
