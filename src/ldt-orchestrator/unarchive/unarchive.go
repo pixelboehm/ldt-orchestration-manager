@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func Untar(src, dest string) (string, error) {
@@ -42,7 +43,7 @@ func Untar(src, dest string) (string, error) {
 		}
 		dest := folder + "/" + nextFile.Name
 		files = append(files, dest)
-		unpacked, err := os.Create(dest)
+		unpacked, err := create(dest)
 		if err != nil {
 			log.Printf("failed to create: %s\n", dest)
 			return "", err
@@ -67,4 +68,11 @@ func prepareFolder(src, dest string) (string, error) {
 		}
 	}
 	return folder, nil
+}
+
+func create(path string) (*os.File, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0770); err != nil {
+		return nil, err
+	}
+	return os.Create(path)
 }
