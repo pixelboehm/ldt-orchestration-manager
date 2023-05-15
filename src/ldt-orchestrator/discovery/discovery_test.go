@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"longevity/src/types"
 	"os"
 	"testing"
 
@@ -88,11 +89,62 @@ func Test_IsGithubRepository(t *testing.T) {
 }
 
 func Test_DiscoverLDTs(t *testing.T) {
+	t.Skip("skipping test")
 	ensureConfigExists(t)
 	assert := assert.New(t)
 
 	c.DiscoverLDTs()
 	assert.NotNil(len(c.SupportedLDTs.LDTs))
+}
+
+func Test_updateLatestTag(t *testing.T) {
+	ensureConfigExists(t)
+	assert := assert.New(t)
+	require := require.New(t)
+
+	injectLDTFromFakeUserIn(&c.SupportedLDTs.LDTs)
+	c.DiscoverLDTs()
+	require.NotNil(len(c.SupportedLDTs.LDTs))
+
+	var actual_latest_tags int = 0
+	for _, ldt := range c.SupportedLDTs.LDTs {
+		if ldt.Version == "latest" {
+			actual_latest_tags += 1
+		}
+	}
+	require.NotZero(actual_latest_tags)
+
+	var expected_latest_tags int = getUniqueUserLDTCombinations(c.SupportedLDTs.LDTs)
+	assert.Equal(expected_latest_tags, actual_latest_tags)
+}
+
+func injectLDTFromFakeUserIn(list *[]types.LDT) {
+	ldt := &types.LDT{
+		Name:    "switch",
+		User:    "fake_user",
+		Version: "v0.10.2",
+		Os:      "darwin",
+		Arch:    "amd64",
+		Url:     "",
+		Hash:    nil,
+	}
+
+	*list = append([]types.LDT{*ldt}, *list...)
+}
+
+func getUniqueUserLDTCombinations(ldts []types.LDT) int {
+	var unique []types.LDT
+loop:
+	for _, l := range ldts {
+		for i, u := range unique {
+			if l.Name == u.Name && l.User == u.User {
+				unique[i] = l
+				continue loop
+			}
+		}
+		unique = append(unique, l)
+	}
+	return len(unique)
 }
 
 func Test_isURL(t *testing.T) {

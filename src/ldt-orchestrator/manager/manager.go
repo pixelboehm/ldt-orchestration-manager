@@ -79,6 +79,7 @@ func (manager *Manager) DownloadLDT(name string) string {
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
+		return ""
 	}
 
 	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", infos[0], infos[1], infos[2])
