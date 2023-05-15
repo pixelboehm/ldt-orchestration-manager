@@ -17,7 +17,7 @@ const (
 )
 
 func waitForAnswer(connection net.Conn) {
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 2048)
 	for {
 		n, err := connection.Read(buffer[:])
 		if err != nil {
@@ -32,7 +32,7 @@ func waitForAnswer(connection net.Conn) {
 }
 
 func blockingWaitForAnswer(connection net.Conn, process chan int) {
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 2048)
 	for {
 		n, err := connection.Read(buffer[:])
 		if err != nil {
