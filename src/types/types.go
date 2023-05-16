@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	wotm "longevity/src/wot-manager"
@@ -36,7 +37,7 @@ type Process struct {
 	Pid     int
 	Ldt     string
 	Name    string
-	Desc    wotm.WoTDescription
+	Desc    json.RawMessage
 	Started time.Time
 }
 
@@ -45,7 +46,12 @@ func NewProcess(pid int, ldt string, name string) *Process {
 	if err != nil {
 		log.Fatal(err)
 	}
-	desc, err := wotm.FetchWoTDescription()
+	wotm_desc, err := wotm.FetchWoTDescription()
+	if err != nil {
+		log.Printf("New Process: Failed to fetch WoT Description")
+	}
+
+	desc, err := json.Marshal(wotm_desc)
 	if err != nil {
 		log.Fatal(err)
 	}
