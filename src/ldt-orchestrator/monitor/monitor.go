@@ -92,6 +92,7 @@ func (m *Monitor) SerializeLDTs() error {
 	for _, ldt := range m.processes {
 		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started.Format("02-01-2006 15:04:05"))
 		writer.WriteString(res)
+		writer.WriteString(string(ldt.Desc))
 	}
 
 	writer.Flush()
@@ -113,7 +114,11 @@ func (m *Monitor) DeserializeLDTs() error {
 			var name string
 			var day string
 			var hour string
-			fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
+			var desc json.RawMessage
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
+			if err != nil {
+				log.Println("Monitor: failed to deserialize the LDT", err)
+			}
 
 			time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
 			if err != nil {
@@ -121,7 +126,14 @@ func (m *Monitor) DeserializeLDTs() error {
 				return err
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: time})
+			scanner.Scan()
+			err = json.Unmarshal([]byte(scanner.Text()), &desc)
+
+			if err != nil {
+				log.Println("Monitor: Failed to deserialize the LDT description", err)
+			}
+
+			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: time, Desc: desc})
 		}
 
 		if err := scanner.Err(); err != nil {
