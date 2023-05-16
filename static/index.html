@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Orchestration and Deployment Manager</title>
+    <style>
+      .description-row {
+        display: none;
+      }
+    </style>
+    <script>
+      function toggleDescription(rowId) {
+        var descriptionRow = document.getElementById('description-row-' + rowId);
+        var button = document.getElementById('toggle-button-' + rowId);
+        if (descriptionRow.style.display === 'none') {
+          descriptionRow.style.display = 'table-row';
+          button.innerHTML = 'Hide Description';
+        } else {
+          descriptionRow.style.display = 'none';
+          button.innerHTML = 'Show Description';
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Orchestration and Deployment Manager</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>PID</th>
+          <th>LDT</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range $index, $process := .Processes }}
+        <tr>
+          <td>{{ $process.Pid }}</td>
+          <td>{{ $process.Ldt }}</td>
+          <td>{{ $process.Name }}</td>
+          <td>
+            <button id="toggle-button-{{ $index }}" onclick="toggleDescription({{ $index }})">Show Description</button>
+          </td>
+          <td>{{ $process.Started }}</td>
+        </tr>
+        <tr id="description-row-{{ $index }}" class="description-row" style="display: none;">
+            <td colspan="5"><pre>{{ formatJSON $process.Desc }}</pre></td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table> 
+  </body>
+</html>

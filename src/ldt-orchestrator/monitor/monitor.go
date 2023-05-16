@@ -3,12 +3,16 @@ package monitor
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"longevity/src/communication"
 	. "longevity/src/types"
+	"net/http"
 	"os"
 	"syscall"
+	"text/template"
 	"time"
 )
 
@@ -25,6 +29,48 @@ func NewMonitor(ldt_list_path string) *Monitor {
 		Stopped:       make(chan int),
 		ldt_list_path: ldt_list_path,
 	}
+}
+
+func (m *Monitor) Run() {
+	rest := communication.NewRestInterface(nil)
+	rest.AddCustomHandler(m.handler)
+	rest.Run(8080)
+}
+
+func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	if r.Method != "GET" {
+		http.Error(w, "Method is not supported.", http.StatusNotFound)
+		return
+	}
+
+	tmp := template.Must(
+		template.New("index.html").Funcs(template.FuncMap{
+			"formatJSON": formatJSON,
+		}).ParseFiles("static/index.html"),
+	)
+
+	data := map[string]interface{}{
+		"Processes": m.processes,
+	}
+
+	err := tmp.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func formatJSON(data json.RawMessage) string {
+	formatted, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Printf("Error formatting JSON: %v", err)
+		return string(data)
+	}
+	return string(formatted)
 }
 
 func (m *Monitor) DoKeepAlive() {

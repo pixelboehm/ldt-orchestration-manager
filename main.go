@@ -77,6 +77,7 @@ func (app *App) run(out io.Writer) error {
 	go app.checkForShutdown(sigchannel)
 	go app.monitor.DoKeepAlive()
 	go app.monitor.RefreshLDTs()
+	go app.monitor.Run()
 
 	commands := make(chan string)
 	for {
