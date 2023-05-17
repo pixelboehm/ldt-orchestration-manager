@@ -24,34 +24,34 @@
   </head>
   <body>
     <div class="container">
-    <h1>Orchestration and Deployment Manager</h1>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>PID</th>
-          <th>LDT</th>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Started</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ range $index, $process := .Processes }}
-        <tr>
-          <td>{{ $process.Pid }}</td>
-          <td>{{ $process.Ldt }}</td>
-          <td>{{ $process.Name }}</td>
-          <td>
-            <button class="btn btn-dark" id="toggle-button-{{ $index }}" onclick="toggleDescription({{ $index }})">Show Description</button>
-          </td>
-          <td>{{ $process.Started }}</td>
-        </tr>
-        <tr id="description-row-{{ $index }}" class="description-row" style="display: none;">
-            <td colspan="5"><pre>{{ formatJSON $process.Desc }}</pre></td>
-        </tr>
-        {{ end }}
-      </tbody>
-    </table> 
+      <h1>Orchestration and Deployment Manager</h1>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>PID</th>
+            <th>LDT</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Started</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $process := .Processes }}
+          <tr>
+            <td>{{ $process.Pid }}</td>
+            <td>{{ $process.Ldt }}</td>
+            <td>{{ $process.Name }}</td>
+            <td>
+              <button class="btn btn-dark" id="toggle-button-{{ $index }}" onclick="toggleDescription({{ $index }})">Show Description</button>
+            </td>
+            <td><span>up: </span>{{ convertTime $process.Started }}</pre></tr>
+          </tr>
+          <tr id="description-row-{{ $index }}" class="description-row" style="display: none;">
+              <td colspan="5"><pre>{{ formatJSON $process.Desc }}</pre></td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table> 
     </div>
   </body>
 </html>
