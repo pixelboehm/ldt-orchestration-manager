@@ -2,6 +2,7 @@ package wotmanager
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -67,7 +68,15 @@ type WoTManager struct {
 
 func NewWoTmanager(ldt_path string) (*WoTManager, error) {
 	var base string = "/usr/local/etc/orchestration-manager/"
-	var replaced string = strings.Replace(ldt_path, ":", "/v", 1)
+	test := ldt_path[strings.LastIndex(ldt_path, ":")+1:]
+	fmt.Println("test: ", test)
+	var replaced string
+	if test == "latest" {
+		replaced = strings.Replace(ldt_path, ":", "/", 1)
+	} else {
+		replaced = strings.Replace(ldt_path, ":", "/v", 1)
+	}
+
 	const location string = "/wotm/description.json"
 	var path string = base + replaced + location
 	buffer, err := ioutil.ReadFile(path)
