@@ -21,6 +21,7 @@ type API interface {
 	UpdateDevice(w http.ResponseWriter, r *http.Request)
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	Database() *sql.DB
+	AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request))
 	Router() *mux.Router
 	SetDatabase(db *sql.DB)
 	SetRouter(router *mux.Router)
@@ -183,6 +184,10 @@ func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{})
 
 func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	respondWithJSON(w, statusCode, map[string]string{"error": message})
+}
+
+func (rest *RESTInterface) AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request)) {
+	rest.router.HandleFunc("/", handler).Methods("GET")
 }
 
 func (rest *RESTInterface) initialize() {

@@ -3,12 +3,16 @@ package monitor
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"longevity/src/communication"
 	. "longevity/src/types"
+	"net/http"
 	"os"
 	"syscall"
+	"text/template"
 	"time"
 )
 
@@ -25,6 +29,65 @@ func NewMonitor(ldt_list_path string) *Monitor {
 		Stopped:       make(chan int),
 		ldt_list_path: ldt_list_path,
 	}
+}
+
+func (m *Monitor) Run() {
+	rest := communication.NewRestInterface(nil)
+	rest.AddCustomHandler(m.handler)
+	rest.Run(8080)
+}
+
+func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	if r.Method != "GET" {
+		http.Error(w, "Method is not supported.", http.StatusNotFound)
+		return
+	}
+
+	tmp := template.Must(
+		template.New("index.html").Funcs(template.FuncMap{
+			"formatJSON":  formatJSON,
+			"convertTime": convertTime,
+		}).ParseFiles("static/index.html"),
+	)
+
+	data := map[string]interface{}{
+		"Processes": m.processes,
+	}
+
+	err := tmp.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func formatJSON(data json.RawMessage) string {
+	formatted, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Printf("Error formatting JSON: %v", err)
+		return string(data)
+	}
+	return string(formatted)
+}
+
+func convertTime(started string) string {
+	currentTime := time.Now().Format("2006-1-2 15:4:5")
+	newCurrentTime, err := time.Parse("2006-1-2 15:4:5", currentTime)
+	if err != nil {
+		log.Println("Monitor: Failed to parse time")
+		return "Unknown"
+	}
+	startTime, err := time.Parse("2006-1-2 15:4:5", started)
+	if err != nil {
+		log.Println("Monitor: Failed to parse time")
+		return "Unknown"
+	}
+	uptime := newCurrentTime.Sub(startTime)
+	return fmt.Sprint(uptime)
 }
 
 func (m *Monitor) DoKeepAlive() {
@@ -54,7 +117,7 @@ func (m *Monitor) RefreshLDTs() {
 
 func (m *Monitor) RegisterLDT(ldt *Process) {
 	m.processes = append(m.processes, *ldt)
-	log.Printf("Monitor: New LDT %s with PID %d registered at %s\n", ldt.Name, ldt.Pid, ldt.Started.Format("02-01-2006 15:04:05"))
+	log.Printf("Monitor: New LDT %s with PID %d registered at %s\n", ldt.Name, ldt.Pid, ldt.Started)
 }
 
 func (m *Monitor) RemoveLDT(pid int) {
@@ -90,8 +153,9 @@ func (m *Monitor) SerializeLDTs() error {
 	template := "%s\t%d\t%s\t%s\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started.Format("02-01-2006 15:04:05"))
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started)
 		writer.WriteString(res)
+		writer.WriteString(string(ldt.Desc) + "\n")
 	}
 
 	writer.Flush()
@@ -113,15 +177,30 @@ func (m *Monitor) DeserializeLDTs() error {
 			var name string
 			var day string
 			var hour string
-			fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
-
-			time, err := time.Parse("02-01-2006 15:04:05", day+" "+hour)
+			var desc json.RawMessage
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
 			if err != nil {
-				log.Println(err)
-				return err
+				log.Println("Monitor: failed to deserialize the LDT", err)
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: time})
+			// 2023-05-17 08:11:03.167657 +0200 CEST m=+4.277253773
+			// Format("2006-1-2 15:4:5"))
+			// time, err := time.Parse("2006-01-02 15:04:05", day+" "+hour)
+			// if err != nil {
+			// 	log.Println(err)
+			// 	return err
+			// }
+
+			started := day + " " + hour
+
+			scanner.Scan()
+			err = json.Unmarshal([]byte(scanner.Text()), &desc)
+
+			if err != nil {
+				log.Println("Monitor: Failed to deserialize the LDT description", err)
+			}
+
+			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: started, Desc: desc})
 		}
 
 		if err := scanner.Err(); err != nil {
