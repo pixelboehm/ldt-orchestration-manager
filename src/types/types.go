@@ -38,7 +38,7 @@ type Process struct {
 	Ldt     string
 	Name    string
 	Desc    json.RawMessage
-	Started time.Time
+	Started string
 }
 
 func NewProcess(pid int, ldt string, name string) *Process {
@@ -61,7 +61,7 @@ func NewProcess(pid int, ldt string, name string) *Process {
 		Ldt:     ldt,
 		Name:    name,
 		Desc:    desc,
-		Started: time.Now(),
+		Started: time.Now().Format("2006-1-2 15:4:5"),
 	}
 }
 
