@@ -22,9 +22,9 @@ type API interface {
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	Database() *sql.DB
 	AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request))
-	Router() *mux.Router
+	Router() *http.ServeMux
 	SetDatabase(db *sql.DB)
-	SetRouter(router *mux.Router)
+	SetRouter(router *http.ServeMux)
 	CloseDatabase(db *sql.DB)
 	initialize()
 }
