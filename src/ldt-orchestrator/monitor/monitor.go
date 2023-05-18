@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"longevity/src/communication"
 	. "longevity/src/types"
 	"net/http"
 	"os"
 	"syscall"
-	"text/template"
 	"time"
 )
 
