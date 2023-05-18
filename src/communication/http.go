@@ -30,13 +30,13 @@ type API interface {
 }
 
 type RESTInterface struct {
-	router *mux.Router
+	router *http.ServeMux
 	db     *sql.DB
 }
 
 func NewRestInterface(db *sql.DB) *RESTInterface {
 	return &RESTInterface{
-		router: mux.NewRouter(),
+		router: http.NewServeMux(),
 		db:     db,
 	}
 }
@@ -159,7 +159,7 @@ func (rest *RESTInterface) Database() *sql.DB {
 	return rest.db
 }
 
-func (rest *RESTInterface) Router() *mux.Router {
+func (rest *RESTInterface) Router() *http.ServeMux {
 	return rest.router
 }
 
@@ -167,7 +167,7 @@ func (rest *RESTInterface) SetDatabase(db *sql.DB) {
 	rest.db = db
 }
 
-func (rest *RESTInterface) SetRouter(router *mux.Router) {
+func (rest *RESTInterface) SetRouter(router *http.ServeMux) {
 	rest.router = router
 }
 
@@ -187,13 +187,13 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 }
 
 func (rest *RESTInterface) AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request)) {
-	rest.router.HandleFunc("/", handler).Methods("GET")
+	rest.router.HandleFunc("/", handler)
 }
 
 func (rest *RESTInterface) initialize() {
-	rest.router.HandleFunc("/devices", rest.Devices).Methods("GET")
-	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.Device).Methods("GET")
-	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice).Methods("PUT")
-	rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice).Methods("DELETE")
-	rest.router.HandleFunc("/device", rest.CreateDevice).Methods("POST")
+	rest.router.HandleFunc("/devices", rest.Devices)
+	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.Device)
+	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice)
+	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice)
+	rest.router.HandleFunc("/device", rest.CreateDevice)
 }

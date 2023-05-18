@@ -32,7 +32,9 @@ func NewMonitor(ldt_list_path string) *Monitor {
 }
 
 func (m *Monitor) Run() {
+	fs := http.FileServer(http.Dir("static"))
 	rest := communication.NewRestInterface(nil)
+	rest.Router().Handle("/static/", http.StripPrefix("/static/", fs))
 	rest.AddCustomHandler(m.handler)
 	rest.Run(8080)
 }
@@ -54,6 +56,8 @@ func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
 			"convertTime": convertTime,
 		}).ParseFiles("static/index.html"),
 	)
+
+	// tmp := template.Must(template.ParseFiles("static/index.html"))
 
 	data := map[string]interface{}{
 		"Processes": m.processes,
