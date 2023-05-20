@@ -57,8 +57,6 @@ func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
 		}).ParseFiles("static/index.html"),
 	)
 
-	// tmp := template.Must(template.ParseFiles("static/index.html"))
-
 	data := map[string]interface{}{
 		"Processes": m.processes,
 	}
@@ -69,14 +67,13 @@ func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func formatJSON(data json.RawMessage) template.HTML {
-	// formatted, err := json.MarshalIndent(data, "", "  ")
-	// if err != nil {
-	// 	log.Printf("Error formatting JSON: %v", err)
-	// 	return string(data)
-	// }
-	// return string(formatted)
-	return "<p style='color:blue;'>this works</p>"
+func formatJSON(data json.RawMessage) string {
+	formatted, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		log.Printf("Error formatting JSON: %v", err)
+		return string(data)
+	}
+	return string(formatted)
 }
 
 func convertTime(started string) string {
