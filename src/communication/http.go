@@ -21,7 +21,7 @@ type API interface {
 	UpdateDevice(w http.ResponseWriter, r *http.Request)
 	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	Database() *sql.DB
-	AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request))
+	AddCustomHandler(route string, handler func(w http.ResponseWriter, r *http.Request))
 	Router() *http.ServeMux
 	SetDatabase(db *sql.DB)
 	SetRouter(router *http.ServeMux)
@@ -186,14 +186,14 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 	respondWithJSON(w, statusCode, map[string]string{"error": message})
 }
 
-func (rest *RESTInterface) AddCustomHandler(handler func(w http.ResponseWriter, r *http.Request)) {
+func (rest *RESTInterface) AddCustomHandler(route string, handler func(w http.ResponseWriter, r *http.Request)) {
 	rest.router.HandleFunc("/", handler)
 }
 
 func (rest *RESTInterface) initialize() {
-	rest.router.HandleFunc("/devices", rest.Devices)
+	// rest.router.HandleFunc("/devices", rest.Devices)
 	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.Device)
 	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice)
 	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice)
-	rest.router.HandleFunc("/device", rest.CreateDevice)
+	// rest.router.HandleFunc("/device", rest.CreateDevice)
 }

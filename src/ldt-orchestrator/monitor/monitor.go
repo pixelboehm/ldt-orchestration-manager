@@ -31,12 +31,12 @@ func NewMonitor(ldt_list_path string) *Monitor {
 	}
 }
 
-func (m *Monitor) Run() {
+func (m *Monitor) Run(port int) {
 	fs := http.FileServer(http.Dir("static"))
 	rest := communication.NewRestInterface(nil)
 	rest.Router().Handle("/static/", http.StripPrefix("/static/", fs))
-	rest.AddCustomHandler(m.handler)
-	rest.Run(8080)
+	rest.AddCustomHandler("/", m.handler)
+	rest.Run(port)
 }
 
 func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
@@ -69,13 +69,14 @@ func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func formatJSON(data json.RawMessage) string {
-	formatted, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		log.Printf("Error formatting JSON: %v", err)
-		return string(data)
-	}
-	return string(formatted)
+func formatJSON(data json.RawMessage) template.HTML {
+	// formatted, err := json.MarshalIndent(data, "", "  ")
+	// if err != nil {
+	// 	log.Printf("Error formatting JSON: %v", err)
+	// 	return string(data)
+	// }
+	// return string(formatted)
+	return "<p style='color:blue;'>this works</p>"
 }
 
 func convertTime(started string) string {
