@@ -2,7 +2,6 @@ package bootstrapping
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	comms "longevity/src/communication"
 
@@ -11,21 +10,23 @@ import (
 )
 
 type Bootstrapper struct {
-	rest *comms.RESTInterface
+	rest        *comms.RESTInterface
+	waitingList chan Device
 }
 
 func NewBootstrapper() *Bootstrapper {
 	return &Bootstrapper{
-		rest: comms.NewRestInterface(nil),
+		rest:        comms.NewRestInterface(nil),
+		waitingList: make(chan Device),
 	}
 }
 
 func (b *Bootstrapper) Run(port int) {
-	b.rest.AddCustomHandler("/register", registration)
+	b.rest.AddCustomHandler("/register", b.registration)
 	b.rest.Run(port)
 }
 
-func registration(w http.ResponseWriter, r *http.Request) {
+func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 	log.Println("Bootstrapper: A new registration request came")
 
 	var device Device
@@ -34,6 +35,6 @@ func registration(w http.ResponseWriter, r *http.Request) {
 		log.Println("Bootstrapper: Decoding Error: ", err)
 	}
 	defer r.Body.Close()
-	var result string = fmt.Sprintf("New Device: %s\t%s\t%s\n", device.Name, device.MacAddress, device.Version)
-	w.Write([]byte(result))
+	b.waitingList <- device
+	w.Write([]byte("192.168.188.56"))
 }
