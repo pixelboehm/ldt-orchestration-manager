@@ -187,7 +187,7 @@ func respondWithError(w http.ResponseWriter, statusCode int, message string) {
 }
 
 func (rest *RESTInterface) AddCustomHandler(route string, handler func(w http.ResponseWriter, r *http.Request)) {
-	rest.router.HandleFunc("/", handler)
+	rest.router.HandleFunc(route, handler)
 }
 
 func (rest *RESTInterface) initialize() {
