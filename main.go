@@ -37,10 +37,12 @@ func main() {
 		syscall.Unlink(socketpath)
 	}()
 	parseFlags()
+
+	var monitor *mon.Monitor = mon.NewMonitor(ldts)
 	app := &App{
 		manager:      man.NewManager(repos, storage),
-		monitor:      mon.NewMonitor(ldts),
-		bootstrapper: boo.NewBootstrapper(),
+		monitor:      monitor,
+		bootstrapper: boo.NewBootstrapper(monitor),
 	}
 
 	if err := app.monitor.DeserializeLDTs(); err != nil {

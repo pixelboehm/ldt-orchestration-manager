@@ -12,6 +12,7 @@ import (
 	. "longevity/src/types"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -223,4 +224,15 @@ func ldtIsRunning(pid int) bool {
 		return false
 	}
 	return true
+}
+
+func (m *Monitor) GetPairaibleLDT() string {
+	for _, ldt := range m.processes {
+		if ldt.Pairable == true {
+			var name string = ldt.Ldt
+			actual_ldt := name[strings.LastIndex(name, "/")+1 : strings.LastIndex(name, ":")]
+			return actual_ldt
+		}
+	}
+	return " "
 }
