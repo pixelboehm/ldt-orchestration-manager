@@ -180,9 +180,11 @@ func Test_GetURLFromLDTByName(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	in := []string{"pixelboehm", "lightbulb", "v0.5.0"}
+	user := "pixelboehm"
+	ldt := "lightbulb"
+	version := "v0.5.0"
 	want := "https://github.com/pixelboehm/ldt/releases/download/v0.5.0/lightbulb_Darwin_x86_64.tar.gz"
-	got, err := c.GetURLFromLDTByName(in)
+	got, err := c.GetURLFromLDTByName(user, ldt, version)
 	require.NoError(err)
 
 	assert.Equal(want[:59], got[:59])

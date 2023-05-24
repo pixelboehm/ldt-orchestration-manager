@@ -36,8 +36,8 @@ func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
 	return url, nil
 }
 
-func (manager *Manager) GetURLFromLDTByName(name []string) (string, error) {
-	url, err := manager.discovery.GetURLFromLDTByName(name)
+func (manager *Manager) GetURLFromLDTByName(user, ldt, version string) (string, error) {
+	url, err := manager.discovery.GetURLFromLDTByName(user, ldt, version)
 	if err != nil {
 		return "", err
 	}
@@ -45,14 +45,14 @@ func (manager *Manager) GetURLFromLDTByName(name []string) (string, error) {
 	return url, nil
 }
 
-func (manager *Manager) SplitLDTInfos(name string) []string {
+func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
 	reg, _ := regexp.Compile("[\\/\\:]+")
 	result := reg.Split(name, -1)
 
 	if result[2] != "latest" {
 		result[2] = "v" + result[2]
 	}
-	return result
+	return result[0], result[1], result[2]
 }
 
 func downloadLDTArchive(address string) string {
@@ -67,28 +67,32 @@ func downloadLDTArchive(address string) string {
 
 func (manager *Manager) DownloadLDT(name string) string {
 	manager.optionalScan()
-	infos := manager.SplitLDTInfos(name)
-	url, err := manager.GetURLFromLDTByName(infos)
+	user, ldt_name, version := manager.SplitLDTInfos(name)
+	url, err := manager.GetURLFromLDTByName(user, ldt_name, version)
 
 	if err != nil {
 		return err.Error()
 	}
 
 	ldtArchive := downloadLDTArchive(url)
-	location := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2]
+	location := manager.storage + "/" + user + "/" + ldt_name + "/" + version
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
 		return ""
 	}
 
-	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", infos[0], infos[1], infos[2])
+	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version)
 	return ldt
 }
 
+func prepareExeution(ldt string) {
+
+}
+
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
-	infos := manager.SplitLDTInfos(ldt)
-	ldt_full := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
+	user, ldt_name, version := manager.SplitLDTInfos(ldt)
+	ldt_full := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	process, err := run(ldt_full, ldt)
 	if err != nil {
 		log.Println("Manager: Failed to run LDT: ", err)
@@ -100,8 +104,8 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 }
 
 func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
-	infos := manager.SplitLDTInfos(ldt)
-	ldt_full := manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2] + "/" + infos[1]
+	user, ldt_name, version := manager.SplitLDTInfos(ldt)
+	ldt_full := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	process, err := start(ldt_full, ldt, in)
 	if err != nil {
 		log.Println("Manager: Failed to start LDT: ", err)
@@ -130,6 +134,6 @@ func (manager *Manager) optionalScan() {
 }
 
 func (manager *Manager) fixLdtLocation(ldt string) string {
-	var infos []string = manager.SplitLDTInfos(ldt)
-	return manager.storage + "/" + infos[0] + "/" + infos[1] + "/" + infos[2]
+	user, ldt_name, version := manager.SplitLDTInfos(ldt)
+	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
 }

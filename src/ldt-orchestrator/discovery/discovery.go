@@ -117,15 +117,13 @@ func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
 	return c.SupportedLDTs.LDTs[id].Url, nil
 }
 
-func (c *DiscoveryConfig) GetURLFromLDTByName(val []string) (string, error) {
-	var ldt string = val[1]
-	var tag string = val[2]
+func (c *DiscoveryConfig) GetURLFromLDTByName(user, ldt, tag string) (string, error) {
 	for _, entry := range c.SupportedLDTs.LDTs {
-		if entry.Name == ldt && entry.Version == tag {
+		if entry.User == user && entry.Name == ldt && entry.Version == tag {
 			return entry.Url, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("Unable to find LDT: %s", val[1]))
+	return "", errors.New(fmt.Sprintf("Unable to find LDT: %s", ldt))
 }
 
 func ldtAlreadyExists(ldt *LDT, ldt_list *LDTList) bool {
