@@ -20,10 +20,19 @@ func prepareCommand(ldt, name string) (*exec.Cmd, string) {
 	makeExecutable(ldt)
 
 	if name == "" {
-		name = generateRandomName()
+		name = GenerateRandomName()
 	}
 
-	cmd := exec.Command(ldt, name)
+	var port int
+
+	for {
+		port = generateRandomPort()
+		if portIsAvailable(port) {
+			break
+		}
+	}
+
+	cmd := exec.Command(ldt, name, fmt.Sprint(port))
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -92,9 +101,24 @@ func makeExecutable(ldt string) {
 	}
 }
 
-func generateRandomName() string {
+func GenerateRandomName() string {
 	rand.Seed(time.Now().UnixNano())
 	return adjectives[rand.Intn(len(adjectives))] + "_" + dogs[rand.Intn((len(dogs)))]
+}
+
+func generateRandomPort() int {
+	var min int = 30000
+	var max int = 50000
+	return rand.Intn((max - min) + min)
+}
+
+func portIsAvailable(port int) bool {
+	checker, err := net.Listen("tcp", ":"+fmt.Sprint(port))
+	if err != nil {
+		return false
+	}
+	_ = checker.Close()
+	return true
 }
 
 func waitOnProcess(cmd *exec.Cmd) {

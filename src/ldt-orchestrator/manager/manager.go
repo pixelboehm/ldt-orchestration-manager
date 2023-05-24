@@ -1,12 +1,15 @@
 package manager
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	di "longevity/src/ldt-orchestrator/discovery"
 	"longevity/src/ldt-orchestrator/unarchive"
 	. "longevity/src/types"
 	"net"
+	"os"
 	"regexp"
 )
 
@@ -86,11 +89,118 @@ func (manager *Manager) DownloadLDT(name string) string {
 	return ldt
 }
 
-func prepareExeution(ldt string) {
+func (manager *Manager) prepareExeution(ldt string) error {
+	user, ldt_name, version := manager.SplitLDTInfos(ldt)
+	random_name := GenerateRandomName()
 
+	dest := manager.storage + "/" + random_name
+	dir, err := createLdtSpecificDirectory(dest)
+	if err != nil {
+		return errors.New(fmt.Sprint("Could not create LDT specific directory", err))
+	}
+
+	manager.copyLdtDescription(ldt, dir)
+
+	src_exec := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
+	dest_exec := dir + "/" + ldt_name
+	err = symlinkLdtExecutable(src_exec, dest_exec)
+	if err != nil {
+		log.Println()
+		return errors.New(fmt.Sprint("Unable to symlink LDT", err))
+	}
+	return nil
+}
+
+func createLdtSpecificDirectory(dir string) (string, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0777); err != nil {
+			return "", err
+		}
+	}
+	return dir, nil
+}
+
+func (manager *Manager) copyLdtDescription(ldt, dest string) error {
+	src_dir := manager.getLdtLocation(ldt)
+	src_description := src_dir + "/" + "wotm/description.json"
+	dest_description := dest + "/" + "wotm/description.json"
+	os.MkdirAll(dest+"/"+"wotm", 0777)
+	log.Printf("Source: %s", src_description)
+	log.Printf("Dest: %s", dest_description)
+	err := CopyFile(src_description, dest_description)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func symlinkLdtExecutable(src, dest string) error {
+	log.Println("symlinking")
+	log.Printf("Source: %s\n", src)
+	log.Printf("Dest: %s\n", dest)
+	err := os.Symlink(src, dest)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CopyFile(src, dst string) (err error) {
+	sfi, err := os.Stat(src)
+	if err != nil {
+		return
+	}
+	if !sfi.Mode().IsRegular() {
+		return fmt.Errorf("CopyFile: non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
+	}
+	dfi, err := os.Stat(dst)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return
+		}
+	} else {
+		if !(dfi.Mode().IsRegular()) {
+			return fmt.Errorf("CopyFile: non-regular destination file %s (%q)", dfi.Name(), dfi.Mode().String())
+		}
+		if os.SameFile(sfi, dfi) {
+			return
+		}
+	}
+	if err = os.Link(src, dst); err == nil {
+		return
+	}
+	err = copyFileContents(src, dst)
+	return
+}
+
+func copyFileContents(src, dst string) (err error) {
+	in, err := os.Open(src)
+	if err != nil {
+		return
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return
+	}
+	defer func() {
+		cerr := out.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	if _, err = io.Copy(out, in); err != nil {
+		return
+	}
+	err = out.Sync()
+	return
 }
 
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
+	err := manager.prepareExeution(ldt)
+	if err != nil {
+		return nil, errors.New("Failed to prepare the execution")
+	}
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
 	ldt_full := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	process, err := run(ldt_full, ldt)
@@ -133,7 +243,7 @@ func (manager *Manager) optionalScan() {
 	}
 }
 
-func (manager *Manager) fixLdtLocation(ldt string) string {
+func (manager *Manager) getLdtLocation(ldt string) string {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
 	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
 }
