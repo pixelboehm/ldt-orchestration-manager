@@ -89,14 +89,14 @@ func (manager *Manager) DownloadLDT(name string) string {
 	return ldt
 }
 
-func (manager *Manager) prepareExeution(ldt string) error {
+func (manager *Manager) prepareExecution(ldt string) (string, string, error) {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
 	random_name := GenerateRandomName()
 
 	dest := manager.storage + "/" + random_name
 	dir, err := createLdtSpecificDirectory(dest)
 	if err != nil {
-		return errors.New(fmt.Sprint("Could not create LDT specific directory", err))
+		return "", "", errors.New(fmt.Sprint("Could not create LDT specific directory", err))
 	}
 
 	manager.copyLdtDescription(ldt, dir)
@@ -106,9 +106,9 @@ func (manager *Manager) prepareExeution(ldt string) error {
 	err = symlinkLdtExecutable(src_exec, dest_exec)
 	if err != nil {
 		log.Println()
-		return errors.New(fmt.Sprint("Unable to symlink LDT", err))
+		return "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
 	}
-	return nil
+	return dest_exec, random_name, nil
 }
 
 func createLdtSpecificDirectory(dir string) (string, error) {
@@ -197,13 +197,11 @@ func copyFileContents(src, dst string) (err error) {
 }
 
 func (manager *Manager) RunLDT(ldt string) (*Process, error) {
-	err := manager.prepareExeution(ldt)
+	ldt_path, random_name, err := manager.prepareExecution(ldt)
 	if err != nil {
 		return nil, errors.New("Failed to prepare the execution")
 	}
-	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	ldt_full := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
-	process, err := run(ldt_full, ldt)
+	process, err := run(ldt_path, ldt, random_name)
 	if err != nil {
 		log.Println("Manager: Failed to run LDT: ", err)
 		return nil, err
@@ -214,9 +212,11 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 }
 
 func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
-	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	ldt_full := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
-	process, err := start(ldt_full, ldt, in)
+	ldt_path, random_name, err := manager.prepareExecution(ldt)
+	if err != nil {
+		return nil, errors.New("Failed to prepare the execution")
+	}
+	process, err := start(ldt_path, ldt, random_name, in)
 	if err != nil {
 		log.Println("Manager: Failed to start LDT: ", err)
 		return nil, err

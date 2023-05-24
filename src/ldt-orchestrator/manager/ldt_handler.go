@@ -16,12 +16,8 @@ var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassion
 
 var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "bearded_collie", "bernese_mountain_dog", "border_collie", "boxer", "bulldog", "cavalier_king_charles_spaniel", "chihuahua", "dachshund", "english_cocker_spaniel", "german_shepherd_dog", "golden_retriever", "jack_russell_terrier", "labrador_retriever", "poodle", "pug", "siberian_husky", "west_highland_white_terrier"}
 
-func prepareCommand(ldt, name string) (*exec.Cmd, string) {
-	makeExecutable(ldt)
-
-	if name == "" {
-		name = GenerateRandomName()
-	}
+func prepareCommand(ldt_exec, name string) (*exec.Cmd, string) {
+	makeExecutable(ldt_exec)
 
 	var port int
 
@@ -32,15 +28,15 @@ func prepareCommand(ldt, name string) (*exec.Cmd, string) {
 		}
 	}
 
-	cmd := exec.Command(ldt, name, fmt.Sprint(port))
+	cmd := exec.Command(ldt_exec, name, fmt.Sprint(port))
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
 	return cmd, name
 }
 
-func run(ldt_full, ldt string) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, "")
+func run(ldt_full, ldt, random_name string) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -51,8 +47,8 @@ func run(ldt_full, ldt string) (*Process, error) {
 	return process, nil
 }
 
-func start(ldt_full, ldt string, in net.Conn) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, "")
+func start(ldt_full, ldt, random_name string, in net.Conn) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name)
 	cmd.Stdout = in
 	cmd.Stderr = in
 	cmd.Stdin = in
