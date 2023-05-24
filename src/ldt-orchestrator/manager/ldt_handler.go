@@ -16,17 +16,8 @@ var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassion
 
 var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "bearded_collie", "bernese_mountain_dog", "border_collie", "boxer", "bulldog", "cavalier_king_charles_spaniel", "chihuahua", "dachshund", "english_cocker_spaniel", "german_shepherd_dog", "golden_retriever", "jack_russell_terrier", "labrador_retriever", "poodle", "pug", "siberian_husky", "west_highland_white_terrier"}
 
-func prepareCommand(ldt_exec, name string) (*exec.Cmd, string) {
+func prepareCommand(ldt_exec, name string, port int) (*exec.Cmd, string) {
 	makeExecutable(ldt_exec)
-
-	var port int
-
-	for {
-		port = generateRandomPort()
-		if portIsAvailable(port) {
-			break
-		}
-	}
 
 	cmd := exec.Command(ldt_exec, name, fmt.Sprint(port))
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -35,20 +26,34 @@ func prepareCommand(ldt_exec, name string) (*exec.Cmd, string) {
 	return cmd, name
 }
 
+func findOpenPort() int {
+	var port int
+
+	for {
+		port = generateRandomPort()
+		if portIsAvailable(port) {
+			break
+		}
+	}
+	return port
+}
+
 func run(ldt_full, ldt, random_name string) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, random_name)
+	port := findOpenPort()
+	cmd, name := prepareCommand(ldt_full, random_name, port)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
 
 	go waitOnProcess(cmd)
 
-	process := NewProcess(cmd.Process.Pid, ldt, name)
+	process := NewProcess(cmd.Process.Pid, ldt, name, port)
 	return process, nil
 }
 
 func start(ldt_full, ldt, random_name string, in net.Conn) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, random_name)
+	port := findOpenPort()
+	cmd, name := prepareCommand(ldt_full, random_name, port)
 	cmd.Stdout = in
 	cmd.Stderr = in
 	cmd.Stdin = in
@@ -59,7 +64,7 @@ func start(ldt_full, ldt, random_name string, in net.Conn) (*Process, error) {
 
 	go waitOnProcess(cmd)
 
-	process := NewProcess(cmd.Process.Pid, ldt, name)
+	process := NewProcess(cmd.Process.Pid, ldt, name, port)
 
 	return process, nil
 }

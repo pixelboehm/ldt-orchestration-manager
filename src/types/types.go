@@ -37,12 +37,13 @@ type Process struct {
 	Pid      int
 	Ldt      string
 	Name     string
+	Port     int
 	Desc     json.RawMessage
 	Started  string
 	Pairable bool
 }
 
-func NewProcess(pid int, ldt string, name string) *Process {
+func NewProcess(pid int, ldt string, name string, port int) *Process {
 	wotm, err := wotm.NewWoTmanager(ldt)
 	if err != nil {
 		log.Fatal(err)
@@ -61,6 +62,7 @@ func NewProcess(pid int, ldt string, name string) *Process {
 		Pid:      pid,
 		Ldt:      ldt,
 		Name:     name,
+		Port:     port,
 		Desc:     desc,
 		Started:  time.Now().Format("2006-1-2 15:4:5"),
 		Pairable: true,

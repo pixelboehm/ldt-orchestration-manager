@@ -153,10 +153,10 @@ func (m *Monitor) SerializeLDTs() error {
 	}
 	defer file.Close()
 
-	template := "%s\t%d\t%s\t%s\t%t\n"
+	template := "%s\t%d\t%s\t%d\t%s\t%t\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started, ldt.Pairable)
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable)
 		writer.WriteString(res)
 		writer.WriteString(string(ldt.Desc) + "\n")
 	}
@@ -178,11 +178,12 @@ func (m *Monitor) DeserializeLDTs() error {
 			var ldt string
 			var pid int
 			var name string
+			var port int
 			var day string
 			var hour string
 			var pairable bool
 			var desc json.RawMessage
-			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s\t%t", &ldt, &pid, &name, &day, &hour, &pairable)
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t", &ldt, &pid, &name, &port, &day, &hour, &pairable)
 			if err != nil {
 				log.Println("Monitor: failed to deserialize the LDT", err)
 			}
@@ -196,7 +197,14 @@ func (m *Monitor) DeserializeLDTs() error {
 				log.Println("Monitor: Failed to deserialize the LDT description", err)
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: started, Desc: desc, Pairable: pairable})
+			m.processes = append(m.processes, Process{
+				Pid:      pid,
+				Ldt:      ldt,
+				Name:     name,
+				Port:     port,
+				Started:  started,
+				Desc:     desc,
+				Pairable: pairable})
 		}
 
 		if err := scanner.Err(); err != nil {
