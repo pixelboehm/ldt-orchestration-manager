@@ -243,7 +243,6 @@ func (m *Monitor) GetPairaibleLDTAddress(name string) (string, error) {
 		if ldt.Pairable == true && ldt.LdtType() == name {
 			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
 			m.processes[i].Pairable = false
-			// ldt[i].Pairable = false
 			return res, nil
 		}
 	}
