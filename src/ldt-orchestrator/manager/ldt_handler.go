@@ -110,7 +110,7 @@ func GenerateRandomName() string {
 func generateRandomPort() int {
 	var min int = 30000
 	var max int = 50000
-	return rand.Intn((max - min) + min)
+	return rand.Intn(max-min) + min
 }
 
 func portIsAvailable(port int) bool {
