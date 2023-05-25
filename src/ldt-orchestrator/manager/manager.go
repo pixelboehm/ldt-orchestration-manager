@@ -125,8 +125,6 @@ func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 	src_description := src_dir + "/" + "wotm/description.json"
 	dest_description := dest + "/" + "wotm/description.json"
 	os.MkdirAll(dest+"/"+"wotm", 0777)
-	log.Printf("Source: %s", src_description)
-	log.Printf("Dest: %s", dest_description)
 	err := CopyFile(src_description, dest_description)
 	if err != nil {
 		return err
@@ -135,9 +133,7 @@ func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 }
 
 func symlinkLdtExecutable(src, dest string) error {
-	log.Println("symlinking")
-	log.Printf("Source: %s\n", src)
-	log.Printf("Dest: %s\n", dest)
+	log.Println("Manager: Symlinking Executable")
 	err := os.Symlink(src, dest)
 	if err != nil {
 		return err
