@@ -83,3 +83,7 @@ func (ll *LDTList) String() string {
 	writer.Flush()
 	return result.String()
 }
+
+func (p *Process) LdtType() string {
+	return p.Ldt[strings.LastIndex(p.Ldt, "/")+1 : strings.LastIndex(p.Ldt, ":")]
+}

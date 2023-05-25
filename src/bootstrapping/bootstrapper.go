@@ -2,6 +2,7 @@ package bootstrapping
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	comms "longevity/src/communication"
 	mon "longevity/src/ldt-orchestrator/monitor"
@@ -48,12 +49,11 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *Bootstrapper) getPariableLDT(waiting_device Device) string {
-	var pairable_ldt string = b.monitor.GetPairaibleLDT()
-
-	if pairable_ldt == waiting_device.Name {
-		return waiting_device.Name
-	} else {
-		log.Printf("Pairable: %s \t Waiting: %s", pairable_ldt, waiting_device.Name)
+	ldtAddress, err := b.monitor.GetPairaibleLDTAddress(waiting_device.Name)
+	if err != nil {
+		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
+		return " "
 	}
-	return " "
+
+	return ldtAddress
 }

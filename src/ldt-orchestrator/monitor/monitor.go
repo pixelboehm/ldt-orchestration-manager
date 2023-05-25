@@ -10,9 +10,9 @@ import (
 	"log"
 	"longevity/src/communication"
 	. "longevity/src/types"
+	"net"
 	"net/http"
 	"os"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -136,7 +136,7 @@ func (m *Monitor) ListLDTs() string {
 	if len(m.processes) > 0 {
 		var buffer bytes.Buffer
 		for _, process := range m.processes {
-			line := fmt.Sprintf("%d \t %s \t %s \t %v\n", process.Pid, process.Ldt, process.Name, process.Started)
+			line := fmt.Sprintf("%d \t %s \t %s \t %v \t %d \t %t\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable)
 			buffer.WriteString(line)
 		}
 		return buffer.String()
@@ -234,13 +234,28 @@ func ldtIsRunning(pid int) bool {
 	return true
 }
 
-func (m *Monitor) GetPairaibleLDT() string {
-	for _, ldt := range m.processes {
-		if ldt.Pairable == true {
-			var name string = ldt.Ldt
-			actual_ldt := name[strings.LastIndex(name, "/")+1 : strings.LastIndex(name, ":")]
-			return actual_ldt
+func (m *Monitor) GetPairaibleLDTAddress(name string) (string, error) {
+	hostAddress, err := getIPAddress()
+	if err != nil {
+		return "", err
+	}
+	for i, ldt := range m.processes {
+		if ldt.Pairable == true && ldt.LdtType() == name {
+			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
+			m.processes[i].Pairable = false
+			// ldt[i].Pairable = false
+			return res, nil
 		}
 	}
-	return " "
+	return "No pairable LDT available", nil
+}
+
+func getIPAddress() (string, error) {
+	hostname, _ := os.Hostname()
+
+	ipAddr, err := net.ResolveIPAddr("ip4", hostname)
+	if err != nil {
+		return "", errors.New(fmt.Sprint("Monitor: Failed wo obtain Host-IP Address"))
+	}
+	return ipAddr.IP.String(), nil
 }
