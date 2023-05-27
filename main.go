@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	boo "longevity/src/bootstrapping"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
 	mon "longevity/src/ldt-orchestrator/monitor"
@@ -26,8 +27,9 @@ var ldts string
 var storage string
 
 type App struct {
-	manager *man.Manager
-	monitor *mon.Monitor
+	manager      *man.Manager
+	monitor      *mon.Monitor
+	bootstrapper *boo.Bootstrapper
 }
 
 func main() {
@@ -35,9 +37,12 @@ func main() {
 		syscall.Unlink(socketpath)
 	}()
 	parseFlags()
+
+	var monitor *mon.Monitor = mon.NewMonitor(ldts)
 	app := &App{
-		manager: man.NewManager(repos, storage),
-		monitor: mon.NewMonitor(ldts),
+		manager:      man.NewManager(repos, storage),
+		monitor:      monitor,
+		bootstrapper: boo.NewBootstrapper(monitor),
 	}
 
 	if err := app.monitor.DeserializeLDTs(); err != nil {
@@ -77,7 +82,8 @@ func (app *App) run(out io.Writer) error {
 	go app.checkForShutdown(sigchannel)
 	go app.monitor.DoKeepAlive()
 	go app.monitor.RefreshLDTs()
-	go app.monitor.Run()
+	go app.monitor.Run(8080)
+	go app.bootstrapper.Run(55443)
 
 	commands := make(chan string)
 	for {

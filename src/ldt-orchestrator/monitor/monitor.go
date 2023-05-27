@@ -10,6 +10,7 @@ import (
 	"log"
 	"longevity/src/communication"
 	. "longevity/src/types"
+	"net"
 	"net/http"
 	"os"
 	"syscall"
@@ -31,12 +32,12 @@ func NewMonitor(ldt_list_path string) *Monitor {
 	}
 }
 
-func (m *Monitor) Run() {
+func (m *Monitor) Run(port int) {
 	fs := http.FileServer(http.Dir("static"))
 	rest := communication.NewRestInterface(nil)
 	rest.Router().Handle("/static/", http.StripPrefix("/static/", fs))
-	rest.AddCustomHandler(m.handler)
-	rest.Run(8080)
+	rest.AddCustomHandler("/", m.handler)
+	rest.Run(port)
 }
 
 func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +57,6 @@ func (m *Monitor) handler(w http.ResponseWriter, r *http.Request) {
 			"convertTime": convertTime,
 		}).ParseFiles("static/index.html"),
 	)
-
-	// tmp := template.Must(template.ParseFiles("static/index.html"))
 
 	data := map[string]interface{}{
 		"Processes": m.processes,
@@ -137,7 +136,7 @@ func (m *Monitor) ListLDTs() string {
 	if len(m.processes) > 0 {
 		var buffer bytes.Buffer
 		for _, process := range m.processes {
-			line := fmt.Sprintf("%d \t %s \t %s \t %v\n", process.Pid, process.Ldt, process.Name, process.Started)
+			line := fmt.Sprintf("%d \t %s \t %s \t %v \t %d \t %t\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable)
 			buffer.WriteString(line)
 		}
 		return buffer.String()
@@ -154,10 +153,10 @@ func (m *Monitor) SerializeLDTs() error {
 	}
 	defer file.Close()
 
-	template := "%s\t%d\t%s\t%s\n"
+	template := "%s\t%d\t%s\t%d\t%s\t%t\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Started)
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable)
 		writer.WriteString(res)
 		writer.WriteString(string(ldt.Desc) + "\n")
 	}
@@ -179,21 +178,15 @@ func (m *Monitor) DeserializeLDTs() error {
 			var ldt string
 			var pid int
 			var name string
+			var port int
 			var day string
 			var hour string
+			var pairable bool
 			var desc json.RawMessage
-			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%s%s", &ldt, &pid, &name, &day, &hour)
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t", &ldt, &pid, &name, &port, &day, &hour, &pairable)
 			if err != nil {
 				log.Println("Monitor: failed to deserialize the LDT", err)
 			}
-
-			// 2023-05-17 08:11:03.167657 +0200 CEST m=+4.277253773
-			// Format("2006-1-2 15:4:5"))
-			// time, err := time.Parse("2006-01-02 15:04:05", day+" "+hour)
-			// if err != nil {
-			// 	log.Println(err)
-			// 	return err
-			// }
 
 			started := day + " " + hour
 
@@ -204,7 +197,14 @@ func (m *Monitor) DeserializeLDTs() error {
 				log.Println("Monitor: Failed to deserialize the LDT description", err)
 			}
 
-			m.processes = append(m.processes, Process{Pid: pid, Ldt: ldt, Name: name, Started: started, Desc: desc})
+			m.processes = append(m.processes, Process{
+				Pid:      pid,
+				Ldt:      ldt,
+				Name:     name,
+				Port:     port,
+				Started:  started,
+				Desc:     desc,
+				Pairable: pairable})
 		}
 
 		if err := scanner.Err(); err != nil {
@@ -232,4 +232,29 @@ func ldtIsRunning(pid int) bool {
 		return false
 	}
 	return true
+}
+
+func (m *Monitor) GetPairaibleLDTAddress(name string) (string, error) {
+	hostAddress, err := getIPAddress()
+	if err != nil {
+		return "", err
+	}
+	for i, ldt := range m.processes {
+		if ldt.Pairable == true && ldt.LdtType() == name {
+			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
+			m.processes[i].Pairable = false
+			return res, nil
+		}
+	}
+	return "No pairable LDT available", nil
+}
+
+func getIPAddress() (string, error) {
+	hostname, _ := os.Hostname()
+
+	ipAddr, err := net.ResolveIPAddr("ip4", hostname)
+	if err != nil {
+		return "", errors.New(fmt.Sprint("Monitor: Failed wo obtain Host-IP Address"))
+	}
+	return ipAddr.IP.String(), nil
 }
