@@ -33,16 +33,37 @@ func waitForAnswer(connection net.Conn) {
 
 func blockingWaitForAnswer(connection net.Conn, process chan int) {
 	buffer := make([]byte, 2048)
+	var pid int = 0
 	for {
+		go checkIfAttachedProcessIsStillRunning(&pid)
 		n, err := connection.Read(buffer[:])
 		if err != nil {
 			return
 		}
 		val := string(buffer[0:n])
-		if pid, err := strconv.Atoi(val); err == nil {
+		if pid, err = strconv.Atoi(val); err == nil {
 			fmt.Println("LDT PID: ", pid)
 			process <- pid
 		}
+	}
+}
+
+func checkIfAttachedProcessIsStillRunning(pid *int) {
+	for {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		if *pid == 0 {
+			continue
+		}
+		process, err := os.FindProcess(*pid)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		err = process.Signal(syscall.Signal(0))
+		if err != nil {
+			os.Exit(0)
+		}
+		<-ticker.C
 	}
 }
 
