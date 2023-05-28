@@ -105,8 +105,12 @@ func checkForShutdown(connection net.Conn, process chan int) {
 	log.Printf("Caught signal, shutting down")
 	pid := <-process
 	log.Printf("Shutdown Process: %d\n", pid)
-	if err := syscall.Kill(pid, syscall.SIGINT); err != nil {
-		log.Fatal(err)
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		log.Printf("Failed to find process with PID %d\n", pid)
+	}
+	if err = proc.Signal(os.Interrupt); err != nil {
+		log.Println("Failed to stop LDT gracefully")
 	}
 	<-ticker.C
 	os.Exit(0)
