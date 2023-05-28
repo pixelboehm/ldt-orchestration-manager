@@ -34,17 +34,20 @@ func waitForAnswer(connection net.Conn) {
 func blockingWaitForAnswer(connection net.Conn, process chan int) {
 	buffer := make([]byte, 2048)
 	var pid int = 0
+	go checkIfAttachedProcessIsStillRunning(&pid)
 	for {
-		go checkIfAttachedProcessIsStillRunning(&pid)
 		n, err := connection.Read(buffer[:])
 		if err != nil {
 			return
 		}
 		val := string(buffer[0:n])
-		if pid, err = strconv.Atoi(val); err == nil {
-			fmt.Println("LDT PID: ", pid)
-			process <- pid
+		if pid == 0 {
+			pid, err = strconv.Atoi(val)
+			if err == nil {
+				process <- pid
+			}
 		}
+		fmt.Print(val)
 	}
 }
 
@@ -68,7 +71,7 @@ func checkIfAttachedProcessIsStillRunning(pid *int) {
 }
 
 func main() {
-	process := make(chan int)
+	process := make(chan int, 1)
 
 	connection, err := net.Dial("unix", socketPath)
 	if err != nil {
