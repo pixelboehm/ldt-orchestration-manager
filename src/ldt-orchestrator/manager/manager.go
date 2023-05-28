@@ -91,12 +91,19 @@ func (manager *Manager) DownloadLDT(name string) string {
 
 func (manager *Manager) prepareExecution(ldt string) (string, string, error) {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	random_name := GenerateRandomName()
+	var dest string = ""
+	var random_name string
+	for dest == "" {
+		random_name = GenerateRandomName()
+		dest = manager.storage + "/" + random_name
+		if _, err := os.Stat(dest); err == nil {
+			dest = ""
+		}
+	}
 
-	dest := manager.storage + "/" + random_name
 	dir, err := createLdtSpecificDirectory(dest)
 	if err != nil {
-		return "", "", errors.New(fmt.Sprint("Could not create LDT specific directory", err))
+		return "", "", err
 	}
 
 	manager.copyLdtDescription(ldt, dir)
