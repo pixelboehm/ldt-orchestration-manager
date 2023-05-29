@@ -21,7 +21,6 @@ func NewBootstrapper(monitor *mon.Monitor) *Bootstrapper {
 	return &Bootstrapper{
 		rest:    comms.NewRestInterface(nil),
 		monitor: monitor,
-		// waitingList: make(chan Device),
 	}
 }
 
@@ -39,10 +38,6 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 		log.Println("Bootstrapper: Decoding Error: ", err)
 	}
 	defer r.Body.Close()
-
-	// b.waitingList = make(chan Device)
-	// b.waitingList <- device
-	// close(b.waitingList)
 
 	name := b.getPariableLDT(device)
 	w.Write([]byte(name))
