@@ -26,6 +26,47 @@ func NewManager(config, storage string) *Manager {
 	return manager
 }
 
+func (manager *Manager) RunLDT(ldt string) (*Process, error) {
+	ldt_path, random_name, err := manager.prepareExecution(ldt)
+	if err != nil {
+		return nil, errors.New("Failed to prepare the execution")
+	}
+	process, err := run(ldt_path, ldt, random_name)
+	if err != nil {
+		log.Println("Manager: Failed to run LDT: ", err)
+		return nil, err
+	}
+
+	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
+	return process, nil
+}
+
+func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
+	ldt_path, random_name, err := manager.prepareExecution(ldt)
+	if err != nil {
+		return nil, errors.New("Failed to prepare the execution")
+	}
+	process, err := start(ldt_path, ldt, random_name, in)
+	if err != nil {
+		log.Println("Manager: Failed to start LDT: ", err)
+		return nil, err
+	}
+
+	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
+	return process, nil
+}
+
+func (manager *Manager) StopLDT(pid int, graceful bool) string {
+	var result string
+	success := stop(pid, graceful)
+	if success {
+		result = fmt.Sprintf("Successfully stopped LDT with PID %d\n", pid)
+	} else {
+		result = fmt.Sprintf("Failed to stop LDT with PID %d\n", pid)
+	}
+	return result
+}
+
 func (manager *Manager) GetAvailableLDTs() string {
 	manager.discovery.DiscoverLDTs()
 	return manager.discovery.SupportedLDTs.String()
@@ -48,26 +89,6 @@ func (manager *Manager) GetURLFromLDTByName(user, ldt, version string) (string, 
 	return url, nil
 }
 
-func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
-	reg, _ := regexp.Compile("[\\/\\:]+")
-	result := reg.Split(name, -1)
-
-	if result[2] != "latest" {
-		result[2] = "v" + result[2]
-	}
-	return result[0], result[1], result[2]
-}
-
-func downloadLDTArchive(address string) string {
-	name, err := download(address)
-
-	if err != nil {
-		log.Println("Manager: Failed to download LDT archive: ", err)
-		return ""
-	}
-	return name
-}
-
 func (manager *Manager) DownloadLDT(name string) string {
 	manager.optionalScan()
 	user, ldt_name, version := manager.SplitLDTInfos(name)
@@ -87,6 +108,16 @@ func (manager *Manager) DownloadLDT(name string) string {
 
 	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version)
 	return ldt
+}
+
+func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
+	reg, _ := regexp.Compile("[\\/\\:]+")
+	result := reg.Split(name, -1)
+
+	if result[2] != "latest" {
+		result[2] = "v" + result[2]
+	}
+	return result[0], result[1], result[2]
 }
 
 func (manager *Manager) prepareExecution(ldt string) (string, string, error) {
@@ -118,15 +149,6 @@ func (manager *Manager) prepareExecution(ldt string) (string, string, error) {
 	return dest_exec, random_name, nil
 }
 
-func createLdtSpecificDirectory(dir string) (string, error) {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0777); err != nil {
-			return "", err
-		}
-	}
-	return dir, nil
-}
-
 func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 	src_dir := manager.getLdtLocation(ldt)
 	src_description := src_dir + "/" + "wotm/description.json"
@@ -137,6 +159,36 @@ func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 		return err
 	}
 	return nil
+}
+
+func (manager *Manager) optionalScan() {
+	if len(manager.discovery.SupportedLDTs.LDTs) < 1 {
+		manager.GetAvailableLDTs()
+	}
+}
+
+func (manager *Manager) getLdtLocation(ldt string) string {
+	user, ldt_name, version := manager.SplitLDTInfos(ldt)
+	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
+}
+
+func downloadLDTArchive(address string) string {
+	name, err := download(address)
+
+	if err != nil {
+		log.Println("Manager: Failed to download LDT archive: ", err)
+		return ""
+	}
+	return name
+}
+
+func createLdtSpecificDirectory(dir string) (string, error) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0777); err != nil {
+			return "", err
+		}
+	}
+	return dir, nil
 }
 
 func symlinkLdtExecutable(src, dest string) error {
@@ -197,56 +249,4 @@ func copyFileContents(src, dst string) (err error) {
 	}
 	err = out.Sync()
 	return
-}
-
-func (manager *Manager) RunLDT(ldt string) (*Process, error) {
-	ldt_path, random_name, err := manager.prepareExecution(ldt)
-	if err != nil {
-		return nil, errors.New("Failed to prepare the execution")
-	}
-	process, err := run(ldt_path, ldt, random_name)
-	if err != nil {
-		log.Println("Manager: Failed to run LDT: ", err)
-		return nil, err
-	}
-
-	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
-	return process, nil
-}
-
-func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
-	ldt_path, random_name, err := manager.prepareExecution(ldt)
-	if err != nil {
-		return nil, errors.New("Failed to prepare the execution")
-	}
-	process, err := start(ldt_path, ldt, random_name, in)
-	if err != nil {
-		log.Println("Manager: Failed to start LDT: ", err)
-		return nil, err
-	}
-
-	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
-	return process, nil
-}
-
-func (manager *Manager) StopLDT(pid int, graceful bool) string {
-	var result string
-	success := stop(pid, graceful)
-	if success {
-		result = fmt.Sprintf("Successfully stopped LDT with PID %d\n", pid)
-	} else {
-		result = fmt.Sprintf("Failed to stop LDT with PID %d\n", pid)
-	}
-	return result
-}
-
-func (manager *Manager) optionalScan() {
-	if len(manager.discovery.SupportedLDTs.LDTs) < 1 {
-		manager.GetAvailableLDTs()
-	}
-}
-
-func (manager *Manager) getLdtLocation(ldt string) string {
-	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
 }
