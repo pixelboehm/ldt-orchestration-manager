@@ -38,8 +38,7 @@ func findOpenPort() int {
 	return port
 }
 
-func run(ldt_full, ldt, random_name string) (*Process, error) {
-	port := findOpenPort()
+func run(ldt_full, ldt, random_name string, port int) (*Process, error) {
 	cmd, name := prepareCommand(ldt_full, random_name, port)
 	if err := cmd.Start(); err != nil {
 		return nil, err

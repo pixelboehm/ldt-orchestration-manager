@@ -26,12 +26,22 @@ func NewManager(config, storage string) *Manager {
 	return manager
 }
 
-func (manager *Manager) RunLDT(ldt string) (*Process, error) {
-	ldt_path, random_name, err := manager.prepareExecution(ldt)
+func (manager *Manager) RunLDT(args []string) (*Process, error) {
+	var ldt string = args[1]
+	var ldt_path string
+	var err error
+	var ldt_name string
+	var port int
+
+	if len(args) > 2 {
+		ldt_name = args[2]
+	}
+	ldt_path, ldt_name, port, err = manager.prepareExecution(ldt, ldt_name)
 	if err != nil {
 		return nil, errors.New("Failed to prepare the execution")
 	}
-	process, err := run(ldt_path, ldt, random_name)
+
+	process, err := run(ldt_path, ldt, ldt_name, port)
 	if err != nil {
 		log.Println("Manager: Failed to run LDT: ", err)
 		return nil, err
@@ -42,7 +52,7 @@ func (manager *Manager) RunLDT(ldt string) (*Process, error) {
 }
 
 func (manager *Manager) StartLDT(ldt string, in net.Conn) (*Process, error) {
-	ldt_path, random_name, err := manager.prepareExecution(ldt)
+	ldt_path, random_name, _, err := manager.prepareExecution(ldt, "")
 	if err != nil {
 		return nil, errors.New("Failed to prepare the execution")
 	}
@@ -120,33 +130,54 @@ func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
 	return result[0], result[1], result[2]
 }
 
-func (manager *Manager) prepareExecution(ldt string) (string, string, error) {
+func (manager *Manager) prepareExecution(ldt, name string) (string, string, int, error) {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
 	var dest string = ""
-	var random_name string
-	for dest == "" {
-		random_name = GenerateRandomName()
-		dest = manager.storage + "/" + random_name
+	var known_ldt bool
+	var dir string = ""
+	var port int
+	var err error
+
+	if name != "" {
+		dest = manager.storage + "/" + name
 		if _, err := os.Stat(dest); err == nil {
-			dest = ""
+			known_ldt = true
+			log.Println("Starting Known LDT: ", name)
+			dir = dest
+			port = 49991
 		}
 	}
+	if !known_ldt {
+		if name == "" {
+			name = GenerateRandomName()
+		}
+		for dest == "" {
+			dest = manager.storage + "/" + name
+			if _, err := os.Stat(dest); err == nil {
+				dest = ""
+				name = GenerateRandomName()
+			}
+		}
 
-	dir, err := createLdtSpecificDirectory(dest)
-	if err != nil {
-		return "", "", err
+		log.Println("Starting unknown LDT: ", name)
+
+		dir, err = createLdtSpecificDirectory(dest)
+		if err != nil {
+			return "", "", -1, err
+		}
+		manager.copyLdtDescription(ldt, dir)
+		port = generateRandomPort()
 	}
-
-	manager.copyLdtDescription(ldt, dir)
-
 	src_exec := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	dest_exec := dir + "/" + ldt_name
-	err = symlinkLdtExecutable(src_exec, dest_exec)
-	if err != nil {
-		log.Println()
-		return "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
+	if !known_ldt {
+		err = symlinkLdtExecutable(src_exec, dest_exec)
+		if err != nil {
+			log.Println()
+			return "", "", -1, errors.New(fmt.Sprint("Unable to symlink LDT", err))
+		}
 	}
-	return dest_exec, random_name, nil
+	return dest_exec, name, port, nil
 }
 
 func (manager *Manager) copyLdtDescription(ldt, dest string) error {
