@@ -19,6 +19,7 @@
             <th>Started</th>
             <th>Port</th>
             <th>Pairable</th>
+            <th>Device</th>
           </tr>
         </thead>
 
@@ -32,8 +33,9 @@
               <button class="btn btn-dark" id="toggle-button-{{ $index }}" onclick="toggleDescription({{ $index }})">Show Description</button>
             </td>
             <td><span>up: </span>{{ convertTime $process.Started }}</pre>
-            <td> {{ $process.Port }} </td>
+            <td>{{ $process.Port }}</td>
             <td>{{ $process.Pairable }}</td>
+            <td>{{ $process.DeviceMacAddress }}</td>
           </tr>
           <tr id="description-row-{{ $index }}" class="description-row" style="display: none;">
               <td colspan="5"><pre>{{ formatJSON $process.Desc }}</pre></td>

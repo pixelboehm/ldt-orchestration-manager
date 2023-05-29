@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"longevity/src/communication"
+	. "longevity/src/database"
 	. "longevity/src/types"
 	"net/http"
 	"time"
@@ -64,7 +65,7 @@ func (m *Monitor) ListLDTs() string {
 	if len(m.processes) > 0 {
 		var buffer bytes.Buffer
 		for _, process := range m.processes {
-			line := fmt.Sprintf("%d \t %s \t %s \t %v \t %d \t %t\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable)
+			line := fmt.Sprintf("%d\t%s\t%s\t%v\t%d\t%t\t%s\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable, process.DeviceMacAddress)
 			buffer.WriteString(line)
 		}
 		return buffer.String()
@@ -85,14 +86,19 @@ func (m *Monitor) DoKeepAlive() {
 	}
 }
 
-func (m *Monitor) GetPairaibleLDTAddress(name string) (string, error) {
+func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 	hostAddress, err := getIPAddress()
 	if err != nil {
 		return "", err
 	}
 	for i, ldt := range m.processes {
-		if ldt.Pairable == true && ldt.LdtType() == name {
+		if ldt.DeviceMacAddress == device.MacAddress && ldt.Pairable == false {
 			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
+			return res, nil
+		}
+		if ldt.Pairable == true && ldt.LdtType() == device.Name {
+			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
+			m.processes[i].DeviceMacAddress = device.MacAddress
 			m.processes[i].Pairable = false
 			return res, nil
 		}

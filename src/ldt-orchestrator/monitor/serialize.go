@@ -18,10 +18,10 @@ func (m *Monitor) SerializeLDTs() error {
 	}
 	defer file.Close()
 
-	template := "%s\t%d\t%s\t%d\t%s\t%t\n"
+	template := "%s\t%d\t%s\t%d\t%s\t%t\t%s\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable)
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable, ldt.DeviceMacAddress)
 		writer.WriteString(res)
 		writer.WriteString(string(ldt.Desc) + "\n")
 	}
@@ -47,8 +47,9 @@ func (m *Monitor) DeserializeLDTs() error {
 			var day string
 			var hour string
 			var pairable bool
+			var deviceMacAddress string
 			var desc json.RawMessage
-			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t", &ldt, &pid, &name, &port, &day, &hour, &pairable)
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t\t%s", &ldt, &pid, &name, &port, &day, &hour, &pairable, &deviceMacAddress)
 			if err != nil {
 				log.Println("Monitor: failed to deserialize the LDT", err)
 			}
@@ -63,13 +64,15 @@ func (m *Monitor) DeserializeLDTs() error {
 			}
 
 			m.processes = append(m.processes, Process{
-				Pid:      pid,
-				Ldt:      ldt,
-				Name:     name,
-				Port:     port,
-				Started:  started,
-				Desc:     desc,
-				Pairable: pairable})
+				Pid:              pid,
+				Ldt:              ldt,
+				Name:             name,
+				Port:             port,
+				Started:          started,
+				Desc:             desc,
+				Pairable:         pairable,
+				DeviceMacAddress: deviceMacAddress,
+			})
 		}
 
 		if err := scanner.Err(); err != nil {
