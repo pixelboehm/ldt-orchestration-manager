@@ -16,14 +16,14 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-var c *DiscoveryConfig = nil
+var c *Discoverer = nil
 
 func setupDiscoveryConfig() {
 	d1 := []byte("https://github.com/pixelboehm/ldt\n#https://github.com/pixelboehm/longevity\n")
 	if err := os.WriteFile("./config", d1, 0644); err != nil {
 		panic(err)
 	}
-	c = NewConfig("./config")
+	c = NewDiscoverer("./config")
 }
 
 func teardownDiscoveryConfig() {

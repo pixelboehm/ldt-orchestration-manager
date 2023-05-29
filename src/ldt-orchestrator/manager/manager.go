@@ -14,13 +14,13 @@ import (
 )
 
 type Manager struct {
-	discovery *di.DiscoveryConfig
+	discovery *di.Discoverer
 	storage   string
 }
 
 func NewManager(config, storage string) *Manager {
 	manager := &Manager{
-		discovery: di.NewConfig(config),
+		discovery: di.NewDiscoverer(config),
 		storage:   storage,
 	}
 	return manager
@@ -32,7 +32,7 @@ func (manager *Manager) GetAvailableLDTs() string {
 }
 
 func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
-	url, err := manager.discovery.GetUrlFromLDT(id)
+	url, err := manager.discovery.GetUrlFromLDTByID(id)
 	if err != nil {
 		return "", err
 	}
