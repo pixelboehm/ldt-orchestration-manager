@@ -97,12 +97,11 @@ func prepareExecutionCommand(args []string) string {
 }
 
 func checkForShutdown(connection net.Conn, process chan int) {
-	ticker := time.NewTicker(1 * time.Second)
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
-	<-channel
-	log.Printf("Caught signal, shutting down")
+	sig := <-channel
+	log.Printf("Caught signal: %s, shutting down", sig)
 	pid := <-process
 	log.Printf("Shutdown Process: %d\n", pid)
 
@@ -113,7 +112,4 @@ func checkForShutdown(connection net.Conn, process chan int) {
 	if err = proc.Signal(os.Interrupt); err != nil {
 		log.Println("Failed to stop LDT gracefully")
 	}
-
-	<-ticker.C
-	os.Exit(0)
 }
