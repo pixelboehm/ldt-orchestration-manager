@@ -49,6 +49,5 @@ func (b *Bootstrapper) getLDTAddressForDevice(waiting_device Device) string {
 		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
 		return " "
 	}
-
 	return ldtAddress
 }
