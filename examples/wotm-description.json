@@ -1,0 +1,36 @@
+{
+    "@context": "https://www.w3.org/2019/wot/td/v1",
+    "id": "urn:dev:ops:32473-WoTLamp-1234",
+    "title": "Awesome Lightbulb",
+    "securityDefinitions": {
+        "basic_sc": {"scheme": "basic", "in":"header"}
+    },
+    "security": ["basic_sc"],
+    "properties": {
+        "status" : {
+            "type": "string",
+            "forms": [{"href": "111.111.111.111/status"}]
+        },
+        "address": {
+            "type": "string",
+            "value": "111.111.111.111"
+        }
+    },
+    "actions": {
+        "on" : {
+            "forms": [{"href": "111.111.111.111/on"}]
+        },
+        "off" : {
+            "forms": [{"href": "111.111.111.111/off"}]
+        }
+    },
+    "events":{
+        "overheating":{
+            "data": {"type": "string"},
+            "forms": [{
+                "href": "111.111.111.111/oh",
+                "subprotocol": "longpoll"
+            }]
+        }
+    }
+}
