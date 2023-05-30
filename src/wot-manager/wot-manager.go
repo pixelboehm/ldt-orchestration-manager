@@ -87,3 +87,7 @@ func (wotm *WoTManager) FetchWoTDescription() (WoTDescription, error) {
 	}
 	return desc, nil
 }
+
+func (wotm *WoTManager) getDeviceAddressFromDescription(desc WoTDescription) string {
+	return desc.Properties.Address.Value
+}
