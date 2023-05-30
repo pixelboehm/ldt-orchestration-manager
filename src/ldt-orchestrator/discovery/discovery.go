@@ -6,17 +6,13 @@ import (
 	"fmt"
 	"io"
 	"longevity/src/ldt-orchestrator/github"
-	"longevity/src/types"
 	. "longevity/src/types"
 	"net/http"
-	"net/url"
 	"os"
-	"runtime"
-	"sort"
 	"strings"
 )
 
-type DiscoveryConfig struct {
+type Discoverer struct {
 	repository_source string
 	SupportedLDTs     *LDTList
 	otherLDTs         *LDTList
@@ -25,9 +21,9 @@ type DiscoveryConfig struct {
 	arch              string
 }
 
-func NewConfig(path string) *DiscoveryConfig {
+func NewDiscoverer(path string) *Discoverer {
 	os, arch := getRuntimeInformation()
-	return &DiscoveryConfig{
+	return &Discoverer{
 		repository_source: path,
 		SupportedLDTs:     NewLDTList(),
 		otherLDTs:         NewLDTList(),
@@ -37,88 +33,41 @@ func NewConfig(path string) *DiscoveryConfig {
 	}
 }
 
-func getRuntimeInformation() (string, string) {
-	os := runtime.GOOS
-	arch := runtime.GOARCH
-	return os, arch
-}
-
-func (c *DiscoveryConfig) DiscoverLDTs() {
-	_ = c.updateRepositories()
-	newLDTs := github.FetchGithubReleases(c.repositories)
+func (discoverer *Discoverer) DiscoverLDTs() {
+	_ = discoverer.updateRepositories()
+	newLDTs := github.FetchGithubReleases(discoverer.repositories)
 	var update_latest_tag_supported bool = false
 	var update_latest_tag_other bool = false
 	for _, ldt := range newLDTs.LDTs {
-		if ldt.Os == c.os && ldt.Arch == c.arch {
-			if !ldtAlreadyExists(&ldt, c.SupportedLDTs) {
-				c.SupportedLDTs.LDTs = append(c.SupportedLDTs.LDTs, ldt)
+		if ldt.Os == discoverer.os && ldt.Arch == discoverer.arch {
+			if !ldtAlreadyExists(&ldt, discoverer.SupportedLDTs) {
+				discoverer.SupportedLDTs.LDTs = append(discoverer.SupportedLDTs.LDTs, ldt)
 				update_latest_tag_supported = true
 			}
 		} else {
-			if !ldtAlreadyExists(&ldt, c.otherLDTs) {
-				c.otherLDTs.LDTs = append(c.otherLDTs.LDTs, ldt)
+			if !ldtAlreadyExists(&ldt, discoverer.otherLDTs) {
+				discoverer.otherLDTs.LDTs = append(discoverer.otherLDTs.LDTs, ldt)
 				update_latest_tag_supported = true
 			}
 		}
 	}
 	if update_latest_tag_supported {
-		updateLatestTag(&c.SupportedLDTs.LDTs)
+		updateLatestTag(&discoverer.SupportedLDTs.LDTs)
 	}
 	if update_latest_tag_other {
-		updateLatestTag(&c.otherLDTs.LDTs)
+		updateLatestTag(&discoverer.otherLDTs.LDTs)
 	}
 }
 
-func updateLatestTag(ldts *[]LDT) {
-	sortLDTsByName(*ldts)
-
-	var last_ldt_name string
-	var current_latest_version string
-	var latest_ldt_changed bool = false
-	var latest_ldt *LDT
-
-	for _, ldt := range *ldts {
-		if ldt.Name != last_ldt_name {
-			last_ldt_name = ldt.Name
-			current_latest_version = ldt.Version
-			latest_ldt = &ldt
-			latest_ldt_changed = true
-		} else if ldt.Name == last_ldt_name {
-			latest_ldt_changed = false
-			if ldt.Version > current_latest_version {
-				current_latest_version = ldt.Version
-				latest_ldt = &ldt
-				latest_ldt_changed = true
-			}
-		}
-		if latest_ldt_changed {
-			latest_ldt.Version = "latest"
-			*ldts = append([]types.LDT{*latest_ldt}, *ldts...)
-		}
-	}
-}
-
-func sortLDTsByName(ldts []LDT) {
-	sort.Slice(ldts, func(i, j int) bool {
-		if ldts[i].User != ldts[j].User {
-			return ldts[i].User > ldts[j].User
-		} else if ldts[i].Name != ldts[j].Name {
-			return ldts[i].Name > ldts[j].Name
-		} else {
-			return ldts[i].Version > ldts[j].Version
-		}
-	})
-}
-
-func (c *DiscoveryConfig) GetUrlFromLDT(id int) (string, error) {
-	if id >= len(c.SupportedLDTs.LDTs) {
+func (discoverer *Discoverer) GetUrlFromLDTByID(id int) (string, error) {
+	if id >= len(discoverer.SupportedLDTs.LDTs) {
 		return "", errors.New("Failed to map ID to LDT")
 	}
-	return c.SupportedLDTs.LDTs[id].Url, nil
+	return discoverer.SupportedLDTs.LDTs[id].Url, nil
 }
 
-func (c *DiscoveryConfig) GetURLFromLDTByName(user, ldt, tag string) (string, error) {
-	for _, entry := range c.SupportedLDTs.LDTs {
+func (discoverer *Discoverer) GetURLFromLDTByName(user, ldt, tag string) (string, error) {
+	for _, entry := range discoverer.SupportedLDTs.LDTs {
 		if entry.User == user && entry.Name == ldt && entry.Version == tag {
 			return entry.Url, nil
 		}
@@ -126,29 +75,7 @@ func (c *DiscoveryConfig) GetURLFromLDTByName(user, ldt, tag string) (string, er
 	return "", errors.New(fmt.Sprintf("Unable to find LDT: %s", ldt))
 }
 
-func ldtAlreadyExists(ldt *LDT, ldt_list *LDTList) bool {
-	for _, existingLDT := range ldt_list.LDTs {
-		if string(ldt.Hash) == string(existingLDT.Hash) {
-			return true
-		}
-	}
-	return false
-}
-
-func isGithubRepository(repo string) bool {
-	stuff, _ := url.Parse(repo)
-	if stuff.Host != "" {
-		return strings.Contains(stuff.Host, "github.com")
-	} else if strings.HasPrefix(stuff.Path, "www.github.com") {
-		return true
-	} else if strings.HasPrefix(stuff.Path, "github.com") {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (c *DiscoveryConfig) updateRepositories() error {
+func (c *Discoverer) updateRepositories() error {
 	var content io.Reader
 	if isURL(c.repository_source) {
 		resp, err := http.Get(c.repository_source)
@@ -175,12 +102,4 @@ func (c *DiscoveryConfig) updateRepositories() error {
 		panic(err)
 	}
 	return nil
-}
-
-func isURL(input string) bool {
-	u, err := url.Parse(input)
-	if err != nil {
-		return false
-	}
-	return u.Scheme != "" && u.Host != ""
 }

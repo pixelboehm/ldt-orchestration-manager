@@ -34,17 +34,18 @@ func NewLDTList() *LDTList {
 }
 
 type Process struct {
-	Pid      int
-	Ldt      string
-	Name     string
-	Port     int
-	Desc     json.RawMessage
-	Started  string
-	Pairable bool
+	Pid              int
+	Ldt              string
+	Name             string
+	Port             int
+	Desc             json.RawMessage
+	Started          string
+	Pairable         bool
+	DeviceMacAddress string
 }
 
 func NewProcess(pid int, ldt string, name string, port int) *Process {
-	wotm, err := wotm.NewWoTmanager(ldt)
+	wotm, err := wotm.NewWoTmanager("/usr/local/etc/orchestration-manager/" + ldt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,13 +60,14 @@ func NewProcess(pid int, ldt string, name string, port int) *Process {
 	}
 
 	return &Process{
-		Pid:      pid,
-		Ldt:      ldt,
-		Name:     name,
-		Port:     port,
-		Desc:     desc,
-		Started:  time.Now().Format("2006-1-2 15:4:5"),
-		Pairable: true,
+		Pid:              pid,
+		Ldt:              ldt,
+		Name:             name,
+		Port:             port,
+		Desc:             desc,
+		Started:          time.Now().Format("2006-1-2 15:4:5"),
+		Pairable:         true,
+		DeviceMacAddress: "",
 	}
 }
 

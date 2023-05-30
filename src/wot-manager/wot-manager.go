@@ -3,80 +3,70 @@ package wotmanager
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
 type WoTDescription struct {
-	Context             []any    `json:"@context,omitempty"`
-	Type                []string `json:"@type,omitempty"`
-	ID                  string   `json:"id,omitempty"`
-	Name                string   `json:"name,omitempty"`
+	Context             string `json:"@context"`
+	ID                  string `json:"id"`
+	Title               string `json:"title"`
 	SecurityDefinitions struct {
 		BasicSc struct {
-			Scheme string `json:"scheme,omitempty"`
-			In     string `json:"in,omitempty"`
-		} `json:"basic_sc,omitempty"`
-	} `json:"securityDefinitions,omitempty"`
-	Security   []string `json:"security,omitempty"`
+			Scheme string `json:"scheme"`
+			In     string `json:"in"`
+		} `json:"basic_sc"`
+	} `json:"securityDefinitions"`
+	Security   []string `json:"security"`
 	Properties struct {
 		Status struct {
-			Type       string `json:"@type,omitempty"`
-			ReadOnly   bool   `json:"readOnly,omitempty"`
-			WriteOnly  bool   `json:"writeOnly,omitempty"`
-			Observable bool   `json:"observable,omitempty"`
-			Type0      string `json:"type,omitempty"`
-			Forms      []struct {
-				Href          string `json:"href,omitempty"`
-				ContentType   string `json:"contentType,omitempty"`
-				HtvMethodName string `json:"htv:methodName,omitempty"`
-				Op            string `json:"op,omitempty"`
-			} `json:"forms,omitempty"`
-		} `json:"status,omitempty"`
-	} `json:"properties,omitempty"`
+			Type  string `json:"type"`
+			Forms []struct {
+				Href string `json:"href"`
+			} `json:"forms"`
+		} `json:"status"`
+		DeviceAddress struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"deviceAddress"`
+		LdtAddress struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"ldtAddress"`
+	} `json:"properties"`
 	Actions struct {
-		Toggle struct {
-			Type       string `json:"@type,omitempty"`
-			Idempotent bool   `json:"idempotent,omitempty"`
-			Safe       bool   `json:"safe,omitempty"`
-			Forms      []struct {
-				Href          string `json:"href,omitempty"`
-				ContentType   string `json:"contentType,omitempty"`
-				HtvMethodName string `json:"htv:methodName,omitempty"`
-				Op            string `json:"op,omitempty"`
-			} `json:"forms,omitempty"`
-		} `json:"toggle,omitempty"`
-	} `json:"actions,omitempty"`
+		On struct {
+			Forms []struct {
+				Href string `json:"href"`
+			} `json:"forms"`
+		} `json:"on"`
+		Off struct {
+			Forms []struct {
+				Href string `json:"href"`
+			} `json:"forms"`
+		} `json:"off"`
+	} `json:"actions"`
 	Events struct {
 		Overheating struct {
 			Data struct {
-				Type string `json:"type,omitempty"`
-			} `json:"data,omitempty"`
+				Type string `json:"type"`
+			} `json:"data"`
 			Forms []struct {
-				Href        string `json:"href,omitempty"`
-				ContentType string `json:"contentType,omitempty"`
-				Subprotocol string `json:"subprotocol,omitempty"`
-				Op          string `json:"op,omitempty"`
-			} `json:"forms,omitempty"`
-		} `json:"overheating,omitempty"`
-	} `json:"events,omitempty"`
+				Href        string `json:"href"`
+				Subprotocol string `json:"subprotocol"`
+			} `json:"forms"`
+		} `json:"overheating"`
+	} `json:"events"`
 }
 
 type WoTManager struct {
 	description_raw string
 }
 
-func NewWoTmanager(ldt_path string) (*WoTManager, error) {
-	var base string = "/usr/local/etc/orchestration-manager/"
-	test := ldt_path[strings.LastIndex(ldt_path, ":")+1:]
-	var replaced string
-	if test == "latest" {
-		replaced = strings.Replace(ldt_path, ":", "/", 1)
-	} else {
-		replaced = strings.Replace(ldt_path, ":", "/v", 1)
-	}
-
+func NewWoTmanager(base string) (*WoTManager, error) {
 	const location string = "/wotm/description.json"
-	var path string = base + replaced + location
+	var path string = base + location
+	path = strings.Replace(path, ":", "/", 1)
 	buffer, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -93,4 +83,17 @@ func (wotm *WoTManager) FetchWoTDescription() (WoTDescription, error) {
 		return WoTDescription{}, err
 	}
 	return desc, nil
+}
+
+func (wotm *WoTManager) GetDeviceAddressFromDescription() string {
+	desc, _ := wotm.FetchWoTDescription()
+	return desc.Properties.DeviceAddress.Value
+}
+
+func (wotm *WoTManager) GetLdtPortFromDescription() int {
+	desc, _ := wotm.FetchWoTDescription()
+	ldt_address := desc.Properties.LdtAddress.Value
+	res := ldt_address[strings.LastIndex(ldt_address, ":")+1:]
+	port, _ := strconv.Atoi(res)
+	return port
 }

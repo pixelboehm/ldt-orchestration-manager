@@ -21,7 +21,6 @@ func NewBootstrapper(monitor *mon.Monitor) *Bootstrapper {
 	return &Bootstrapper{
 		rest:    comms.NewRestInterface(nil),
 		monitor: monitor,
-		// waitingList: make(chan Device),
 	}
 }
 
@@ -40,20 +39,15 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// b.waitingList = make(chan Device)
-	// b.waitingList <- device
-	// close(b.waitingList)
-
-	name := b.getPariableLDT(device)
-	w.Write([]byte(name))
+	ldt_address := b.getLDTAddressForDevice(device)
+	w.Write([]byte(ldt_address))
 }
 
-func (b *Bootstrapper) getPariableLDT(waiting_device Device) string {
-	ldtAddress, err := b.monitor.GetPairaibleLDTAddress(waiting_device.Name)
+func (b *Bootstrapper) getLDTAddressForDevice(waiting_device Device) string {
+	ldtAddress, err := b.monitor.GetLDTAddressForDevice(waiting_device)
 	if err != nil {
 		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
 		return " "
 	}
-
 	return ldtAddress
 }

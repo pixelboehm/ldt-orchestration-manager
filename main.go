@@ -98,30 +98,6 @@ func (app *App) run(out io.Writer) error {
 	}
 }
 
-func (app *App) checkForShutdown(c chan os.Signal) {
-	sig := <-c
-	switch sig {
-	case syscall.SIGINT, syscall.SIGTERM:
-		log.Printf("Caught signal %s: shutting down.", sig)
-		err := syscall.Unlink(socketpath)
-		if err != nil {
-			log.Fatal("error during unlinking: ", err)
-		}
-		app.shutdown()
-		os.Exit(1)
-	case syscall.SIGHUP:
-		log.Printf("Caught signal %s: reloading.", sig)
-		err := syscall.Unlink(socketpath)
-		if err != nil {
-			log.Fatal("error during unlinking: ", err)
-		}
-		app.shutdown()
-		if err := app.run(os.Stdout); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
 func (app *App) executeCommand(input string, in net.Conn) string {
 	command := strings.Fields(input)
 
@@ -140,7 +116,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return res
 	case "run":
 		if len(command) > 1 {
-			process, err := app.manager.RunLDT(command[1])
+			process, err := app.manager.RunLDT(command)
 			if err != nil {
 				panic(err)
 			}
@@ -150,7 +126,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "start":
 		if len(command) > 1 {
-			process, err := app.manager.StartLDT(command[1], in)
+			process, err := app.manager.StartLDT(command, in)
 			if err != nil {
 				panic(err)
 			}
@@ -174,6 +150,30 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 	case "help":
 		result := cliHelp()
 		return result.String()
+	}
+}
+
+func (app *App) checkForShutdown(c chan os.Signal) {
+	sig := <-c
+	switch sig {
+	case syscall.SIGINT, syscall.SIGTERM:
+		log.Printf("Caught signal %s: shutting down.", sig)
+		err := syscall.Unlink(socketpath)
+		if err != nil {
+			log.Fatal("error during unlinking: ", err)
+		}
+		app.shutdown()
+		os.Exit(1)
+	case syscall.SIGHUP:
+		log.Printf("Caught signal %s: reloading.", sig)
+		err := syscall.Unlink(socketpath)
+		if err != nil {
+			log.Fatal("error during unlinking: ", err)
+		}
+		app.shutdown()
+		if err := app.run(os.Stdout); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
