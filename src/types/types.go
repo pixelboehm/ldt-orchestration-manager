@@ -45,7 +45,7 @@ type Process struct {
 }
 
 func NewProcess(pid int, ldt string, name string, port int) *Process {
-	wotm, err := wotm.NewWoTmanager(ldt)
+	wotm, err := wotm.NewWoTmanager("/usr/local/etc/orchestration-manager/" + ldt)
 	if err != nil {
 		log.Fatal(err)
 	}

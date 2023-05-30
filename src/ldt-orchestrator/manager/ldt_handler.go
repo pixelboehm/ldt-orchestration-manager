@@ -16,10 +16,10 @@ var adjectives = []string{"joyful", "confident", "radiant", "brave", "compassion
 
 var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "bearded_collie", "bernese_mountain_dog", "border_collie", "boxer", "bulldog", "cavalier_king_charles_spaniel", "chihuahua", "dachshund", "english_cocker_spaniel", "german_shepherd_dog", "golden_retriever", "jack_russell_terrier", "labrador_retriever", "poodle", "pug", "siberian_husky", "west_highland_white_terrier"}
 
-func prepareCommand(ldt_exec, name string, port int) (*exec.Cmd, string) {
+func prepareCommand(ldt_exec, name string, port int, device_address string) (*exec.Cmd, string) {
 	makeExecutable(ldt_exec)
 
-	cmd := exec.Command(ldt_exec, name, fmt.Sprint(port))
+	cmd := exec.Command(ldt_exec, name, fmt.Sprint(port), device_address)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -38,8 +38,8 @@ func findOpenPort() int {
 	return port
 }
 
-func run(ldt_full, ldt, random_name string, port int) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, random_name, port)
+func run(ldt_full, ldt, random_name string, port int, device_address string) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name, port, device_address)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -50,9 +50,9 @@ func run(ldt_full, ldt, random_name string, port int) (*Process, error) {
 	return process, nil
 }
 
-func start(ldt_full, ldt, random_name string, in net.Conn) (*Process, error) {
-	port := findOpenPort()
-	cmd, name := prepareCommand(ldt_full, random_name, port)
+func start(ldt_full, ldt, random_name string, port int, device_address string, in net.Conn) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name, port, device_address)
+
 	cmd.Stdout = in
 	cmd.Stderr = in
 	cmd.Stdin = in
@@ -62,7 +62,6 @@ func start(ldt_full, ldt, random_name string, in net.Conn) (*Process, error) {
 	}
 
 	go waitOnProcess(cmd)
-
 	process := NewProcess(cmd.Process.Pid, ldt, name, port)
 
 	return process, nil

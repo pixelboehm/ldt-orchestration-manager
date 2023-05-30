@@ -126,7 +126,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "start":
 		if len(command) > 1 {
-			process, err := app.manager.StartLDT(command[1], in)
+			process, err := app.manager.StartLDT(command, in)
 			if err != nil {
 				panic(err)
 			}
