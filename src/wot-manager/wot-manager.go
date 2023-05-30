@@ -3,6 +3,7 @@ package wotmanager
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -24,10 +25,14 @@ type WoTDescription struct {
 				Href string `json:"href"`
 			} `json:"forms"`
 		} `json:"status"`
-		Address struct {
+		DeviceAddress struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
-		} `json:"address"`
+		} `json:"deviceAddress"`
+		LdtAddress struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"ldtAddress"`
 	} `json:"properties"`
 	Actions struct {
 		On struct {
@@ -58,18 +63,10 @@ type WoTManager struct {
 	description_raw string
 }
 
-func NewWoTmanager(ldt_path string) (*WoTManager, error) {
-	var base string = "/usr/local/etc/orchestration-manager/"
-	test := ldt_path[strings.LastIndex(ldt_path, ":")+1:]
-	var replaced string
-	if test == "latest" {
-		replaced = strings.Replace(ldt_path, ":", "/", 1)
-	} else {
-		replaced = strings.Replace(ldt_path, ":", "/v", 1)
-	}
-
+func NewWoTmanager(base string) (*WoTManager, error) {
 	const location string = "/wotm/description.json"
-	var path string = base + replaced + location
+	var path string = base + location
+	path = strings.Replace(path, ":", "/", 1)
 	buffer, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -88,6 +85,15 @@ func (wotm *WoTManager) FetchWoTDescription() (WoTDescription, error) {
 	return desc, nil
 }
 
-func (wotm *WoTManager) getDeviceAddressFromDescription(desc WoTDescription) string {
-	return desc.Properties.Address.Value
+func (wotm *WoTManager) GetDeviceAddressFromDescription() string {
+	desc, _ := wotm.FetchWoTDescription()
+	return desc.Properties.DeviceAddress.Value
+}
+
+func (wotm *WoTManager) GetLdtPortFromDescription() int {
+	desc, _ := wotm.FetchWoTDescription()
+	ldt_address := desc.Properties.LdtAddress.Value
+	res := ldt_address[strings.LastIndex(ldt_address, ":")+1:]
+	port, _ := strconv.Atoi(res)
+	return port
 }

@@ -32,11 +32,20 @@ func Test_getDeviceAddressFromDescription(t *testing.T) {
 	require.NoError(err)
 
 	wotm := &WoTManager{description_raw: description_raw}
-	description, err := wotm.FetchWoTDescription()
+	got := wotm.GetDeviceAddressFromDescription()
+	assert.Equal(want, got)
+}
+
+func Test_getLDTPortFromDescription(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+	var want int = 98765
+
+	description_raw, err := loadDescription(path)
 	require.NoError(err)
 
-	got := wotm.getDeviceAddressFromDescription(description)
-	require.NoError(err)
+	wotm := &WoTManager{description_raw: description_raw}
+	got := wotm.GetLdtPortFromDescription()
 	assert.Equal(want, got)
 }
 
