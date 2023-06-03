@@ -106,6 +106,7 @@ func GenerateRandomName() string {
 }
 
 func generateRandomPort() int {
+	rand.Seed(time.Now().UnixNano())
 	var min int = 30000
 	var max int = 50000
 	return rand.Intn(max-min) + min
