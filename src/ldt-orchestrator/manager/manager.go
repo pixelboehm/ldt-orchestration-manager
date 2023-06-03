@@ -269,9 +269,6 @@ func CopyFile(src, dst string) (err error) {
 			return
 		}
 	}
-	// if err = os.Link(src, dst); err == nil {
-	// 	return
-	// }
 	err = copyFileContents(src, dst)
 	return
 }

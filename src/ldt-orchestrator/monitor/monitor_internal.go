@@ -5,19 +5,29 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	wotm "longevity/src/wot-manager"
 	"net"
 	"os"
 	"syscall"
 	"time"
 )
 
-func formatJSON(data json.RawMessage) string {
-	formatted, err := json.MarshalIndent(data, "", "  ")
+func loadDescription(ldt string) string {
+	const base string = "/usr/local/etc/orchestration-manager/"
+	var desc_path string = base + ldt
+	wotm, err := wotm.NewWoTmanager(desc_path)
 	if err != nil {
-		log.Printf("Error formatting JSON: %v", err)
-		return string(data)
+		log.Fatal(err)
 	}
-	return string(formatted)
+	wotm_desc, err := wotm.FetchWoTDescription()
+	if err != nil {
+		log.Printf("Monitor: Failed to fetch WoT Description")
+	}
+	desc, err := json.MarshalIndent(wotm_desc, "", "   ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(desc)
 }
 
 func convertTime(started string) string {

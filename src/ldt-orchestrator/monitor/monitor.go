@@ -126,8 +126,8 @@ func (m *Monitor) mainpage(w http.ResponseWriter, r *http.Request) {
 
 	tmp := template.Must(
 		template.New("index.html").Funcs(template.FuncMap{
-			"formatJSON":  formatJSON,
-			"convertTime": convertTime,
+			"loadDescription": loadDescription,
+			"convertTime":     convertTime,
 		}).ParseFiles("static/index.html"),
 	)
 
