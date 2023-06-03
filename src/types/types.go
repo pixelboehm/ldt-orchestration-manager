@@ -40,15 +40,20 @@ type Process struct {
 	DeviceMacAddress string
 }
 
-func NewProcess(pid int, ldt string, name string, port int) *Process {
+func NewProcess(pid int, ldt string, name string, port int, deviceAddress string) *Process {
+	var pairable bool = true
+	if deviceAddress != "" {
+		pairable = false
+	}
+
 	return &Process{
 		Pid:              pid,
 		Ldt:              ldt,
 		Name:             name,
 		Port:             port,
 		Started:          time.Now().Format("2006-1-2 15:4:5"),
-		Pairable:         true,
-		DeviceMacAddress: "",
+		Pairable:         pairable,
+		DeviceMacAddress: deviceAddress,
 	}
 }
 

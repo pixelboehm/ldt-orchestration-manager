@@ -21,7 +21,7 @@ func loadDescription(ldt string) string {
 	}
 	wotm_desc, err := wotm.FetchWoTDescription()
 	if err != nil {
-		log.Printf("Monitor: Failed to fetch WoT Description")
+		log.Println("Monitor: Failed to fetch WoT Description: ", err)
 	}
 	desc, err := json.MarshalIndent(wotm_desc, "", "   ")
 	if err != nil {

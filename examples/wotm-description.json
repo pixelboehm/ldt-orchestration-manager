@@ -11,11 +11,15 @@
             "type": "string",
             "forms": [{"href": "111.111.111.111/status"}]
         },
-        "deviceAddress": {
+        "deviceIPv4Address": {
             "type": "string",
             "value": "111.111.111.111"
         },
-        "ldtAddress" : {
+        "deviceMACAddress": {
+            "type": "string",
+            "value": "AA:BB:CC:DD:EE:FF"
+        },
+        "ldtIPv4Address": {
             "type": "string",
             "value": "222.222.222.222:98765"
         }

@@ -3,6 +3,7 @@ package wotmanager
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -25,14 +26,18 @@ type WoTDescription struct {
 				Href string `json:"href"`
 			} `json:"forms"`
 		} `json:"status"`
-		DeviceAddress struct {
+		DeviceIPv4Address struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
-		} `json:"deviceAddress"`
-		LdtAddress struct {
+		} `json:"deviceIPv4Address"`
+		DeviceMACAddress struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
-		} `json:"ldtAddress"`
+		} `json:"deviceMACAddress"`
+		LdtIPv4Address struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"ldtIPv4Address"`
 	} `json:"properties"`
 	Actions struct {
 		On struct {
@@ -85,14 +90,32 @@ func (wotm *WoTManager) FetchWoTDescription() (WoTDescription, error) {
 	return desc, nil
 }
 
-func (wotm *WoTManager) GetDeviceAddressFromDescription() string {
+func (wotm *WoTManager) GetDeviceIPv4AddressFromDescription() string {
 	desc, _ := wotm.FetchWoTDescription()
-	return desc.Properties.DeviceAddress.Value
+	address := desc.Properties.DeviceIPv4Address.Value
+
+	if net.ParseIP(address) == nil {
+		return ""
+	}
+
+	return address
+}
+
+func (wotm *WoTManager) GetDeviceMACAddressFromDescription() string {
+	desc, _ := wotm.FetchWoTDescription()
+	address := desc.Properties.DeviceMACAddress.Value
+
+	_, err := net.ParseMAC(address)
+	if err != nil {
+		return ""
+	}
+
+	return address
 }
 
 func (wotm *WoTManager) GetLdtPortFromDescription() int {
 	desc, _ := wotm.FetchWoTDescription()
-	ldt_address := desc.Properties.LdtAddress.Value
+	ldt_address := desc.Properties.LdtIPv4Address.Value
 	res := ldt_address[strings.LastIndex(ldt_address, ":")+1:]
 	port, _ := strconv.Atoi(res)
 	return port

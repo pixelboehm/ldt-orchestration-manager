@@ -92,8 +92,6 @@ func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 		return "", err
 	}
 	for i, ldt := range m.processes {
-		log.Println("Device Name: ", device.Name)
-		log.Println("LDT Type: ", ldt.LdtType())
 		if ldt.DeviceMacAddress == device.MacAddress && ldt.Pairable == false {
 			var res string
 			if ldt.Port == 0 || ldt.Port == 80 {

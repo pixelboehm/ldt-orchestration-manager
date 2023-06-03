@@ -38,20 +38,20 @@ func findOpenPort() int {
 	return port
 }
 
-func run(ldt_full, ldt, random_name string, port int, device_address string) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, random_name, port, device_address)
+func run(ldt_full, ldt, random_name string, port int, device_IPv4, device_MAC string) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name, port, device_IPv4)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
 
 	go waitOnProcess(cmd)
 
-	process := NewProcess(cmd.Process.Pid, ldt, name, port)
+	process := NewProcess(cmd.Process.Pid, ldt, name, port, device_MAC)
 	return process, nil
 }
 
-func start(ldt_full, ldt, random_name string, port int, device_address string, in net.Conn) (*Process, error) {
-	cmd, name := prepareCommand(ldt_full, random_name, port, device_address)
+func start(ldt_full, ldt, random_name string, port int, device_IPv4, device_MAC string, in net.Conn) (*Process, error) {
+	cmd, name := prepareCommand(ldt_full, random_name, port, device_IPv4)
 
 	cmd.Stdout = in
 	cmd.Stderr = in
@@ -62,7 +62,7 @@ func start(ldt_full, ldt, random_name string, port int, device_address string, i
 	}
 
 	go waitOnProcess(cmd)
-	process := NewProcess(cmd.Process.Pid, ldt, name, port)
+	process := NewProcess(cmd.Process.Pid, ldt, name, port, device_MAC)
 
 	return process, nil
 }
