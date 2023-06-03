@@ -92,8 +92,6 @@ func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 		return "", err
 	}
 	for i, ldt := range m.processes {
-		log.Println("Device Name: ", device.Name)
-		log.Println("LDT Type: ", ldt.LdtType())
 		if ldt.DeviceMacAddress == device.MacAddress && ldt.Pairable == false {
 			var res string
 			if ldt.Port == 0 || ldt.Port == 80 {
@@ -126,8 +124,8 @@ func (m *Monitor) mainpage(w http.ResponseWriter, r *http.Request) {
 
 	tmp := template.Must(
 		template.New("index.html").Funcs(template.FuncMap{
-			"formatJSON":  formatJSON,
-			"convertTime": convertTime,
+			"loadDescription": loadDescription,
+			"convertTime":     convertTime,
 		}).ParseFiles("static/index.html"),
 	)
 

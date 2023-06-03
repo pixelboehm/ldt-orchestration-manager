@@ -38,7 +38,7 @@
             <td>{{ $process.DeviceMacAddress }}</td>
           </tr>
           <tr id="description-row-{{ $index }}" class="description-row" style="display: none;">
-              <td colspan="5"><pre>{{ formatJSON $process.Desc }}</pre></td>
+              <td colspan="5"><pre>{{ loadDescription $process.Name }}</pre></td>
           </tr>
           {{ end }}
         </tbody>

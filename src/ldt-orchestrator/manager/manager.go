@@ -33,17 +33,18 @@ func (manager *Manager) RunLDT(args []string) (*Process, error) {
 	var err error
 	var ldt_name string
 	var port int
-	var device_address string
+	var device_IPv4 string
+	var device_MAC string
 
 	if len(args) > 2 {
 		ldt_name = args[2]
 	}
-	ldt_path, ldt_name, port, device_address, err = manager.prepareExecution(ldt, ldt_name)
+	ldt_path, ldt_name, port, device_IPv4, device_MAC, err = manager.prepareExecution(ldt, ldt_name)
 	if err != nil {
 		return nil, errors.New("Failed to prepare the execution")
 	}
 
-	process, err := run(ldt_path, ldt, ldt_name, port, device_address)
+	process, err := run(ldt_path, ldt, ldt_name, port, device_IPv4, device_MAC)
 	if err != nil {
 		log.Println("Manager: Failed to run LDT: ", err)
 		return nil, err
@@ -59,17 +60,18 @@ func (manager *Manager) StartLDT(args []string, in net.Conn) (*Process, error) {
 	var err error
 	var ldt_name string
 	var port int
-	var device_address string
+	var device_IPv4 string
+	var device_MAC string
 
 	if len(args) > 2 {
 		ldt_name = args[2]
 	}
-	ldt_path, ldt_name, port, device_address, err = manager.prepareExecution(ldt, ldt_name)
+	ldt_path, ldt_name, port, device_IPv4, device_MAC, err = manager.prepareExecution(ldt, ldt_name)
 	if err != nil {
 		return nil, errors.New("Failed to prepare the execution")
 	}
 
-	process, err := start(ldt_path, ldt, ldt_name, port, device_address, in)
+	process, err := start(ldt_path, ldt, ldt_name, port, device_IPv4, device_MAC, in)
 	if err != nil {
 		log.Println("Manager: Failed to start LDT: ", err)
 		return nil, err
@@ -142,14 +144,15 @@ func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
 	return result[0], result[1], result[2]
 }
 
-func (manager *Manager) prepareExecution(ldt, name string) (string, string, int, string, error) {
+func (manager *Manager) prepareExecution(ldt, name string) (string, string, int, string, string, error) {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
 	var dest string = ""
 	var known_ldt bool
 	var dir string = ""
 	var port int
 	var err error
-	var device_address string
+	var device_ipv4 string
+	var device_mac string
 	if name != "" {
 		dest = manager.storage + "/" + name
 		if _, err := os.Stat(dest); err == nil {
@@ -158,7 +161,11 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 			dir = dest
 			wotm, err := wot.NewWoTmanager(dir)
 			port = wotm.GetLdtPortFromDescription()
-			device_address = wotm.GetDeviceAddressFromDescription()
+			if port == 0 {
+				port = generateRandomPort()
+			}
+			device_ipv4 = wotm.GetDeviceIPv4AddressFromDescription()
+			device_mac = wotm.GetDeviceMACAddressFromDescription()
 			if err != nil {
 				log.Println("Manager: Err: ", err)
 			}
@@ -180,7 +187,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 
 		dir, err = createLdtSpecificDirectory(dest)
 		if err != nil {
-			return "", "", -1, "", err
+			return "", "", -1, "", "", err
 		}
 		manager.copyLdtDescription(ldt, dir)
 		port = generateRandomPort()
@@ -191,10 +198,10 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		err = symlinkLdtExecutable(src_exec, dest_exec)
 		if err != nil {
 			log.Println()
-			return "", "", -1, "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
+			return "", "", -1, "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
 		}
 	}
-	return dest_exec, name, port, device_address, nil
+	return dest_exec, name, port, device_ipv4, device_mac, nil
 }
 
 func (manager *Manager) copyLdtDescription(ldt, dest string) error {
@@ -269,9 +276,6 @@ func CopyFile(src, dst string) (err error) {
 			return
 		}
 	}
-	// if err = os.Link(src, dst); err == nil {
-	// 	return
-	// }
 	err = copyFileContents(src, dst)
 	return
 }

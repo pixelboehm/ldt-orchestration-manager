@@ -32,7 +32,20 @@ func Test_getDeviceAddressFromDescription(t *testing.T) {
 	require.NoError(err)
 
 	wotm := &WoTManager{description_raw: description_raw}
-	got := wotm.GetDeviceAddressFromDescription()
+	got := wotm.GetDeviceIPv4AddressFromDescription()
+	assert.Equal(want, got)
+}
+
+func Test_getDeviceMACAddressFromDescription(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+	var want string = "AA:BB:CC:DD:EE:FF"
+
+	description_raw, err := loadDescription(path)
+	require.NoError(err)
+
+	wotm := &WoTManager{description_raw: description_raw}
+	got := wotm.GetDeviceMACAddressFromDescription()
 	assert.Equal(want, got)
 }
 

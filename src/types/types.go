@@ -1,10 +1,7 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	wotm "longevity/src/wot-manager"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -38,25 +35,15 @@ type Process struct {
 	Ldt              string
 	Name             string
 	Port             int
-	Desc             json.RawMessage
 	Started          string
 	Pairable         bool
 	DeviceMacAddress string
 }
 
-func NewProcess(pid int, ldt string, name string, port int) *Process {
-	wotm, err := wotm.NewWoTmanager("/usr/local/etc/orchestration-manager/" + ldt)
-	if err != nil {
-		log.Fatal(err)
-	}
-	wotm_desc, err := wotm.FetchWoTDescription()
-	if err != nil {
-		log.Printf("New Process: Failed to fetch WoT Description")
-	}
-
-	desc, err := json.Marshal(wotm_desc)
-	if err != nil {
-		log.Fatal(err)
+func NewProcess(pid int, ldt string, name string, port int, deviceAddress string) *Process {
+	var pairable bool = true
+	if deviceAddress != "" {
+		pairable = false
 	}
 
 	return &Process{
@@ -64,10 +51,9 @@ func NewProcess(pid int, ldt string, name string, port int) *Process {
 		Ldt:              ldt,
 		Name:             name,
 		Port:             port,
-		Desc:             desc,
 		Started:          time.Now().Format("2006-1-2 15:4:5"),
-		Pairable:         true,
-		DeviceMacAddress: "",
+		Pairable:         pairable,
+		DeviceMacAddress: deviceAddress,
 	}
 }
 
