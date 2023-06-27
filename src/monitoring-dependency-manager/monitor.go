@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"log"
 	"longevity/src/communication"
-	. "longevity/src/database"
 	. "longevity/src/types"
 	"net/http"
 	"time"

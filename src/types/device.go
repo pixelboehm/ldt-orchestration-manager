@@ -1,4 +1,4 @@
-package database
+package types
 
 type Device struct {
 	ID         int    `json:"id"`

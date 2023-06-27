@@ -6,8 +6,7 @@ import (
 	"log"
 	comms "longevity/src/communication"
 	mon "longevity/src/monitoring-dependency-manager"
-
-	. "longevity/src/database"
+	. "longevity/src/types"
 	"net/http"
 )
 
