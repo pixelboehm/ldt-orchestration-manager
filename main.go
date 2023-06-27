@@ -9,7 +9,7 @@ import (
 	boo "longevity/src/bootstrapping"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
-	mon "longevity/src/ldt-orchestrator/monitor"
+	mon "longevity/src/monitoring-dependency-manager"
 	"net"
 	"os"
 	"os/signal"

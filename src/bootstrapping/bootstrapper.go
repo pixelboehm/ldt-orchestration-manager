@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	comms "longevity/src/communication"
-	mon "longevity/src/ldt-orchestrator/monitor"
+	mon "longevity/src/monitoring-dependency-manager"
 
 	. "longevity/src/database"
 	"net/http"
