@@ -11,9 +11,8 @@ import (
 )
 
 type Bootstrapper struct {
-	rest        *comms.RESTInterface
-	monitor     *mon.Monitor
-	waitingList chan Device
+	rest    *comms.RESTInterface
+	monitor *mon.Monitor
 }
 
 func NewBootstrapper(monitor *mon.Monitor) *Bootstrapper {
