@@ -1,4 +1,4 @@
-package bootstrapping
+package bootstrapper
 
 import (
 	"encoding/json"

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	boo "longevity/src/bootstrapping"
+	boo "longevity/src/bootstrapper"
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
 	mon "longevity/src/monitoring-dependency-manager"
