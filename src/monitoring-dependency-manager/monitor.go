@@ -92,13 +92,13 @@ func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 	}
 	for i, ldt := range m.processes {
 		if ldt.DeviceMacAddress == device.MacAddress && ldt.Pairable == false {
-			var res string
+			var ldt_IPv4_full string
 			if ldt.Port == 0 || ldt.Port == 80 {
-				res = hostAddress
+				ldt_IPv4_full = hostAddress
 			} else {
-				res = hostAddress + ":" + fmt.Sprint(ldt.Port)
+				ldt_IPv4_full = hostAddress + ":" + fmt.Sprint(ldt.Port)
 			}
-			return res, nil
+			return ldt_IPv4_full, nil
 		}
 		if ldt.Pairable == true && ldt.LdtType() == device.Name {
 			res := hostAddress + ":" + fmt.Sprint(ldt.Port)
