@@ -5,27 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	. "longevity/src/database"
 	"net/http"
-	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 type API interface {
 	Run(port int)
 	RunWithHTTPS(port int)
-	Devices(w http.ResponseWriter, r *http.Request)
-	Device(w http.ResponseWriter, r *http.Request)
-	CreateDevice(w http.ResponseWriter, r *http.Request)
-	UpdateDevice(w http.ResponseWriter, r *http.Request)
-	DeleteDevice(w http.ResponseWriter, r *http.Request)
 	Database() *sql.DB
-	AddCustomHandler(route string, handler func(w http.ResponseWriter, r *http.Request))
 	Router() *http.ServeMux
 	SetDatabase(db *sql.DB)
 	SetRouter(router *http.ServeMux)
-	CloseDatabase(db *sql.DB)
+	CloseDatabase() error
+	AddCustomHandler(route string, handler func(w http.ResponseWriter, r *http.Request))
 	initialize()
 }
 
@@ -61,100 +52,6 @@ func (rest *RESTInterface) RunWithHTTPS(port int) {
 	}
 }
 
-func (rest *RESTInterface) Devices(w http.ResponseWriter, r *http.Request) {
-	result := []string{}
-	respondWithJSON(w, http.StatusOK, result)
-}
-
-func (rest *RESTInterface) Device(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid device ID")
-		return
-	}
-
-	p := Device{ID: id}
-	err = p.Device(rest.db)
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			respondWithError(w, http.StatusNotFound, "device not found")
-		default:
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-		}
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, p)
-}
-
-func (rest *RESTInterface) CreateDevice(w http.ResponseWriter, r *http.Request) {
-	var device Device
-	decoder := json.NewDecoder(r.Body)
-
-	err := decoder.Decode(&device)
-
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Invalid Payload")
-		return
-	}
-	defer r.Body.Close()
-
-	err = device.CreateDevice(rest.db)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	respondWithJSON(w, http.StatusCreated, device)
-}
-
-func (rest *RESTInterface) UpdateDevice(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Unknown Device ID")
-		return
-	}
-
-	var device Device
-	decoder := json.NewDecoder(r.Body)
-
-	err = decoder.Decode(&device)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Invalid Payload")
-		return
-	}
-	defer r.Body.Close()
-	device.ID = id
-
-	err = device.UpdateDevice(rest.db)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJSON(w, http.StatusOK, device)
-}
-
-func (rest *RESTInterface) DeleteDevice(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Unknown Device ID")
-		return
-	}
-
-	var device = &Device{ID: id}
-	err = device.DeleteDevice(rest.db)
-
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
-}
-
 func (rest *RESTInterface) Database() *sql.DB {
 	return rest.db
 }
@@ -171,8 +68,12 @@ func (rest *RESTInterface) SetRouter(router *http.ServeMux) {
 	rest.router = router
 }
 
-func (rest *RESTInterface) CloseDatabase(db *sql.DB) {
-	rest.db.Close()
+func (rest *RESTInterface) CloseDatabase() error {
+	err := rest.db.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
@@ -190,10 +91,4 @@ func (rest *RESTInterface) AddCustomHandler(route string, handler func(w http.Re
 	rest.router.HandleFunc(route, handler)
 }
 
-func (rest *RESTInterface) initialize() {
-	// rest.router.HandleFunc("/devices", rest.Devices)
-	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.Device)
-	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.UpdateDevice)
-	// rest.router.HandleFunc("/device/{id:[0-9]+}", rest.DeleteDevice)
-	// rest.router.HandleFunc("/device", rest.CreateDevice)
-}
+func (rest *RESTInterface) initialize() {}
