@@ -163,7 +163,8 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "stop":
 		if len(command) > 1 {
-			pid, err := app.monitor.GetPidViaLdtName(command[1])
+			name := command[1]
+			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
 				panic(err)
 			}

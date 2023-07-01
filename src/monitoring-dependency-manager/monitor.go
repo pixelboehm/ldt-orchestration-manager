@@ -53,12 +53,14 @@ func (m *Monitor) RegisterLDT(ldt *Process) {
 }
 
 func (m *Monitor) RemoveLDT(pid int) {
+	var name string
 	for i, ldt := range m.processes {
 		if ldt.Pid == pid {
+			name = ldt.Name
 			m.processes = append(m.processes[:i], m.processes[i+1:]...)
 		}
 	}
-	log.Printf("Monitor: Removing LDT with PID %d\n", pid)
+	log.Printf("Monitor: Removing LDT %s with PID %d\n", name, pid)
 }
 
 func (m *Monitor) ListLDTs() string {
