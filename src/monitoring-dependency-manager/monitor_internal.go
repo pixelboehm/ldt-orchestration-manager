@@ -1,4 +1,4 @@
-package monitor
+package monitoring_dependency_manager
 
 import (
 	"encoding/json"

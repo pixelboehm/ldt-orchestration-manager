@@ -1,20 +1,18 @@
-package bootstrapping
+package bootstrapper
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	comms "longevity/src/communication"
-	mon "longevity/src/ldt-orchestrator/monitor"
-
-	. "longevity/src/database"
+	mon "longevity/src/monitoring-dependency-manager"
+	. "longevity/src/types"
 	"net/http"
 )
 
 type Bootstrapper struct {
-	rest        *comms.RESTInterface
-	monitor     *mon.Monitor
-	waitingList chan Device
+	rest    *comms.RESTInterface
+	monitor *mon.Monitor
 }
 
 func NewBootstrapper(monitor *mon.Monitor) *Bootstrapper {
