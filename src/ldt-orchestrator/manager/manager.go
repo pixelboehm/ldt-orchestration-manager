@@ -15,7 +15,7 @@ import (
 )
 
 type Manager struct {
-	discovery *di.Discoverer
+	Discovery *di.Discoverer
 	storage   string
 	ldt_dir   string
 }
@@ -24,7 +24,7 @@ func NewManager(config, storage string) *Manager {
 	ldt_dir := storage + "LDTs"
 	os.Mkdir(ldt_dir, 0777)
 	manager := &Manager{
-		discovery: di.NewDiscoverer(config),
+		Discovery: di.NewDiscoverer(config),
 		storage:   storage,
 		ldt_dir:   ldt_dir + "/",
 	}
@@ -96,12 +96,12 @@ func (manager *Manager) StopLDT(pid int, name string, graceful bool) string {
 }
 
 func (manager *Manager) GetAvailableLDTs() string {
-	manager.discovery.DiscoverLDTs()
-	return manager.discovery.SupportedLDTs.String()
+	manager.Discovery.DiscoverLDTs()
+	return manager.Discovery.SupportedLDTs.String()
 }
 
 func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
-	url, err := manager.discovery.GetUrlFromLDTByID(id)
+	url, err := manager.Discovery.GetUrlFromLDTByID(id)
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +109,7 @@ func (manager *Manager) GetURLFromLDTByID(id int) (string, error) {
 }
 
 func (manager *Manager) GetURLFromLDTByName(user, ldt, version string) (string, error) {
-	url, err := manager.discovery.GetURLFromLDTByName(user, ldt, version)
+	url, err := manager.Discovery.GetURLFromLDTByName(user, ldt, version)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +118,7 @@ func (manager *Manager) GetURLFromLDTByName(user, ldt, version string) (string, 
 }
 
 func (manager *Manager) DownloadLDT(name string) string {
-	manager.optionalScan()
+	manager.OptionalScan()
 	user, ldt_name, version := manager.SplitLDTInfos(name)
 	url, err := manager.GetURLFromLDTByName(user, ldt_name, version)
 	if err != nil {
@@ -219,8 +219,8 @@ func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 	return nil
 }
 
-func (manager *Manager) optionalScan() {
-	if len(manager.discovery.SupportedLDTs.LDTs) < 1 {
+func (manager *Manager) OptionalScan() {
+	if len(manager.Discovery.SupportedLDTs.LDTs) < 1 {
 		manager.GetAvailableLDTs()
 	}
 }

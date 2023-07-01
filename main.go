@@ -42,10 +42,11 @@ func main() {
 	}()
 
 	var monitor *mon.Monitor = mon.NewMonitor(ldts)
+	var manager *man.Manager = man.NewManager(repos, storage)
 	app := &App{
-		manager:      man.NewManager(repos, storage),
+		manager:      manager,
 		monitor:      monitor,
-		bootstrapper: boo.NewBootstrapper(monitor),
+		bootstrapper: boo.NewBootstrapper(monitor, manager),
 	}
 
 	if err := app.monitor.DeserializeLDTs(); err != nil {
