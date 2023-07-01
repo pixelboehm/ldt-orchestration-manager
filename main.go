@@ -182,6 +182,16 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 			return res
 		}
 		return " "
+	case "rm":
+		if len(command) > 1 {
+			ldt := command[1]
+			path := storage + command[1]
+			if err := os.RemoveAll(path); err != nil {
+				return fmt.Sprintf("Failed to remove LDT: %s\n", ldt)
+			}
+			return fmt.Sprintf("Successfully removed LDT: %s\n", ldt)
+		}
+		return " "
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
