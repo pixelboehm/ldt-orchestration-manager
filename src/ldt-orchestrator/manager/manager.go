@@ -154,7 +154,9 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 	var device_ipv4 string
 	var device_mac string
 	if name != "" {
-		dest = manager.storage + "/" + name
+		log.Printf("Manager Prepare: %s\n", manager.storage)
+		dest = manager.storage + name
+		log.Printf("Manager Prepare Dest: %s\n", dest)
 		if _, err := os.Stat(dest); err == nil {
 			known_ldt = true
 			log.Println("Manager: Starting Known LDT: ", name)
@@ -176,7 +178,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 			name = GenerateRandomName()
 		}
 		for dest == "" {
-			dest = manager.storage + "/" + name
+			dest = manager.storage + name
 			if _, err := os.Stat(dest); err == nil {
 				dest = ""
 				name = GenerateRandomName()
@@ -184,7 +186,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		}
 
 		log.Println("Starting unknown LDT: ", name)
-
+		log.Printf("Create Directory here: %s\n", dest)
 		dir, err = createLdtSpecificDirectory(dest)
 		if err != nil {
 			return "", "", -1, "", "", err
@@ -192,7 +194,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		manager.copyLdtDescription(ldt, dir)
 		port = generateRandomPort()
 	}
-	src_exec := manager.storage + "/" + user + "/" + ldt_name + "/" + version + "/" + ldt_name
+	src_exec := manager.storage + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	dest_exec := dir + "/" + ldt_name
 	if !known_ldt {
 		err = symlinkLdtExecutable(src_exec, dest_exec)
