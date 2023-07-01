@@ -233,9 +233,6 @@ func (manager *Manager) getLdtLocation(ldt string) string {
 func (manager *Manager) downloadLDTArchive(address string) string {
 	name, err := download(address, manager.ldt_dir)
 
-	log.Println("Manager Download dir: ", manager.ldt_dir)
-	log.Println("Manager Download: ", name)
-
 	if err != nil {
 		log.Println("Manager: Failed to download LDT archive: ", err)
 		return ""
