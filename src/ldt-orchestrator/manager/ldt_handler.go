@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -18,8 +19,9 @@ var dogs = []string{"affenpinscher", "australian_cattle_dog", "basset_hound", "b
 
 func prepareCommand(ldt_exec, name string, port int, device_address string) (*exec.Cmd, string) {
 	makeExecutable(ldt_exec)
+	var ldt_cache_dir = ldt_exec[:strings.LastIndex(ldt_exec, "/")]
 
-	cmd := exec.Command(ldt_exec, name, fmt.Sprint(port), device_address)
+	cmd := exec.Command(ldt_exec, ldt_cache_dir, fmt.Sprint(port), device_address, name)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
