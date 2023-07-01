@@ -17,12 +17,16 @@ import (
 type Manager struct {
 	discovery *di.Discoverer
 	storage   string
+	ldt_dir   string
 }
 
 func NewManager(config, storage string) *Manager {
+	ldt_dir := storage + "LDTs"
+	os.Mkdir(ldt_dir, 0777)
 	manager := &Manager{
 		discovery: di.NewDiscoverer(config),
 		storage:   storage,
+		ldt_dir:   ldt_dir + "/",
 	}
 	return manager
 }
@@ -123,7 +127,7 @@ func (manager *Manager) DownloadLDT(name string) string {
 
 	ldtArchive := manager.downloadLDTArchive(url)
 	defer os.Remove(ldtArchive)
-	location := manager.storage + user + "/" + ldt_name + "/" + version
+	location := manager.ldt_dir + user + "/" + ldt_name + "/" + version
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
@@ -191,7 +195,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		manager.copyLdtDescription(ldt, dir)
 		port = generateRandomPort()
 	}
-	src_exec := manager.storage + user + "/" + ldt_name + "/" + version + "/" + ldt_name
+	src_exec := manager.ldt_dir + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	dest_exec := dir + "/" + ldt_name
 	if !known_ldt {
 		err = symlinkLdtExecutable(src_exec, dest_exec)
@@ -223,11 +227,14 @@ func (manager *Manager) optionalScan() {
 
 func (manager *Manager) getLdtLocation(ldt string) string {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
+	return manager.ldt_dir + "/" + user + "/" + ldt_name + "/" + version
 }
 
 func (manager *Manager) downloadLDTArchive(address string) string {
-	name, err := download(address, manager.storage)
+	name, err := download(address, manager.ldt_dir)
+
+	log.Println("Manager Download dir: ", manager.ldt_dir)
+	log.Println("Manager Download: ", name)
 
 	if err != nil {
 		log.Println("Manager: Failed to download LDT archive: ", err)
