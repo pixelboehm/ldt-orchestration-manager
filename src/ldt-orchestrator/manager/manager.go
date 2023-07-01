@@ -117,13 +117,13 @@ func (manager *Manager) DownloadLDT(name string) string {
 	manager.optionalScan()
 	user, ldt_name, version := manager.SplitLDTInfos(name)
 	url, err := manager.GetURLFromLDTByName(user, ldt_name, version)
-
 	if err != nil {
 		return err.Error()
 	}
 
-	ldtArchive := downloadLDTArchive(url)
-	location := manager.storage + "/" + user + "/" + ldt_name + "/" + version
+	ldtArchive := manager.downloadLDTArchive(url)
+	defer os.Remove(ldtArchive)
+	location := manager.storage + user + "/" + ldt_name + "/" + version
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
@@ -154,9 +154,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 	var device_ipv4 string
 	var device_mac string
 	if name != "" {
-		log.Printf("Manager Prepare: %s\n", manager.storage)
 		dest = manager.storage + name
-		log.Printf("Manager Prepare Dest: %s\n", dest)
 		if _, err := os.Stat(dest); err == nil {
 			known_ldt = true
 			log.Println("Manager: Starting Known LDT: ", name)
@@ -186,7 +184,6 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		}
 
 		log.Println("Starting unknown LDT: ", name)
-		log.Printf("Create Directory here: %s\n", dest)
 		dir, err = createLdtSpecificDirectory(dest)
 		if err != nil {
 			return "", "", -1, "", "", err
@@ -229,8 +226,8 @@ func (manager *Manager) getLdtLocation(ldt string) string {
 	return manager.storage + "/" + user + "/" + ldt_name + "/" + version
 }
 
-func downloadLDTArchive(address string) string {
-	name, err := download(address)
+func (manager *Manager) downloadLDTArchive(address string) string {
+	name, err := download(address, manager.storage)
 
 	if err != nil {
 		log.Println("Manager: Failed to download LDT archive: ", err)
