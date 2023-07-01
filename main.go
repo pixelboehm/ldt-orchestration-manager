@@ -116,6 +116,16 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 	case "get":
 		res := app.manager.GetAvailableLDTs()
 		return res
+	case "kill":
+		if len(command) > 1 {
+			pid, err := strconv.Atoi(command[1])
+			if err != nil {
+				panic(err)
+			}
+			res := app.manager.StopLDT(pid, false)
+			return res
+		}
+		return " "
 	case "pull":
 		if len(command) > 1 {
 			ldt := app.manager.DownloadLDT(command[1])
@@ -135,6 +145,11 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 			return process.Name
 		}
 		return " "
+	case "show":
+		if len(command) > 1 {
+			return storage + command[1] + "/wotm/description.json"
+		}
+		return " "
 	case "start":
 		if len(command) > 1 {
 			process, err := app.manager.StartLDT(command, in)
@@ -147,21 +162,12 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "stop":
 		if len(command) > 1 {
-			pid, err := strconv.Atoi(command[1])
+			pid, err := app.monitor.GetPidViaLdtName(command[1])
 			if err != nil {
 				panic(err)
 			}
+
 			res := app.manager.StopLDT(pid, true)
-			return res
-		}
-		return " "
-	case "kill":
-		if len(command) > 1 {
-			pid, err := strconv.Atoi(command[1])
-			if err != nil {
-				panic(err)
-			}
-			res := app.manager.StopLDT(pid, false)
 			return res
 		}
 		return " "

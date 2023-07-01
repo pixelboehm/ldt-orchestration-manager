@@ -2,6 +2,7 @@ package monitoring_dependency_manager
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -108,6 +109,15 @@ func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 		}
 	}
 	return "No pairable LDT available", nil
+}
+
+func (m *Monitor) GetPidViaLdtName(name string) (int, error) {
+	for _, ldt := range m.processes {
+		if ldt.Name == name {
+			return ldt.Pid, nil
+		}
+	}
+	return -1, errors.New("PID could not be resolved")
 }
 
 func (m *Monitor) mainpage(w http.ResponseWriter, r *http.Request) {
