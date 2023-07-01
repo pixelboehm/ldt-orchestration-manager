@@ -31,7 +31,9 @@ Testing and coverage will always be executed regardless of caching.
 
 ## Variables
 
-Environment variables can be set in `.env` file. This includes the location of the unix socket, the meta-repository and the ODM data directory. I would advise to change these values to your liking, depending on your operating system. All values are loaded via [godotenv](https://github.com/joho/godotenv). Do not use existing shell variables in this file, as they are not resolved correctly.
+Environment variables can be set in `.env` file. This includes the location of the meta-repository and the ODM data directory. I would advise to change these values to your liking, depending on your operating system. All values are loaded via [godotenv](https://github.com/joho/godotenv). Do not use existing shell variables in this file, as they are not resolved correctly.
+
+The socket is currently hardcoded under `/tmp/orchestration-manager.sock`. The reason for this is to eliminate a runtime dependency of the cli-frontend-application.
 
 ## Building
 
