@@ -16,15 +16,14 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-)
 
-const (
-	socketpath = "/tmp/orchestration-manager.sock"
+	"github.com/joho/godotenv"
 )
 
 var repos string
 var ldts string
 var storage string
+var socket string
 
 type App struct {
 	manager      *man.Manager
@@ -33,10 +32,10 @@ type App struct {
 }
 
 func main() {
+	initialize()
 	defer func() {
-		syscall.Unlink(socketpath)
+		syscall.Unlink(socket)
 	}()
-	parseFlags()
 
 	var monitor *mon.Monitor = mon.NewMonitor(ldts)
 	app := &App{
@@ -54,23 +53,35 @@ func main() {
 	}
 }
 
+func initialize() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Main: Failed to load .env file")
+	}
+	socket = os.Getenv("SOCKET")
+	repos = os.Getenv("META_REPOSITORY")
+	storage = os.Getenv("ODM_DATA_DIRECTORY")
+	if storage[len(storage)-1:] != "/" {
+		storage = storage + "/"
+	}
+	ldts = storage + "ldt.list"
+	parseFlags()
+}
+
 func parseFlags() {
-	flag.StringVar(&repos, "repos", "https://raw.githubusercontent.com/pixelboehm/meta-ldt/main/repositories.list", "Path to the meta repositories file")
-	flag.StringVar(&ldts, "ldts", "/usr/local/etc/orchestration-manager/ldt.list", "Path to store LDT status")
+	flag.StringVar(&repos, "repos", repos, "Path to the meta repositories file")
+	flag.StringVar(&storage, "data-dir", storage, "Path to the ODM data directory")
 	flag.Parse()
-	storage = ldts[:strings.LastIndex(ldts, "/")]
-	flag.Usage = flagHelp
 }
 
 func flagHelp() {
 	fmt.Printf("Usage: %s [OPTIONS]", os.Args[0])
-	fmt.Printf("--repos \t Custom path to the repositories file")
-	fmt.Printf("--ldts \t Custom path to store LDT status")
+	fmt.Printf("-repos \t Custom path to the repositories file")
+	fmt.Printf("-data-dir \t Custom path the the ODM data directory")
 }
 
 func (app *App) run(out io.Writer) error {
 	log.SetOutput(out)
-	listener, err := net.Listen("unix", socketpath)
+	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		log.Fatal("error listening on: ", err)
 		return err
@@ -144,6 +155,16 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 			return res
 		}
 		return " "
+	case "kill":
+		if len(command) > 1 {
+			pid, err := strconv.Atoi(command[1])
+			if err != nil {
+				panic(err)
+			}
+			res := app.manager.StopLDT(pid, false)
+			return res
+		}
+		return " "
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
@@ -158,7 +179,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 	switch sig {
 	case syscall.SIGINT, syscall.SIGTERM:
 		log.Printf("Caught signal %s: shutting down.", sig)
-		err := syscall.Unlink(socketpath)
+		err := syscall.Unlink(socket)
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
@@ -166,7 +187,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		os.Exit(1)
 	case syscall.SIGHUP:
 		log.Printf("Caught signal %s: reloading.", sig)
-		err := syscall.Unlink(socketpath)
+		err := syscall.Unlink(socket)
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
