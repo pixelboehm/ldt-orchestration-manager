@@ -80,13 +80,13 @@ func (manager *Manager) StartLDT(args []string, in net.Conn) (*Process, error) {
 	return process, nil
 }
 
-func (manager *Manager) StopLDT(pid int, graceful bool) string {
+func (manager *Manager) StopLDT(pid int, name string, graceful bool) string {
 	var result string
 	success := stop(pid, graceful)
 	if success {
-		result = fmt.Sprintf("Successfully stopped LDT with PID %d\n", pid)
+		result = fmt.Sprintf("Successfully stopped LDT %s\n", name)
 	} else {
-		result = fmt.Sprintf("Failed to stop LDT with PID %d\n", pid)
+		result = fmt.Sprintf("Failed to stop LDT with PID %s\n", name)
 	}
 	return result
 }

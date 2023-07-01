@@ -118,11 +118,12 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return res
 	case "kill":
 		if len(command) > 1 {
-			pid, err := strconv.Atoi(command[1])
+			name := command[1]
+			pid, err := strconv.Atoi(name)
 			if err != nil {
 				panic(err)
 			}
-			res := app.manager.StopLDT(pid, false)
+			res := app.manager.StopLDT(pid, name, false)
 			return res
 		}
 		return " "
@@ -167,7 +168,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 				panic(err)
 			}
 
-			res := app.manager.StopLDT(pid, true)
+			res := app.manager.StopLDT(pid, name, true)
 			return res
 		}
 		return " "
