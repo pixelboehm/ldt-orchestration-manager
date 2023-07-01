@@ -24,6 +24,7 @@ var repos string
 var ldts string
 var storage string
 var socket string
+var env string = ".env"
 
 type App struct {
 	manager      *man.Manager
@@ -54,22 +55,30 @@ func main() {
 }
 
 func initialize() {
-	if err := godotenv.Load(); err != nil {
+	parseFlags()
+	if err := godotenv.Load(env); err != nil {
 		log.Fatal("Main: Failed to load .env file")
 	}
-	socket = os.Getenv("SOCKET")
-	repos = os.Getenv("META_REPOSITORY")
-	storage = os.Getenv("ODM_DATA_DIRECTORY")
+	if socket == "" {
+		socket = os.Getenv("SOCKET")
+	}
+	if repos == "" {
+		repos = os.Getenv("META_REPOSITORY")
+	}
+	if storage == "" {
+		storage = os.Getenv("ODM_DATA_DIRECTORY")
+	}
 	if storage[len(storage)-1:] != "/" {
 		storage = storage + "/"
 	}
 	ldts = storage + "ldt.list"
-	parseFlags()
 }
 
 func parseFlags() {
-	flag.StringVar(&repos, "repos", repos, "Path to the meta repositories file")
-	flag.StringVar(&storage, "data-dir", storage, "Path to the ODM data directory")
+	flag.StringVar(&repos, "repos", repos, "Meta repositories file")
+	flag.StringVar(&storage, "data-dir", storage, "ODM data directory")
+	flag.StringVar(&env, "env", env, ".env variable")
+	flag.StringVar(&socket, "socket", socket, "Unix socket for communication")
 	flag.Parse()
 }
 
