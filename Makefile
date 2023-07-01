@@ -16,7 +16,7 @@ build:
 .PHONY: cli
 cli:
 	@printf "%s\n" 'Compiling CLI...'
-	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/odm src/cli/cli.go
+	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/odm src/cli-frontend-application/cli.go
 	@printf "%s\n" 'Done'
 
 

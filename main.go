@@ -16,15 +16,18 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/joho/godotenv"
 )
 
 const (
-	socketpath = "/tmp/orchestration-manager.sock"
+	socket = "/tmp/orchestration-manager.sock"
 )
 
 var repos string
 var ldts string
 var storage string
+var env string = ".env"
 
 type App struct {
 	manager      *man.Manager
@@ -33,10 +36,10 @@ type App struct {
 }
 
 func main() {
+	initialize()
 	defer func() {
-		syscall.Unlink(socketpath)
+		syscall.Unlink(socket)
 	}()
-	parseFlags()
 
 	var monitor *mon.Monitor = mon.NewMonitor(ldts)
 	app := &App{
@@ -54,23 +57,39 @@ func main() {
 	}
 }
 
+func initialize() {
+	parseFlags()
+	if err := godotenv.Load(env); err != nil {
+		log.Fatal("Main: Failed to load .env file")
+	}
+	if repos == "" {
+		repos = os.Getenv("META_REPOSITORY")
+	}
+	if storage == "" {
+		storage = os.Getenv("ODM_DATA_DIRECTORY")
+	}
+	if storage[len(storage)-1:] != "/" {
+		storage = storage + "/"
+	}
+	ldts = storage + "ldt.list"
+}
+
 func parseFlags() {
-	flag.StringVar(&repos, "repos", "https://raw.githubusercontent.com/pixelboehm/meta-ldt/main/repositories.list", "Path to the meta repositories file")
-	flag.StringVar(&ldts, "ldts", "/usr/local/etc/orchestration-manager/ldt.list", "Path to store LDT status")
+	flag.StringVar(&repos, "repos", repos, "Meta repositories file")
+	flag.StringVar(&storage, "data-dir", storage, "ODM data directory")
+	flag.StringVar(&env, "env", env, ".env variable")
 	flag.Parse()
-	storage = ldts[:strings.LastIndex(ldts, "/")]
-	flag.Usage = flagHelp
 }
 
 func flagHelp() {
 	fmt.Printf("Usage: %s [OPTIONS]", os.Args[0])
-	fmt.Printf("--repos \t Custom path to the repositories file")
-	fmt.Printf("--ldts \t Custom path to store LDT status")
+	fmt.Printf("-repos \t Custom path to the repositories file")
+	fmt.Printf("-data-dir \t Custom path the the ODM data directory")
 }
 
 func (app *App) run(out io.Writer) error {
 	log.SetOutput(out)
-	listener, err := net.Listen("unix", socketpath)
+	listener, err := net.Listen("unix", socket)
 	if err != nil {
 		log.Fatal("error listening on: ", err)
 		return err
@@ -105,6 +124,17 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 	case "get":
 		res := app.manager.GetAvailableLDTs()
 		return res
+	case "kill":
+		if len(command) > 1 {
+			name := command[1]
+			pid, err := strconv.Atoi(name)
+			if err != nil {
+				panic(err)
+			}
+			res := app.manager.StopLDT(pid, name, false)
+			return res
+		}
+		return " "
 	case "pull":
 		if len(command) > 1 {
 			ldt := app.manager.DownloadLDT(command[1])
@@ -124,6 +154,11 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 			return process.Name
 		}
 		return " "
+	case "show":
+		if len(command) > 1 {
+			return storage + command[1] + "/wotm/description.json"
+		}
+		return " "
 	case "start":
 		if len(command) > 1 {
 			process, err := app.manager.StartLDT(command, in)
@@ -136,11 +171,13 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "stop":
 		if len(command) > 1 {
-			pid, err := strconv.Atoi(command[1])
+			name := command[1]
+			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
 				panic(err)
 			}
-			res := app.manager.StopLDT(pid, true)
+
+			res := app.manager.StopLDT(pid, name, true)
 			return res
 		}
 		return " "
@@ -158,7 +195,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 	switch sig {
 	case syscall.SIGINT, syscall.SIGTERM:
 		log.Printf("Caught signal %s: shutting down.", sig)
-		err := syscall.Unlink(socketpath)
+		err := syscall.Unlink(socket)
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}
@@ -166,7 +203,7 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 		os.Exit(1)
 	case syscall.SIGHUP:
 		log.Printf("Caught signal %s: reloading.", sig)
-		err := syscall.Unlink(socketpath)
+		err := syscall.Unlink(socket)
 		if err != nil {
 			log.Fatal("error during unlinking: ", err)
 		}

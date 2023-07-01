@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -13,13 +14,13 @@ import (
 )
 
 const (
-	socketPath = "/tmp/orchestration-manager.sock"
+	socket = "/tmp/orchestration-manager.sock"
 )
 
 func main() {
 	process := make(chan int, 1)
 
-	connection, err := net.Dial("unix", socketPath)
+	connection, err := net.Dial("unix", socket)
 	if err != nil {
 		panic(err)
 	}
@@ -35,11 +36,30 @@ func main() {
 		go checkForShutdown(connection, process)
 		waitForAnswer(connection, process, true)
 	} else {
-		waitForAnswer(connection, nil, false)
+		val := waitForAnswer(connection, nil, false)
+		if os.Args[1] == "show" {
+			openPager(val)
+		}
 	}
 }
 
-func waitForAnswer(connection net.Conn, process chan int, blocking bool) {
+func openPager(location string) {
+	pager := os.Getenv("PAGER")
+	if pager != "" {
+		cmd := exec.Command(pager)
+
+		content, _ := os.ReadFile(location)
+		cmd.Stdin = strings.NewReader(string(content))
+		cmd.Stdout = os.Stdout
+
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func waitForAnswer(connection net.Conn, process chan int, blocking bool) string {
 	var pid int = 0
 	if blocking {
 		go checkIfAttachedProcessIsStillRunning(&pid)
@@ -49,7 +69,7 @@ func waitForAnswer(connection net.Conn, process chan int, blocking bool) {
 	for {
 		n, err := connection.Read(buffer[:])
 		if err != nil {
-			return
+			return ""
 		}
 		val := string(buffer[0:n])
 		val = strings.Trim(val, "\n")
@@ -64,7 +84,7 @@ func waitForAnswer(connection net.Conn, process chan int, blocking bool) {
 		}
 		fmt.Println(val)
 		if !blocking {
-			return
+			return val
 		}
 	}
 }

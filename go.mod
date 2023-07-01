@@ -4,9 +4,7 @@ go 1.19
 
 require (
 	github.com/google/go-github/v51 v51.0.0
-	github.com/gorilla/mux v1.8.0
-	github.com/lib/pq v1.10.7
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/oauth2 v0.6.0
 )

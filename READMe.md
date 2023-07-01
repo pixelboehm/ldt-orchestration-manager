@@ -2,13 +2,11 @@
 
 ## Goal
 
-Provide an application for discovering and managing distributed longevity digital twins.
+Provide an application for discovering and managing distributed Longevity Digital Twins.
 
 ## Prerequisites
 
 - golang >= `1.19`
-- a database
-  - postgres or sqlite3
 
 ### optional
 
@@ -23,7 +21,7 @@ Provide an application for discovering and managing distributed longevity digita
 
 ## Setup
 
-The Makefile provides a `init` command, that initializes the project, if that isn't already done. The `setup` command enables vendoring and fetches existing requirements
+The Makefile provides a `init` command, that initializes the project, if that isn't already done. The `setup` command enables vendoring and fetches dependencies
 
 ## Testing
 
@@ -31,18 +29,14 @@ The `Makefile` provides several helpful commands for testing and coverage. _shor
 The Coverage report can be generated via `make cover` and is located in the `out` directory.
 Testing and coverage will always be executed regardless of caching.
 
+## Variables
+
+Environment variables can be set in `.env` file. This includes the location of the unix socket, the meta-repository and the ODM data directory. I would advise to change these values to your liking, depending on your operating system. All values are loaded via [godotenv](https://github.com/joho/godotenv). Do not use existing shell variables in this file, as they are not resolved correctly.
+
 ## Building
 
-The command from the `Makefile` produces a binary located in the `out` directory.
-
-## Database
-
-The application requires a database. Currently supported are postgres and sqlite3. I recommend a postgres library, and sqlite3 only for testing purposes.
-
-The postgres database needs to expose port `5432` and is currently accessible via the default user `postgres`. The database password needs to be specified in the database setup method call. 
-
-Easiest way to get the database started is via docker:
-`docker run -d --rm -p 5432:5432 -e POSTGRES_PASSWORD=foobar --name longevity-db postgres`
+`make build` produces the binary `orchestration-manager` located in the `out` directory.
+`make cli` produces the binary `odm` located in the `out` directory. This is the command line frontend application.
 
 ## Commands
 

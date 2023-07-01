@@ -13,7 +13,7 @@ import (
 )
 
 func loadDescription(ldt string) string {
-	const base string = "/usr/local/etc/orchestration-manager/"
+	base := os.Getenv("ODM_DATA_DIRECTORY")
 	var desc_path string = base + ldt
 	wotm, err := wotm.NewWoTmanager(desc_path)
 	if err != nil {

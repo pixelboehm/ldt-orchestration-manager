@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-func download(address string) (string, error) {
+func download(address, location string) (string, error) {
 	url, _ := url.Parse(address)
 	filename := strings.Split(url.Path, "/")[6]
 
-	file, err := os.Create("resources/" + filename)
+	file, err := os.Create(location + filename)
 	if err != nil {
 		return "", err
 	}
