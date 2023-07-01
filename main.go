@@ -42,10 +42,11 @@ func main() {
 	}()
 
 	var monitor *mon.Monitor = mon.NewMonitor(ldts)
+	var manager *man.Manager = man.NewManager(repos, storage)
 	app := &App{
-		manager:      man.NewManager(repos, storage),
+		manager:      manager,
 		monitor:      monitor,
-		bootstrapper: boo.NewBootstrapper(monitor),
+		bootstrapper: boo.NewBootstrapper(monitor, manager),
 	}
 
 	if err := app.monitor.DeserializeLDTs(); err != nil {
@@ -179,6 +180,16 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 
 			res := app.manager.StopLDT(pid, name, true)
 			return res
+		}
+		return " "
+	case "rm":
+		if len(command) > 1 {
+			ldt := command[1]
+			path := storage + command[1]
+			if err := os.RemoveAll(path); err != nil {
+				return fmt.Sprintf("Failed to remove LDT: %s\n", ldt)
+			}
+			return fmt.Sprintf("Successfully removed LDT: %s\n", ldt)
 		}
 		return " "
 	default:

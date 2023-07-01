@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	comms "longevity/src/communication"
+	man "longevity/src/ldt-orchestrator/manager"
 	mon "longevity/src/monitoring-dependency-manager"
 	. "longevity/src/types"
 	"net/http"
@@ -13,12 +14,14 @@ import (
 type Bootstrapper struct {
 	rest    *comms.RESTInterface
 	monitor *mon.Monitor
+	manager *man.Manager
 }
 
-func NewBootstrapper(monitor *mon.Monitor) *Bootstrapper {
+func NewBootstrapper(monitor *mon.Monitor, manager *man.Manager) *Bootstrapper {
 	return &Bootstrapper{
 		rest:    comms.NewRestInterface(nil),
 		monitor: monitor,
+		manager: manager,
 	}
 }
 
@@ -42,10 +45,34 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *Bootstrapper) getLDTAddressForDevice(waiting_device Device) string {
-	ldtAddress, err := b.monitor.GetLDTAddressForDevice(waiting_device)
+	result, err := b.monitor.GetLDTAddressForDevice(waiting_device)
 	if err != nil {
 		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
 		return " "
 	}
-	return ldtAddress
+	if result != "No pairable LDT available" {
+		ldt_address := result
+		return ldt_address
+	} else {
+		b.startSuitableLdt(waiting_device)
+		return b.getLDTAddressForDevice(waiting_device)
+	}
+}
+
+func (b *Bootstrapper) startSuitableLdt(waiting_device Device) {
+	b.manager.OptionalScan()
+	var full_ldt_specifier string
+	for _, ldt := range b.manager.Discovery.SupportedLDTs.LDTs {
+		if ldt.Name == waiting_device.Name && ldt.Version[1:] == waiting_device.Version {
+			full_ldt_specifier = ldt.User + "/" + ldt.Name + ":" + ldt.Version[1:]
+			b.manager.DownloadLDT(full_ldt_specifier)
+			break
+		}
+	}
+
+	process, err := b.manager.RunLDT([]string{"run", full_ldt_specifier})
+	if err != nil {
+		panic(err)
+	}
+	b.monitor.Started <- process
 }
