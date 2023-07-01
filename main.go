@@ -20,10 +20,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	socket = "/tmp/orchestration-manager.sock"
+)
+
 var repos string
 var ldts string
 var storage string
-var socket string
 var env string = ".env"
 
 type App struct {
@@ -59,9 +62,6 @@ func initialize() {
 	if err := godotenv.Load(env); err != nil {
 		log.Fatal("Main: Failed to load .env file")
 	}
-	if socket == "" {
-		socket = os.Getenv("SOCKET")
-	}
 	if repos == "" {
 		repos = os.Getenv("META_REPOSITORY")
 	}
@@ -78,7 +78,6 @@ func parseFlags() {
 	flag.StringVar(&repos, "repos", repos, "Meta repositories file")
 	flag.StringVar(&storage, "data-dir", storage, "ODM data directory")
 	flag.StringVar(&env, "env", env, ".env variable")
-	flag.StringVar(&socket, "socket", socket, "Unix socket for communication")
 	flag.Parse()
 }
 

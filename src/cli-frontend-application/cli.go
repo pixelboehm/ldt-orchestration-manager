@@ -11,17 +11,13 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
-var socket string
+const (
+	socket = "/tmp/orchestration-manager.sock"
+)
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("ODM-CLI-Frontend: Failed to load .env file")
-	}
-	socket = os.Getenv("SOCKET")
 	process := make(chan int, 1)
 
 	connection, err := net.Dial("unix", socket)
