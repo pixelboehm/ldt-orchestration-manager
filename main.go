@@ -60,8 +60,8 @@ func main() {
 
 func initialize() {
 	parseFlags()
-	if err := godotenv.Load(env); err != nil {
-		log.Fatal("Main: Failed to load .env file")
+	if err := godotenv.Load(env, "./src/ldt-orchestrator/github/github.env"); err != nil {
+		log.Fatal("Main: Failed to load .env files")
 	}
 	if repos == "" {
 		repos = os.Getenv("META_REPOSITORY")

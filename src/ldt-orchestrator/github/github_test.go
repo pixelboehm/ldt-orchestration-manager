@@ -1,13 +1,24 @@
 package github
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	. "longevity/src/types"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(m *testing.M) {
+	if err := godotenv.Load("github.env"); err != nil {
+		log.Fatal("Failed to load env variable")
+	}
+	code := m.Run()
+	os.Exit(code)
+}
 
 func Test_CreateGithubDiscovererWithoutToken(t *testing.T) {
 	assert := assert.New(t)
