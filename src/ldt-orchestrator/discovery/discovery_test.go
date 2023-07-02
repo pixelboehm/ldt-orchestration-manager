@@ -1,15 +1,20 @@
 package discovery
 
 import (
+	"log"
 	"longevity/src/types"
 	"os"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
+	if err := godotenv.Load("../github/github.env"); err != nil {
+		log.Fatal("Failed to load env variable")
+	}
 	setupDiscoveryConfig()
 	code := m.Run()
 	teardownDiscoveryConfig()
@@ -86,15 +91,6 @@ func Test_IsGithubRepository(t *testing.T) {
 			assert.Equal(tC.want, got)
 		})
 	}
-}
-
-func Test_DiscoverLDTs(t *testing.T) {
-	t.Skip("skipping test")
-	ensureConfigExists(t)
-	assert := assert.New(t)
-
-	c.DiscoverLDTs()
-	assert.NotNil(len(c.SupportedLDTs.LDTs))
 }
 
 func Test_updateLatestTag(t *testing.T) {
