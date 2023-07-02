@@ -32,8 +32,15 @@ Testing and coverage will always be executed regardless of caching.
 ## Variables
 
 Environment variables can be set in `.env` file. This includes the location of the meta-repository and the ODM data directory. I would advise to change these values to your liking, depending on your operating system. All values are loaded via [godotenv](https://github.com/joho/godotenv). Do not use existing shell variables in this file, as they are not resolved correctly.
+There is an additional file in `src/ldt-orchestrator/github` that allows authenticated GitHub requests. It is required to set this value, as otherwise Unit-Tests will fail, and the discovery algorithm fails with an error. Don't worry about accidentally pushing your secret key, as git assumes that this file is always unchanged due to this command:
 
-The socket is currently hardcoded under `/tmp/orchestration-manager.sock`. The reason for this is to eliminate a runtime dependency of the cli-frontend-application.
+```bash
+git update-index --assume-unchanged src/ldt-orchestrator/github
+```
+
+Unfortunately, the github.env file is used in multiple places, with a relative path. I don't really like this, but I didn't found an easy way to use a project root variable. Therefore be careful when refactoring.
+
+The socket is currently hard-coded under `/tmp/orchestration-manager.sock`. The reason for this is to eliminate a runtime dependency of the cli-frontend-application.
 
 ## Building
 
