@@ -190,7 +190,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 			name := command[1]
 			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
-				panic(err)
+				return fmt.Sprintf("LDT %s does not exist\n", name)
 			}
 
 			res := app.manager.StopLDT(pid, name, true)
