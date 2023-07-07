@@ -220,14 +220,20 @@ func (manager *Manager) copyLdtDescription(ldt, dest string) error {
 }
 
 func (manager *Manager) OptionalScan() {
-	if len(manager.Discovery.SupportedLDTs.LDTs) < 1 {
-		manager.GetAvailableLDTs()
+	manager.GetAvailableLDTs()
+}
+
+func (manager *Manager) LDTExists(ldt string) bool {
+	ldt_path := manager.getLdtLocation(ldt)
+	if _, err := os.Stat(ldt_path); err != nil {
+		return false
 	}
+	return false
 }
 
 func (manager *Manager) getLdtLocation(ldt string) string {
 	user, ldt_name, version := manager.SplitLDTInfos(ldt)
-	return manager.ldt_dir + "/" + user + "/" + ldt_name + "/" + version
+	return manager.ldt_dir + user + "/" + ldt_name + "/" + version
 }
 
 func (manager *Manager) downloadLDTArchive(address string) string {

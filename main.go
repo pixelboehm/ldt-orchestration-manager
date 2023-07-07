@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -147,6 +148,13 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return res
 	case "run":
 		if len(command) > 1 {
+			var ldt_name string = command[1]
+			if !app.manager.LDTExists(ldt_name) {
+				ticker := time.NewTicker(2 * time.Second)
+				_ = app.manager.GetAvailableLDTs()
+				_ = app.manager.DownloadLDT(ldt_name)
+				<-ticker.C
+			}
 			process, err := app.manager.RunLDT(command)
 			if err != nil {
 				panic(err)
@@ -162,6 +170,13 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 		return " "
 	case "start":
 		if len(command) > 1 {
+			var ldt_name string = command[1]
+			if !app.manager.LDTExists(ldt_name) {
+				ticker := time.NewTicker(2 * time.Second)
+				_ = app.manager.GetAvailableLDTs()
+				_ = app.manager.DownloadLDT(ldt_name)
+				<-ticker.C
+			}
 			process, err := app.manager.StartLDT(command, in)
 			if err != nil {
 				panic(err)
