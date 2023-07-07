@@ -228,7 +228,7 @@ func (manager *Manager) LDTExists(ldt string) bool {
 	if _, err := os.Stat(ldt_path); err != nil {
 		return false
 	}
-	return false
+	return true
 }
 
 func (manager *Manager) getLdtLocation(ldt string) string {
