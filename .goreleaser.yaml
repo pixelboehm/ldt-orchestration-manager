@@ -39,18 +39,3 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-
-brews:
-  - name: orchestration-manager
-    homepage: https://github.com/pixelboehm/longevity
-    tap:
-      owner: "{{ .Env.MAINTAINER }}"
-      name: homebrew-ldt
-    commit_author:
-      name: "{{ .Env.MAINTAINER }}"
-      email: "{{ .Env.MAIL }}"
-    folder: Formula
-    install: |
-      system "mkdir", "-p" "/usr/local/etc/orchestration-manager"
-      system "touch", "/usr/local/etc/orchestration-manager/ldt.list"
-      bin.install {{- .ProjectName }}
