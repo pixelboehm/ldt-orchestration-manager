@@ -7,6 +7,7 @@ import (
 	"log"
 	di "longevity/src/ldt-orchestrator/discovery"
 	"longevity/src/ldt-orchestrator/unarchive"
+	"longevity/src/types"
 	. "longevity/src/types"
 	wot "longevity/src/wot-manager"
 	"net"
@@ -15,18 +16,22 @@ import (
 )
 
 type Manager struct {
-	Discovery *di.Discoverer
-	storage   string
-	ldt_dir   string
+	Discovery   *di.Discoverer
+	storage     string
+	ldt_dir     string
+	bridge      chan *types.Process
+	started_Ldt chan *types.Process
 }
 
-func NewManager(config, storage string) *Manager {
+func NewManager(config, storage string, bridge, started_Ldt chan *types.Process) *Manager {
 	ldt_dir := storage + "LDTs"
 	os.Mkdir(ldt_dir, 0777)
 	manager := &Manager{
-		Discovery: di.NewDiscoverer(config),
-		storage:   storage,
-		ldt_dir:   ldt_dir + "/",
+		Discovery:   di.NewDiscoverer(config),
+		storage:     storage,
+		ldt_dir:     ldt_dir + "/",
+		bridge:      bridge,
+		started_Ldt: started_Ldt,
 	}
 	return manager
 }
@@ -146,6 +151,20 @@ func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
 		result[2] = "v" + result[2]
 	}
 	return result[0], result[1], result[2]
+}
+
+func (manager *Manager) TryRestartFailedLdt() {
+	for {
+		select {
+		case ldt := <-manager.bridge:
+			log.Printf("<Manager>: Restarting %s\n", ldt.Name)
+			process, err := manager.RunLDT([]string{"run", ldt.Ldt, ldt.Name})
+			if err != nil {
+				panic(err)
+			}
+			manager.started_Ldt <- process
+		}
+	}
 }
 
 func (manager *Manager) prepareExecution(ldt, name string) (string, string, int, string, string, error) {

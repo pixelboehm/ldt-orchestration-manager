@@ -17,13 +17,15 @@ type Monitor struct {
 	Stopped       chan int
 	processes     []Process
 	ldt_list_path string
+	bridge        chan *Process
 }
 
-func NewMonitor(ldt_list_path string) *Monitor {
+func NewMonitor(ldt_list_path string, bridge chan *Process, started chan *Process, stopped chan int) *Monitor {
 	return &Monitor{
-		Started:       make(chan *Process),
-		Stopped:       make(chan int),
+		Started:       started,
+		Stopped:       stopped,
 		ldt_list_path: ldt_list_path,
+		bridge:        bridge,
 	}
 }
 
@@ -67,7 +69,7 @@ func (m *Monitor) ListLDTs() string {
 	if len(m.processes) > 0 {
 		var buffer bytes.Buffer
 		for _, process := range m.processes {
-			line := fmt.Sprintf("%d\t%s\t%s\t%v\t%d\t%t\t%s\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable, process.DeviceMacAddress)
+			line := fmt.Sprintf("%d\t%s\t%s\t%v\t%d\t%t\t%d\t%s\n", process.Pid, process.Ldt, process.Name, process.Started, process.Port, process.Pairable, process.Restarts, process.DeviceMacAddress)
 			buffer.WriteString(line)
 		}
 		return buffer.String()
@@ -78,9 +80,16 @@ func (m *Monitor) ListLDTs() string {
 func (m *Monitor) DoKeepAlive(seconds int64) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	for {
-		log.Printf("Monitor: Currently Active LDTs %d\n", len(m.processes))
+		log.Printf("<Monitor>: Currently Active LDTs %d\n", len(m.processes))
 		for _, ldt := range m.processes {
 			if !ldtIsRunning(ldt.Pid) {
+				restarts := 0
+				log.Printf("<Monitor>: LDT %s crashed with %d possible restarts\n", ldt.Name, ldt.Restarts)
+				for restarts < ldt.Restarts {
+					log.Printf("<Monitor>: Attempt restart %d/%d\n", restarts+1, ldt.Restarts)
+					m.bridge <- &ldt
+					restarts += 1
+				}
 				m.Stopped <- ldt.Pid
 			}
 		}
