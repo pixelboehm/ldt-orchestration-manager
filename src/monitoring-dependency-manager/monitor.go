@@ -75,8 +75,8 @@ func (m *Monitor) ListLDTs() string {
 	return " "
 }
 
-func (m *Monitor) DoKeepAlive() {
-	ticker := time.NewTicker(5 * time.Second)
+func (m *Monitor) DoKeepAlive(seconds int64) {
+	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	for {
 		log.Printf("Monitor: Currently Active LDTs %d\n", len(m.processes))
 		for _, ldt := range m.processes {

@@ -100,7 +100,7 @@ func (app *App) run(out io.Writer) error {
 	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go app.checkForShutdown(sigchannel)
-	go app.monitor.DoKeepAlive()
+	go app.monitor.DoKeepAlive(5)
 	go app.monitor.RefreshLDTs()
 	go app.monitor.Run(8080)
 	go app.bootstrapper.Run(55443)
