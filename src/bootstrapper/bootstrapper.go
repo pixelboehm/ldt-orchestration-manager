@@ -54,25 +54,35 @@ func (b *Bootstrapper) bootstrap(waiting_device Device) string {
 		ldt_address := result
 		return ldt_address
 	} else {
-		b.startSuitableLdt(waiting_device)
-		return b.getLDTAddressForDevice(waiting_device)
+		found := b.startSuitableLdt(waiting_device)
+		if found == true {
+			return b.bootstrap(waiting_device)
+		} else {
+			return "No pairable LDT available"
+		}
 	}
 }
 
-func (b *Bootstrapper) startSuitableLdt(waiting_device Device) {
+func (b *Bootstrapper) startSuitableLdt(waiting_device Device) bool {
 	b.manager.OptionalScan()
 	var full_ldt_specifier string
+	var found bool = false
 	for _, ldt := range b.manager.Discovery.SupportedLDTs.LDTs {
 		if ldt.Name == waiting_device.Name && ldt.Version[1:] == waiting_device.Version {
 			full_ldt_specifier = ldt.User + "/" + ldt.Name + ":" + ldt.Version[1:]
 			b.manager.DownloadLDT(full_ldt_specifier)
+			found = true
 			break
 		}
 	}
-
-	process, err := b.manager.RunLDT([]string{"run", full_ldt_specifier})
-	if err != nil {
-		panic(err)
+	if found == true {
+		process, err := b.manager.RunLDT([]string{"run", full_ldt_specifier})
+		if err != nil {
+			panic(err)
+		}
+		b.monitor.Started <- process
+		return true
+	} else {
+		return false
 	}
-	b.monitor.Started <- process
 }
