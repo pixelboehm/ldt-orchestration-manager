@@ -40,11 +40,11 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	ldt_address := b.getLDTAddressForDevice(device)
+	ldt_address := b.bootstrap(device)
 	w.Write([]byte(ldt_address))
 }
 
-func (b *Bootstrapper) getLDTAddressForDevice(waiting_device Device) string {
+func (b *Bootstrapper) bootstrap(waiting_device Device) string {
 	result, err := b.monitor.GetLDTAddressForDevice(waiting_device)
 	if err != nil {
 		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
