@@ -38,21 +38,21 @@ func Untar(src, dest string) (string, error) {
 			break
 		}
 		if err != nil {
-			log.Println("failed to read next tar entry")
+			log.Println("<Unarchive>: failed to read next tar entry")
 			return "", err
 		}
 		dest := folder + "/" + nextFile.Name
 		files = append(files, dest)
 		unpacked, err := create(dest)
 		if err != nil {
-			log.Printf("failed to create: %s\n", dest)
+			log.Printf("<Unarchive>: failed to create: %s\n", dest)
 			return "", err
 		}
 		defer unpacked.Close()
 
 		_, err = io.Copy(unpacked, tar)
 		if err != nil {
-			log.Printf("failed to unpack to: %s\n", unpacked.Name())
+			log.Printf("<Unarchive>: failed to unpack to: %s\n", unpacked.Name())
 			return "", err
 		}
 	}

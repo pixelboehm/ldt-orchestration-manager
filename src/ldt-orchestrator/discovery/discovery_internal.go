@@ -1,6 +1,8 @@
 package discovery
 
 import (
+	"github.com/hashicorp/go-version"
+
 	. "longevity/src/types"
 	"net/url"
 	"runtime"
@@ -18,19 +20,23 @@ func updateLatestTag(ldts *[]LDT) {
 	sortByName(*ldts)
 
 	var last_ldt_name string
+	var last_ldt_vendor string
 	var current_latest_version string
 	var latest_ldt_changed bool = false
 	var latest_ldt *LDT
 
 	for _, ldt := range *ldts {
-		if ldt.Name != last_ldt_name {
+		if ldt.Name != last_ldt_name || ldt.Vendor != last_ldt_vendor {
 			last_ldt_name = ldt.Name
+			last_ldt_vendor = ldt.Vendor
 			current_latest_version = ldt.Version
 			latest_ldt = &ldt
 			latest_ldt_changed = true
 		} else if ldt.Name == last_ldt_name {
+			nv, _ := version.NewVersion(ldt.Version)
+			clv, _ := version.NewVersion(current_latest_version)
 			latest_ldt_changed = false
-			if ldt.Version > current_latest_version {
+			if nv.GreaterThan(clv) {
 				current_latest_version = ldt.Version
 				latest_ldt = &ldt
 				latest_ldt_changed = true
@@ -45,12 +51,14 @@ func updateLatestTag(ldts *[]LDT) {
 
 func sortByName(ldts []LDT) {
 	sort.Slice(ldts, func(i, j int) bool {
-		if ldts[i].User != ldts[j].User {
-			return ldts[i].User > ldts[j].User
+		if ldts[i].Vendor != ldts[j].Vendor {
+			return ldts[i].Vendor > ldts[j].Vendor
 		} else if ldts[i].Name != ldts[j].Name {
-			return ldts[i].Name > ldts[j].Name
+			return ldts[i].Name < ldts[j].Name
 		} else {
-			return ldts[i].Version > ldts[j].Version
+			vi, _ := version.NewVersion(ldts[i].Version)
+			vj, _ := version.NewVersion(ldts[j].Version)
+			return vi.GreaterThan(vj)
 		}
 	})
 }

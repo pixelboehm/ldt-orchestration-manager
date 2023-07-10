@@ -21,7 +21,7 @@ func NewGithubClient(token string) *GithubClient {
 	val, present := os.LookupEnv(token)
 
 	if !present {
-		log.Println("Github token not found. Requests will be limited to 60 per hour.")
+		log.Println("<Disovery>: Github token not found. Requests will be limited to 60 per hour.")
 	}
 
 	ts := oauth2.StaticTokenSource(

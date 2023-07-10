@@ -34,7 +34,7 @@ func NewRestInterface(db *sql.DB) *RESTInterface {
 
 func (rest *RESTInterface) Run(port int) {
 	rest.initialize()
-	log.Printf("HTTP serve at %d\n", port)
+	log.Printf("<REST>: HTTP serve at %d\n", port)
 	addr := fmt.Sprintf(":%d", port)
 	err := http.ListenAndServe(addr, rest.router)
 	if err != nil {
@@ -44,7 +44,7 @@ func (rest *RESTInterface) Run(port int) {
 
 func (rest *RESTInterface) RunWithHTTPS(port int) {
 	rest.initialize()
-	log.Printf("HTTPS serve at %d\n", port)
+	log.Printf("<REST>: HTTPS serve at %d\n", port)
 	addr := fmt.Sprintf(":%d", port)
 	err := http.ListenAndServeTLS(addr, "server.crt", "server.key", rest.router)
 	if err != nil {

@@ -68,7 +68,7 @@ func (discoverer *Discoverer) GetUrlFromLDTByID(id int) (string, error) {
 
 func (discoverer *Discoverer) GetURLFromLDTByName(user, ldt, tag string) (string, error) {
 	for _, entry := range discoverer.SupportedLDTs.LDTs {
-		if entry.User == user && entry.Name == ldt && entry.Version == tag {
+		if entry.Vendor == user && entry.Name == ldt && entry.Version == tag {
 			return entry.Url, nil
 		}
 	}

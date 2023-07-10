@@ -81,10 +81,14 @@ func waitForAnswer(connection net.Conn, process chan int, blocking bool) string 
 				}
 				continue
 			}
+			fmt.Println(val)
 		}
-		fmt.Println(val)
 		if !blocking {
-			return val
+			if val != " " {
+				fmt.Println(val)
+				return val
+			}
+			return ""
 		}
 	}
 }
@@ -129,7 +133,7 @@ func checkForShutdown(connection net.Conn, process chan int) {
 	if err != nil {
 		log.Printf("Failed to find process with PID %d\n", pid)
 	}
-	if err = proc.Signal(os.Interrupt); err != nil {
+	if err = proc.Signal(syscall.SIGTERM); err != nil {
 		log.Println("Failed to stop LDT gracefully")
 	}
 }

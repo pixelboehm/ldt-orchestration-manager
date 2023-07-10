@@ -111,13 +111,14 @@ func Test_updateLatestTag(t *testing.T) {
 	require.NotZero(actual_latest_tags)
 
 	var expected_latest_tags int = getUniqueUserLDTCombinations(c.SupportedLDTs.LDTs)
-	assert.Equal(expected_latest_tags, actual_latest_tags)
+	assert.Equal(expected_latest_tags, actual_latest_tags, "Comparison of latest tags")
+
 }
 
 func injectLDTFromFakeUserIn(list *[]types.LDT) {
 	ldt := &types.LDT{
 		Name:    "switch",
-		User:    "fake_user",
+		Vendor:  "fake_user",
 		Version: "v0.10.2",
 		Os:      "darwin",
 		Arch:    "amd64",
@@ -133,7 +134,7 @@ func getUniqueUserLDTCombinations(ldts []types.LDT) int {
 loop:
 	for _, l := range ldts {
 		for i, u := range unique {
-			if l.Name == u.Name && l.User == u.User {
+			if l.Name == u.Name && l.Vendor == u.Vendor {
 				unique[i] = l
 				continue loop
 			}
@@ -184,4 +185,35 @@ func Test_GetURLFromLDTByName(t *testing.T) {
 	require.NoError(err)
 
 	assert.Equal(want[:59], got[:59])
+}
+
+func Test_sortLDTsByName(t *testing.T) {
+	ensureConfigExists(t)
+
+	assert := assert.New(t)
+
+	lightbulb1 := types.NewLDT("lightbulb", "pixelboehm", "0.1.0", "", "", "")
+	lightbulb2 := types.NewLDT("lightbulb", "pixelboehm", "0.2.1", "", "", "")
+	lightbulb3 := types.NewLDT("lightbulb", "pixelboehm", "0.10.0", "", "", "")
+
+	switch1 := types.NewLDT("switch", "pixelboehm", "0.3.1", "", "", "")
+	switch2 := types.NewLDT("switch", "pixelboehm", "0.5.8", "", "", "")
+	switch3 := types.NewLDT("switch", "pixelboehm", "0.13.3", "", "", "")
+
+	list := types.NewLDTList()
+	list.LDTs = append(list.LDTs, *lightbulb1)
+	list.LDTs = append(list.LDTs, *lightbulb2)
+	list.LDTs = append(list.LDTs, *lightbulb3)
+	list.LDTs = append(list.LDTs, *switch1)
+	list.LDTs = append(list.LDTs, *switch2)
+	list.LDTs = append(list.LDTs, *switch3)
+
+	sortByName(list.LDTs)
+
+	assert.Equal("0.13.3", list.LDTs[3].Version)
+	assert.Equal("0.5.8", list.LDTs[4].Version)
+	assert.Equal("0.3.1", list.LDTs[5].Version)
+	assert.Equal("0.10.0", list.LDTs[0].Version)
+	assert.Equal("0.2.1", list.LDTs[1].Version)
+	assert.Equal("0.1.0", list.LDTs[2].Version)
 }

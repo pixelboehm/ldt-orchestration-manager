@@ -72,16 +72,16 @@ func start(ldt_full, ldt, random_name string, port int, device_IPv4, device_MAC 
 func stop(pid int, graceful bool) bool {
 	proc, err := os.FindProcess(pid)
 	if err != nil {
-		log.Printf("Failed to find process with PID %d\n", pid)
+		log.Printf("<Manager>: Failed to find process with PID %d\n", pid)
 	}
 	if graceful {
-		if err = proc.Signal(os.Interrupt); err != nil {
-			log.Printf("Failed to stop LDT %d gracefully\n", pid)
+		if err = proc.Signal(syscall.SIGTERM); err != nil {
+			log.Printf("<Manager>: Failed to stop LDT %d gracefully\n", pid)
 			return false
 		}
 	} else {
-		if err = proc.Kill(); err != nil {
-			log.Printf("Failed to kill LDT %d\n", pid)
+		if err = proc.Signal(syscall.SIGINT); err != nil {
+			log.Printf("<Manager>: Failed to kill LDT %d\n", pid)
 			return false
 		}
 	}
@@ -95,10 +95,10 @@ func makeExecutable(ldt string) {
 	}
 	file, err := os.Open(ldt)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to open LDT: %v\n", err))
+		panic(fmt.Sprintf("<Manager>: Failed to open LDT: %v\n", err))
 	}
 	if err := os.Chmod(file.Name(), 0755); err != nil {
-		panic(fmt.Sprintf("Failed to set executable Flag: %v\n", err))
+		panic(fmt.Sprintf("<Manager>: Failed to set executable Flag: %v\n", err))
 	}
 }
 

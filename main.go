@@ -13,9 +13,9 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -100,7 +100,7 @@ func (app *App) run(out io.Writer) error {
 	signal.Notify(sigchannel, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go app.checkForShutdown(sigchannel)
-	go app.monitor.DoKeepAlive()
+	go app.monitor.DoKeepAlive(5)
 	go app.monitor.RefreshLDTs()
 	go app.monitor.Run(8080)
 	go app.bootstrapper.Run(55443)
@@ -113,91 +113,135 @@ func (app *App) run(out io.Writer) error {
 			return err
 		}
 		go comms.GetCommandFromSocket(in, commands)
-		result := app.executeCommand(<-commands, in)
-		comms.SendResultToSocket(in, result)
+		app.executeCommand(<-commands, in)
 	}
 }
 
-func (app *App) executeCommand(input string, in net.Conn) string {
+func (app *App) executeCommand(input string, in net.Conn) {
 	command := strings.Fields(input)
 
 	switch command[0] {
 	case "get":
-		res := app.manager.GetAvailableLDTs()
-		return res
+		result := app.manager.GetAvailableLDTs()
+		comms.SendResultToSocket(in, result)
 	case "kill":
-		if len(command) > 1 {
-			name := command[1]
-			pid, err := strconv.Atoi(name)
-			if err != nil {
-				panic(err)
-			}
-			res := app.manager.StopLDT(pid, name, false)
-			return res
-		}
-		return " "
-	case "pull":
-		if len(command) > 1 {
-			ldt := app.manager.DownloadLDT(command[1])
-			return ldt
-		}
-		return " "
-	case "ps":
-		res := app.monitor.ListLDTs()
-		return res
-	case "run":
-		if len(command) > 1 {
-			process, err := app.manager.RunLDT(command)
-			if err != nil {
-				panic(err)
-			}
-			app.monitor.Started <- process
-			return process.Name
-		}
-		return " "
-	case "show":
-		if len(command) > 1 {
-			return storage + command[1] + "/wotm/description.json"
-		}
-		return " "
-	case "start":
-		if len(command) > 1 {
-			process, err := app.manager.StartLDT(command, in)
-			if err != nil {
-				panic(err)
-			}
-			app.monitor.Started <- process
-			return fmt.Sprint(process.Pid)
-		}
-		return " "
-	case "stop":
 		if len(command) > 1 {
 			name := command[1]
 			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
 				panic(err)
 			}
-
-			res := app.manager.StopLDT(pid, name, true)
-			return res
+			result := app.manager.StopLDT(pid, name, false)
+			comms.SendResultToSocket(in, result)
+			return
 		}
-		return " "
+		comms.SendResultToSocket(in, " ")
+	case "pull":
+		if len(command) > 1 {
+			ldt_name := command[1]
+			ldt, err := app.manager.DownloadLDT(ldt_name)
+			if err != nil {
+				result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+				comms.SendResultToSocket(in, result)
+				return
+			}
+			comms.SendResultToSocket(in, ldt)
+			return
+		}
+		comms.SendResultToSocket(in, " ")
+	case "ps":
+		result := app.monitor.ListLDTs()
+		comms.SendResultToSocket(in, result)
+	case "run":
+		if len(command) > 1 {
+			var ldt_name string = command[1]
+			if !app.manager.LDTExists(ldt_name) {
+				ticker := time.NewTicker(2 * time.Second)
+				_ = app.manager.GetAvailableLDTs()
+				_, err := app.manager.DownloadLDT(ldt_name)
+				if err != nil {
+					result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+					comms.SendResultToSocket(in, result)
+					return
+				}
+				<-ticker.C
+			}
+			process, err := app.manager.RunLDT(command)
+			if err != nil {
+				panic(err)
+			}
+			app.monitor.Started <- process
+			result := process.Name
+			comms.SendResultToSocket(in, result)
+			return
+		}
+		comms.SendResultToSocket(in, " ")
+	case "show":
+		if len(command) > 1 {
+			path := storage + command[1] + "/wotm/description.json"
+			comms.SendResultToSocket(in, path)
+			return
+		}
+		comms.SendResultToSocket(in, " ")
+	case "start":
+		if len(command) > 1 {
+			var ldt_name string = command[1]
+			if !app.manager.LDTExists(ldt_name) {
+				ticker := time.NewTicker(2 * time.Second)
+				_ = app.manager.GetAvailableLDTs()
+				_, err := app.manager.DownloadLDT(ldt_name)
+				if err != nil {
+					result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+					comms.SendResultToSocket(in, result)
+					return
+				}
+				<-ticker.C
+			}
+			process, err := app.manager.StartLDT(command, in)
+			if err != nil {
+				panic(err)
+			}
+			app.monitor.Started <- process
+			result := fmt.Sprint(process.Pid)
+			comms.SendResultToSocket(in, result)
+			return
+		}
+		comms.SendResultToSocket(in, " ")
+	case "stop":
+		if len(command) > 1 {
+			name := command[1]
+			pid, err := app.monitor.GetPidViaLdtName(name)
+			if err != nil {
+				result := fmt.Sprintf("LDT %s does not exist\n", name)
+				comms.SendResultToSocket(in, result)
+				return
+			}
+			result := app.manager.StopLDT(pid, name, true)
+			comms.SendResultToSocket(in, result)
+			return
+		}
+		comms.SendResultToSocket(in, " ")
 	case "rm":
 		if len(command) > 1 {
 			ldt := command[1]
 			path := storage + command[1]
+			var result string
 			if err := os.RemoveAll(path); err != nil {
-				return fmt.Sprintf("Failed to remove LDT: %s\n", ldt)
+				result = fmt.Sprintf("Failed to remove LDT: %s\n", ldt)
+				comms.SendResultToSocket(in, result)
+				return
 			}
-			return fmt.Sprintf("Successfully removed LDT: %s\n", ldt)
+			result = fmt.Sprintf("Successfully removed LDT: %s\n", ldt)
+			comms.SendResultToSocket(in, result)
+			return
 		}
-		return " "
+		comms.SendResultToSocket(in, " ")
 	default:
 		log.Println("Unkown command received: ", command)
 		fallthrough
 	case "help":
-		result := cliHelp()
-		return result.String()
+		result := cliHelp().String()
+		comms.SendResultToSocket(in, result)
 	}
 }
 
@@ -230,7 +274,6 @@ func cliHelp() *bytes.Buffer {
 	buffer.WriteString("Usage: cli [OPTIONS]\n")
 	buffer.WriteString("help \t Show this help\n")
 	buffer.WriteString("run \t Run the managing service\n")
-	log.Println(buffer.String())
 	return &buffer
 }
 
