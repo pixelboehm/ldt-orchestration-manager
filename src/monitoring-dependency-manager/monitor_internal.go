@@ -21,7 +21,7 @@ func loadDescription(ldt string) string {
 	}
 	wotm_desc, err := wotm.FetchWoTDescription()
 	if err != nil {
-		log.Println("Monitor: Failed to fetch WoT Description: ", err)
+		log.Println("<Monitor>: Failed to fetch WoT Description: ", err)
 	}
 	desc, err := json.MarshalIndent(wotm_desc, "", "   ")
 	if err != nil {
@@ -34,12 +34,12 @@ func convertTime(started string) string {
 	currentTime := time.Now().Format("2006-1-2 15:4:5")
 	newCurrentTime, err := time.Parse("2006-1-2 15:4:5", currentTime)
 	if err != nil {
-		log.Println("Monitor: Failed to parse time")
+		log.Println("<Monitor>: Failed to parse time")
 		return "Unknown"
 	}
 	startTime, err := time.Parse("2006-1-2 15:4:5", started)
 	if err != nil {
-		log.Println("Monitor: Failed to parse time")
+		log.Println("<Monitor>: Failed to parse time")
 		return "Unknown"
 	}
 	uptime := newCurrentTime.Sub(startTime)
@@ -69,7 +69,7 @@ func getIPAddress() (string, error) {
 
 	ipAddr, err := net.ResolveIPAddr("ip4", hostname)
 	if err != nil {
-		return "", errors.New(fmt.Sprint("Monitor: Failed wo obtain Host-IP Address"))
+		return "", errors.New(fmt.Sprint("<Monitor>: Failed wo obtain Host-IP Address"))
 	}
 	return ipAddr.IP.String(), nil
 }

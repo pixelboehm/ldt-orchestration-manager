@@ -49,7 +49,7 @@ func (m *Monitor) RefreshLDTs() {
 
 func (m *Monitor) RegisterLDT(ldt *Process) {
 	m.processes = append(m.processes, *ldt)
-	log.Printf("Monitor: New LDT %s with PID %d registered at %s\n", ldt.Name, ldt.Pid, ldt.Started)
+	log.Printf("<Monitor>: New LDT %s with PID %d registered at %s\n", ldt.Name, ldt.Pid, ldt.Started)
 }
 
 func (m *Monitor) RemoveLDT(pid int) {
@@ -60,7 +60,7 @@ func (m *Monitor) RemoveLDT(pid int) {
 			m.processes = append(m.processes[:i], m.processes[i+1:]...)
 		}
 	}
-	log.Printf("Monitor: Removing LDT %s with PID %d\n", name, pid)
+	log.Printf("<Monitor>: Removing LDT %s with PID %d\n", name, pid)
 }
 
 func (m *Monitor) ListLDTs() string {
@@ -78,7 +78,7 @@ func (m *Monitor) ListLDTs() string {
 func (m *Monitor) DoKeepAlive(seconds int64) {
 	ticker := time.NewTicker(time.Duration(seconds) * time.Second)
 	for {
-		log.Printf("Monitor: Currently Active LDTs %d\n", len(m.processes))
+		log.Printf("<Monitor>: Currently Active LDTs %d\n", len(m.processes))
 		for _, ldt := range m.processes {
 			if !ldtIsRunning(ldt.Pid) {
 				m.Stopped <- ldt.Pid
@@ -119,7 +119,7 @@ func (m *Monitor) GetPidViaLdtName(name string) (int, error) {
 			return ldt.Pid, nil
 		}
 	}
-	return -1, errors.New("PID could not be resolved")
+	return -1, errors.New("<Monitor>: PID could not be resolved")
 }
 
 func (m *Monitor) mainpage(w http.ResponseWriter, r *http.Request) {

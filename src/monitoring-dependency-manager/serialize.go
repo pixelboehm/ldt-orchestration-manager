@@ -14,7 +14,7 @@ func (m *Monitor) SerializeLDTs() error {
 	file, err := os.OpenFile(m.ldt_list_path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	if err != nil {
-		log.Printf("Could not create file: %s\n", m.ldt_list_path)
+		log.Printf("<MDM>: Could not create file: %s\n", m.ldt_list_path)
 		return err
 	}
 	defer file.Close()
@@ -50,7 +50,7 @@ func (m *Monitor) DeserializeLDTs() error {
 			var deviceMacAddress string
 			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t\t%s", &ldt, &pid, &name, &port, &day, &hour, &pairable, &deviceMacAddress)
 			if err != nil && !errors.Is(err, io.EOF) {
-				log.Printf("Monitor: failed to deserialize the LDT: %s with error: %v", name, err)
+				log.Printf("<MDM>: failed to deserialize the LDT: %s with error: %v", name, err)
 			}
 
 			started := day + " " + hour

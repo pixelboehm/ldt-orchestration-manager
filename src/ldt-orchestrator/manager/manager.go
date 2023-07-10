@@ -50,11 +50,11 @@ func (manager *Manager) RunLDT(args []string) (*Process, error) {
 
 	process, err := run(ldt_path, ldt, ldt_name, port, device_IPv4, device_MAC)
 	if err != nil {
-		log.Println("Manager: Failed to run LDT: ", err)
+		log.Println("<Manager>: Failed to run LDT: ", err)
 		return nil, err
 	}
 
-	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
+	log.Printf("<Manager>: Successfully started LDT with PID: %d\n", process.Pid)
 	return process, nil
 }
 
@@ -72,15 +72,15 @@ func (manager *Manager) StartLDT(args []string, in net.Conn) (*Process, error) {
 	}
 	ldt_path, ldt_name, port, device_IPv4, device_MAC, err = manager.prepareExecution(ldt, ldt_name)
 	if err != nil {
-		return nil, errors.New("Failed to prepare the execution")
+		return nil, errors.New("<Manager>: Failed to prepare the execution")
 	}
 
 	process, err := start(ldt_path, ldt, ldt_name, port, device_IPv4, device_MAC, in)
 	if err != nil {
-		log.Println("Manager: Failed to start LDT: ", err)
+		log.Println("<Manager>: Failed to start LDT: ", err)
 		return nil, err
 	}
-	log.Printf("Manager: Successfully started LDT with PID: %d\n", process.Pid)
+	log.Printf("<Manager>: Successfully started LDT with PID: %d\n", process.Pid)
 	return process, nil
 }
 
@@ -88,9 +88,9 @@ func (manager *Manager) StopLDT(pid int, name string, graceful bool) string {
 	var result string
 	success := stop(pid, graceful)
 	if success {
-		result = fmt.Sprintf("Successfully stopped LDT %s\n", name)
+		result = fmt.Sprintf("<Manager>: Successfully stopped LDT %s\n", name)
 	} else {
-		result = fmt.Sprintf("Failed to stop LDT with PID %s\n", name)
+		result = fmt.Sprintf("<Manager>: Failed to stop LDT with PID %s\n", name)
 	}
 	return result
 }
@@ -133,11 +133,11 @@ func (manager *Manager) DownloadLDT(name string) (string, error) {
 	location := manager.ldt_dir + user + "/" + ldt_name + "/" + version
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
-		log.Println("Manager: Failed to unpack LDT: ", err)
+		log.Println("<Manager>: Failed to unpack LDT: ", err)
 		return "", err
 	}
 
-	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version[1:])
+	log.Printf("<Manager>: Downloaded LDT %s/%s:%s\n", user, ldt_name, version[1:])
 	return ldt, nil
 }
 
@@ -164,7 +164,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 		dest = manager.storage + name
 		if _, err := os.Stat(dest); err == nil {
 			known_ldt = true
-			log.Println("Manager: Starting Known LDT: ", name)
+			log.Println("<Manager>: Starting Known LDT: ", name)
 			dir = dest
 			wotm, err := wot.NewWoTmanager(dir)
 			port = wotm.GetLdtPortFromDescription()
@@ -174,7 +174,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 			device_ipv4 = wotm.GetDeviceIPv4AddressFromDescription()
 			device_mac = wotm.GetDeviceMACAddressFromDescription()
 			if err != nil {
-				log.Println("Manager: Err: ", err)
+				log.Println("<Manager>: Err: ", err)
 			}
 		}
 	}
@@ -190,7 +190,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 			}
 		}
 
-		log.Println("Starting unknown LDT: ", name)
+		log.Println("<Manager>: Starting unknown LDT: ", name)
 		dir, err = createLdtSpecificDirectory(dest)
 		if err != nil {
 			return "", "", -1, "", "", err
@@ -203,7 +203,7 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 	err = symlinkLdtExecutable(src_exec, dest_exec)
 	if err != nil {
 		log.Println()
-		return "", "", -1, "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
+		return "", "", -1, "", "", errors.New(fmt.Sprint("<Manager>: Unable to symlink LDT", err))
 	}
 	return dest_exec, name, port, device_ipv4, device_mac, nil
 }
@@ -241,7 +241,7 @@ func (manager *Manager) downloadLDTArchive(address string) (string, error) {
 	name, err := download(address, manager.ldt_dir)
 
 	if err != nil {
-		log.Println("Manager: Failed to download LDT archive: ", err)
+		log.Println("<Manager>: Failed to download LDT archive: ", err)
 		return "", err
 	}
 	return name, nil
@@ -257,7 +257,7 @@ func createLdtSpecificDirectory(dir string) (string, error) {
 }
 
 func symlinkLdtExecutable(src, dest string) error {
-	log.Println("Manager: Symlinking Executable")
+	log.Println("<Manager>: Symlinking Executable")
 	err := os.Symlink(src, dest)
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func CopyFile(src, dst string) (err error) {
 		return
 	}
 	if !sfi.Mode().IsRegular() {
-		return fmt.Errorf("CopyFile: non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
+		return fmt.Errorf("<Manager>: CopyFile: non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
 	}
 	dfi, err := os.Stat(dst)
 	if err != nil {
@@ -280,7 +280,7 @@ func CopyFile(src, dst string) (err error) {
 		}
 	} else {
 		if !(dfi.Mode().IsRegular()) {
-			return fmt.Errorf("CopyFile: non-regular destination file %s (%q)", dfi.Name(), dfi.Mode().String())
+			return fmt.Errorf("<Manager>: CopyFile: non-regular destination file %s (%q)", dfi.Name(), dfi.Mode().String())
 		}
 		if os.SameFile(sfi, dfi) {
 			return
