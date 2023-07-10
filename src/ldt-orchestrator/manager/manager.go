@@ -200,12 +200,10 @@ func (manager *Manager) prepareExecution(ldt, name string) (string, string, int,
 	}
 	src_exec := manager.ldt_dir + user + "/" + ldt_name + "/" + version + "/" + ldt_name
 	dest_exec := dir + "/" + ldt_name
-	if !known_ldt {
-		err = symlinkLdtExecutable(src_exec, dest_exec)
-		if err != nil {
-			log.Println()
-			return "", "", -1, "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
-		}
+	err = symlinkLdtExecutable(src_exec, dest_exec)
+	if err != nil {
+		log.Println()
+		return "", "", -1, "", "", errors.New(fmt.Sprint("Unable to symlink LDT", err))
 	}
 	return dest_exec, name, port, device_ipv4, device_mac, nil
 }
