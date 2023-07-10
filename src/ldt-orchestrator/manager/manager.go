@@ -134,7 +134,7 @@ func (manager *Manager) DownloadLDT(name string) string {
 		return ""
 	}
 
-	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version)
+	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version[1:])
 	return ldt
 }
 
