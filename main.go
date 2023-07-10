@@ -13,7 +13,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -129,7 +128,7 @@ func (app *App) executeCommand(input string, in net.Conn) string {
 	case "kill":
 		if len(command) > 1 {
 			name := command[1]
-			pid, err := strconv.Atoi(name)
+			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
 				panic(err)
 			}

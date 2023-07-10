@@ -75,12 +75,12 @@ func stop(pid int, graceful bool) bool {
 		log.Printf("Failed to find process with PID %d\n", pid)
 	}
 	if graceful {
-		if err = proc.Signal(os.Interrupt); err != nil {
+		if err = proc.Signal(syscall.SIGTERM); err != nil {
 			log.Printf("Failed to stop LDT %d gracefully\n", pid)
 			return false
 		}
 	} else {
-		if err = proc.Kill(); err != nil {
+		if err = proc.Signal(syscall.SIGINT); err != nil {
 			log.Printf("Failed to kill LDT %d\n", pid)
 			return false
 		}
