@@ -1,8 +1,6 @@
 package discovery
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/go-version"
 
 	. "longevity/src/types"
@@ -34,7 +32,6 @@ func updateLatestTag(ldts *[]LDT) {
 			current_latest_version = ldt.Version
 			latest_ldt = &ldt
 			latest_ldt_changed = true
-			fmt.Printf("New latest version for new LDT %s %s\n", ldt.Name, ldt.Version)
 		} else if ldt.Name == last_ldt_name {
 			nv, _ := version.NewVersion(ldt.Version)
 			clv, _ := version.NewVersion(current_latest_version)
@@ -43,7 +40,6 @@ func updateLatestTag(ldts *[]LDT) {
 				current_latest_version = ldt.Version
 				latest_ldt = &ldt
 				latest_ldt_changed = true
-				fmt.Printf("New latest version for same LDT %s %s\n", ldt.Name, ldt.Version)
 			}
 		}
 		if latest_ldt_changed {
