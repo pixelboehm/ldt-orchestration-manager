@@ -81,10 +81,14 @@ func waitForAnswer(connection net.Conn, process chan int, blocking bool) string 
 				}
 				continue
 			}
+			fmt.Println(val)
 		}
-		fmt.Println(val)
 		if !blocking {
-			return val
+			if val != " " {
+				fmt.Println(val)
+				return val
+			}
+			return ""
 		}
 	}
 }
