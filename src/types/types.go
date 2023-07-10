@@ -38,7 +38,6 @@ type Process struct {
 	Started          string
 	Pairable         bool
 	DeviceMacAddress string
-	Restarts         int
 }
 
 func NewProcess(pid int, ldt string, name string, port int, deviceAddress string) *Process {
@@ -55,7 +54,6 @@ func NewProcess(pid int, ldt string, name string, port int, deviceAddress string
 		Started:          time.Now().Format("2006-1-2 15:4:5"),
 		Pairable:         pairable,
 		DeviceMacAddress: deviceAddress,
-		Restarts:         1,
 	}
 }
 

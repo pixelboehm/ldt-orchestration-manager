@@ -19,10 +19,10 @@ func (m *Monitor) SerializeLDTs() error {
 	}
 	defer file.Close()
 
-	template := "%s\t%d\t%s\t%d\t%s\t%t\t%d\t%s\n"
+	template := "%s\t%d\t%s\t%d\t%s\t%t\t%s\n"
 	writer := bufio.NewWriter(file)
 	for _, ldt := range m.processes {
-		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable, ldt.Restarts, ldt.DeviceMacAddress)
+		res := fmt.Sprintf(template, ldt.Ldt, ldt.Pid, ldt.Name, ldt.Port, ldt.Started, ldt.Pairable, ldt.DeviceMacAddress)
 		writer.WriteString(res)
 	}
 
@@ -48,8 +48,7 @@ func (m *Monitor) DeserializeLDTs() error {
 			var hour string
 			var pairable bool
 			var deviceMacAddress string
-			var restarts int
-			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t\t%d\t%s", &ldt, &pid, &name, &port, &day, &hour, &pairable, &restarts, &deviceMacAddress)
+			_, err := fmt.Sscanf(scanner.Text(), "%s\t%d\t%s\t%d\t%s%s\t%t\t%s", &ldt, &pid, &name, &port, &day, &hour, &pairable, &deviceMacAddress)
 			if err != nil && !errors.Is(err, io.EOF) {
 				log.Printf("Monitor: failed to deserialize the LDT: %s with error: %v", name, err)
 			}
@@ -64,7 +63,6 @@ func (m *Monitor) DeserializeLDTs() error {
 				Started:          started,
 				Pairable:         pairable,
 				DeviceMacAddress: deviceMacAddress,
-				Restarts:         restarts,
 			})
 		}
 

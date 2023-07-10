@@ -10,7 +10,6 @@ import (
 	comms "longevity/src/communication"
 	man "longevity/src/ldt-orchestrator/manager"
 	mon "longevity/src/monitoring-dependency-manager"
-	"longevity/src/types"
 	"net"
 	"os"
 	"os/signal"
@@ -42,12 +41,9 @@ func main() {
 	defer func() {
 		syscall.Unlink(socket)
 	}()
-	monitor_manager_bridge := make(chan *types.Process)
-	started_Ldt := make(chan *types.Process)
-	stopped_Ldt := make(chan int)
 
-	var monitor *mon.Monitor = mon.NewMonitor(ldts, monitor_manager_bridge, started_Ldt, stopped_Ldt)
-	var manager *man.Manager = man.NewManager(repos, storage, monitor_manager_bridge, started_Ldt)
+	var monitor *mon.Monitor = mon.NewMonitor(ldts)
+	var manager *man.Manager = man.NewManager(repos, storage)
 	app := &App{
 		manager:      manager,
 		monitor:      monitor,
@@ -106,7 +102,6 @@ func (app *App) run(out io.Writer) error {
 
 	go app.checkForShutdown(sigchannel)
 	go app.monitor.DoKeepAlive(5)
-	go app.manager.TryRestartFailedLdt()
 	go app.monitor.RefreshLDTs()
 	go app.monitor.Run(8080)
 	go app.bootstrapper.Run(55443)
