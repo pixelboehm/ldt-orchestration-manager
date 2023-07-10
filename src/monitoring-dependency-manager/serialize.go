@@ -56,18 +56,16 @@ func (m *Monitor) DeserializeLDTs() error {
 
 			started := day + " " + hour
 
-			if ldtIsRunning(pid) {
-				m.processes = append(m.processes, Process{
-					Pid:              pid,
-					Ldt:              ldt,
-					Name:             name,
-					Port:             port,
-					Started:          started,
-					Pairable:         pairable,
-					DeviceMacAddress: deviceMacAddress,
-					Restarts:         restarts,
-				})
-			}
+			m.processes = append(m.processes, Process{
+				Pid:              pid,
+				Ldt:              ldt,
+				Name:             name,
+				Port:             port,
+				Started:          started,
+				Pairable:         pairable,
+				DeviceMacAddress: deviceMacAddress,
+				Restarts:         restarts,
+			})
 		}
 
 		if err := scanner.Err(); err != nil {
