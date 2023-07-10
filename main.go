@@ -138,7 +138,13 @@ func (app *App) executeCommand(input string, in net.Conn) {
 		comms.SendResultToSocket(in, " ")
 	case "pull":
 		if len(command) > 1 {
-			ldt := app.manager.DownloadLDT(command[1])
+			ldt_name := command[1]
+			ldt, err := app.manager.DownloadLDT(ldt_name)
+			if err != nil {
+				result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+				comms.SendResultToSocket(in, result)
+				return
+			}
 			comms.SendResultToSocket(in, ldt)
 			return
 		}
@@ -152,7 +158,12 @@ func (app *App) executeCommand(input string, in net.Conn) {
 			if !app.manager.LDTExists(ldt_name) {
 				ticker := time.NewTicker(2 * time.Second)
 				_ = app.manager.GetAvailableLDTs()
-				_ = app.manager.DownloadLDT(ldt_name)
+				_, err := app.manager.DownloadLDT(ldt_name)
+				if err != nil {
+					result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+					comms.SendResultToSocket(in, result)
+					return
+				}
 				<-ticker.C
 			}
 			process, err := app.manager.RunLDT(command)
@@ -178,7 +189,12 @@ func (app *App) executeCommand(input string, in net.Conn) {
 			if !app.manager.LDTExists(ldt_name) {
 				ticker := time.NewTicker(2 * time.Second)
 				_ = app.manager.GetAvailableLDTs()
-				_ = app.manager.DownloadLDT(ldt_name)
+				_, err := app.manager.DownloadLDT(ldt_name)
+				if err != nil {
+					result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+					comms.SendResultToSocket(in, result)
+					return
+				}
 				<-ticker.C
 			}
 			process, err := app.manager.StartLDT(command, in)

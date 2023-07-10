@@ -117,25 +117,28 @@ func (manager *Manager) GetURLFromLDTByName(user, ldt, version string) (string, 
 	return url, nil
 }
 
-func (manager *Manager) DownloadLDT(name string) string {
+func (manager *Manager) DownloadLDT(name string) (string, error) {
 	manager.OptionalScan()
 	user, ldt_name, version := manager.SplitLDTInfos(name)
 	url, err := manager.GetURLFromLDTByName(user, ldt_name, version)
 	if err != nil {
-		return err.Error()
+		return "", err
 	}
 
-	ldtArchive := manager.downloadLDTArchive(url)
+	ldtArchive, err := manager.downloadLDTArchive(url)
+	if err != nil {
+		return "", err
+	}
 	defer os.Remove(ldtArchive)
 	location := manager.ldt_dir + user + "/" + ldt_name + "/" + version
 	ldt, err := unarchive.Untar(ldtArchive, location)
 	if err != nil {
 		log.Println("Manager: Failed to unpack LDT: ", err)
-		return ""
+		return "", err
 	}
 
 	log.Printf("Manager: Downloaded LDT %s/%s:%s\n", user, ldt_name, version[1:])
-	return ldt
+	return ldt, nil
 }
 
 func (manager *Manager) SplitLDTInfos(name string) (string, string, string) {
@@ -236,14 +239,14 @@ func (manager *Manager) getLdtLocation(ldt string) string {
 	return manager.ldt_dir + user + "/" + ldt_name + "/" + version
 }
 
-func (manager *Manager) downloadLDTArchive(address string) string {
+func (manager *Manager) downloadLDTArchive(address string) (string, error) {
 	name, err := download(address, manager.ldt_dir)
 
 	if err != nil {
 		log.Println("Manager: Failed to download LDT archive: ", err)
-		return ""
+		return "", err
 	}
-	return name
+	return name, nil
 }
 
 func createLdtSpecificDirectory(dir string) (string, error) {
