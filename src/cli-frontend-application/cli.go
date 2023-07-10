@@ -129,7 +129,7 @@ func checkForShutdown(connection net.Conn, process chan int) {
 	if err != nil {
 		log.Printf("Failed to find process with PID %d\n", pid)
 	}
-	if err = proc.Signal(os.Interrupt); err != nil {
+	if err = proc.Signal(syscall.SIGTERM); err != nil {
 		log.Println("Failed to stop LDT gracefully")
 	}
 }
