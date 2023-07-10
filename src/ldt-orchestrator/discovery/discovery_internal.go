@@ -45,8 +45,8 @@ func updateLatestTag(ldts *[]LDT) {
 
 func sortByName(ldts []LDT) {
 	sort.Slice(ldts, func(i, j int) bool {
-		if ldts[i].User != ldts[j].User {
-			return ldts[i].User > ldts[j].User
+		if ldts[i].Vendor != ldts[j].Vendor {
+			return ldts[i].Vendor > ldts[j].Vendor
 		} else if ldts[i].Name != ldts[j].Name {
 			return ldts[i].Name > ldts[j].Name
 		} else {

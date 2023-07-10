@@ -69,7 +69,7 @@ func (b *Bootstrapper) startSuitableLdt(waiting_device Device) bool {
 	var found bool = false
 	for _, ldt := range b.manager.Discovery.SupportedLDTs.LDTs {
 		if ldt.Name == waiting_device.Name && ldt.Version[1:] == waiting_device.Version {
-			full_ldt_specifier = ldt.User + "/" + ldt.Name + ":" + ldt.Version[1:]
+			full_ldt_specifier = ldt.Vendor + "/" + ldt.Name + ":" + ldt.Version[1:]
 			b.manager.DownloadLDT(full_ldt_specifier)
 			found = true
 			break

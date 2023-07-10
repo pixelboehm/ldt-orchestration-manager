@@ -117,7 +117,7 @@ func Test_updateLatestTag(t *testing.T) {
 func injectLDTFromFakeUserIn(list *[]types.LDT) {
 	ldt := &types.LDT{
 		Name:    "switch",
-		User:    "fake_user",
+		Vendor:  "fake_user",
 		Version: "v0.10.2",
 		Os:      "darwin",
 		Arch:    "amd64",
@@ -133,7 +133,7 @@ func getUniqueUserLDTCombinations(ldts []types.LDT) int {
 loop:
 	for _, l := range ldts {
 		for i, u := range unique {
-			if l.Name == u.Name && l.User == u.User {
+			if l.Name == u.Name && l.Vendor == u.Vendor {
 				unique[i] = l
 				continue loop
 			}

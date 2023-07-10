@@ -60,7 +60,7 @@ func Test_FilteringLDTInformationFromURL(t *testing.T) {
 			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.tar.gz",
 			want: &LDT{
 				Name:    "switch",
-				User:    "pixelboehm",
+				Vendor:  "pixelboehm",
 				Version: "v0.2.1",
 				Os:      "darwin",
 				Arch:    "amd64",
@@ -72,7 +72,7 @@ func Test_FilteringLDTInformationFromURL(t *testing.T) {
 			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.tar.gz",
 			want: &LDT{
 				Name:    "switch",
-				User:    "pixelboehm",
+				Vendor:  "pixelboehm",
 				Version: "v0.2.1",
 				Os:      "darwin",
 				Arch:    "arm64",
@@ -84,7 +84,7 @@ func Test_FilteringLDTInformationFromURL(t *testing.T) {
 			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_x86_64.zip",
 			want: &LDT{
 				Name:    "switch",
-				User:    "pixelboehm",
+				Vendor:  "pixelboehm",
 				Version: "v0.2.1",
 				Os:      "darwin",
 				Arch:    "amd64",
@@ -96,7 +96,7 @@ func Test_FilteringLDTInformationFromURL(t *testing.T) {
 			input: "https://github.com/pixelboehm/ldt/releases/download/v0.2.1/switch_Darwin_arm64.zip",
 			want: &LDT{
 				Name:    "switch",
-				User:    "pixelboehm",
+				Vendor:  "pixelboehm",
 				Version: "v0.2.1",
 				Os:      "darwin",
 				Arch:    "arm64",
