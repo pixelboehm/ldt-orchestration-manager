@@ -18,6 +18,17 @@ type LDT struct {
 	Hash    []byte
 }
 
+func NewLDT(name, vendor, version, os, arch, url string) *LDT {
+	return &LDT{
+		Name:    name,
+		Vendor:  vendor,
+		Version: version,
+		Os:      os,
+		Arch:    arch,
+		Url:     url,
+	}
+}
+
 type LDTList struct {
 	LDTs []LDT
 	Lock sync.Mutex

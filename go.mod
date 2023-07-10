@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/google/go-github/v51 v51.0.0
+	github.com/hashicorp/go-version v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/oauth2 v0.6.0
