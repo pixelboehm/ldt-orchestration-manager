@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -129,7 +130,9 @@ func (app *App) executeCommand(input string, in net.Conn) {
 			name := command[1]
 			pid, err := app.monitor.GetPidViaLdtName(name)
 			if err != nil {
-				panic(err)
+				result := fmt.Sprintf("LDT %s does not exist\n", name)
+				comms.SendResultToSocket(in, result)
+				return
 			}
 			result := app.manager.StopLDT(pid, name, false)
 			comms.SendResultToSocket(in, result)
@@ -141,7 +144,7 @@ func (app *App) executeCommand(input string, in net.Conn) {
 			ldt_name := command[1]
 			ldt, err := app.manager.DownloadLDT(ldt_name)
 			if err != nil {
-				result := fmt.Sprintf("Failed to Download LDT: %s\n", ldt_name)
+				result := fmt.Sprintf("Failed to Download LDT %s: %v\n", ldt_name, err)
 				comms.SendResultToSocket(in, result)
 				return
 			}
@@ -154,6 +157,10 @@ func (app *App) executeCommand(input string, in net.Conn) {
 		comms.SendResultToSocket(in, result)
 	case "run":
 		if len(command) > 1 {
+			if err := app.manager.CheckIfLdtFormatIsValid(command[1]); err != nil {
+				comms.SendResultToSocket(in, err.Error())
+				return
+			}
 			var ldt_name string = command[1]
 			if !app.manager.LDTExists(ldt_name) {
 				ticker := time.NewTicker(2 * time.Second)
@@ -179,6 +186,10 @@ func (app *App) executeCommand(input string, in net.Conn) {
 	case "show":
 		if len(command) > 1 {
 			path := storage + command[1] + "/wotm/description.json"
+			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+				comms.SendResultToSocket(in, "LDT does not exist")
+				return
+			}
 			comms.SendResultToSocket(in, path)
 			return
 		}
@@ -225,6 +236,10 @@ func (app *App) executeCommand(input string, in net.Conn) {
 		if len(command) > 1 {
 			ldt := command[1]
 			path := storage + command[1]
+			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+				comms.SendResultToSocket(in, "LDT does not exist")
+				return
+			}
 			var result string
 			if err := os.RemoveAll(path); err != nil {
 				result = fmt.Sprintf("Failed to remove LDT: %s\n", ldt)
@@ -272,8 +287,16 @@ func (app *App) checkForShutdown(c chan os.Signal) {
 func cliHelp() *bytes.Buffer {
 	var buffer bytes.Buffer
 	buffer.WriteString("Usage: cli [OPTIONS]\n")
-	buffer.WriteString("help \t Show this help\n")
-	buffer.WriteString("run \t Run the managing service\n")
+	buffer.WriteString("help\t\t\t\t\t\tShow this help\n")
+	buffer.WriteString("get\t\t\t\t\t\tget all available LDTs\n")
+	buffer.WriteString("kill\t<ldt-identifier>\t\t\tungraceful stop specified LDT\n")
+	buffer.WriteString("pull\t<ldt-name>\t\t\t\tdownload specified LDT\n")
+	buffer.WriteString("ps\t\t\t\t\t\tlist all running LDTs\n")
+	buffer.WriteString("run\t<ldt-name>\t[ldt-identifier]\tdetached start LDT\n")
+	buffer.WriteString("show\t<ldt-identifier>\t\t\tdisplays Web-of-Things description\n")
+	buffer.WriteString("start\t<ldt-name>\t[ldt-identifier]\tattached start LDT\n")
+	buffer.WriteString("stop\t<ldt-identifier>\t\t\tgraceful stop specified LDT \n")
+	buffer.WriteString("rm\t<ldt-identifier>\t\t\tremoves LDT cache \n")
 	return &buffer
 }
 
