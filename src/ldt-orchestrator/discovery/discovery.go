@@ -72,7 +72,7 @@ func (discoverer *Discoverer) GetURLFromLDTByName(user, ldt, tag string) (string
 			return entry.Url, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("Unable to find LDT: %s", ldt))
+	return "", errors.New(fmt.Sprintf("Unable to find LDT %s", ldt))
 }
 
 func (c *Discoverer) updateRepositories() error {
