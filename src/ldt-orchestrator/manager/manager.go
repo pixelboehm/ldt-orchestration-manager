@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type Manager struct {
@@ -137,7 +138,11 @@ func (manager *Manager) DownloadLDT(name string) (string, error) {
 		return "", err
 	}
 
-	log.Printf("<Manager>: Downloaded LDT %s/%s:%s\n", user, ldt_name, version[1:])
+	if strings.HasPrefix(version, "v") {
+		version = version[1:]
+	}
+
+	log.Printf("<Manager>: Downloaded LDT %s/%s:%s\n", user, ldt_name, version)
 	return ldt, nil
 }
 
