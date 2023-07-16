@@ -7,16 +7,18 @@ GORELEASER_BIN 	:= goreleaser
 PROJECT_DIR 		:= $(CURDIR)
 PROJECT_BUILD_DIR 	:= $(PROJECT_DIR)/out
 
-.PHONY: build
-build:
-	@printf "%s\n" 'Compiling...'
+build: odm-d cli
+
+.PHONY: odm-d
+odm-d:
+	@printf "%s\n" 'Compiling Orchestration-Manager...'
 	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) main.go
 	@printf "%s\n" 'Done'
 
 .PHONY: cli
 cli:
 	@printf "%s\n" 'Compiling CLI...'
-	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/odm src/cli-frontend-application/cli.go
+	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/odm src/cli/cli.go
 	@printf "%s\n" 'Done'
 
 
