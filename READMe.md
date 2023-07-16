@@ -1,8 +1,16 @@
-# Longevity
+# Orchestration and Deployment Manager
 
 ## Goal
 
-Provide an application for discovering and managing distributed Longevity Digital Twins.
+Implementation of a Hub for the orchestration of distributed Longevity Digital Twins (LDTs), called Orchestration and Deployment Manager (ODM).
+It was the task of a master-thesis from December 21, 2022, until July 19, 2023, and therefore will most likely not be maintained further.
+
+Further repositories are required for a successful execution of this project
+
+- [Longevity Digital Twins](https://github.com/pixelboehm/ldt): Stores various LDTs.
+- [LDT Meta Repository](https://github.com/pixelboehm/meta-ldt): Stores a file with links to repositories containing LDTs.
+- [ESP32 Applications](https://github.com/pixelboehm/longevity-esp32): Stores ESP32 applications that are our smart devices.
+- (Optional) [Homebrew-LDT](https://github.com/pixelboehm/homebrew-ldt): Contains Homebrew (outdated) formulas for the ODM and LDTs. The formulas are not up-to-date anymore, but can be enabled through the `.goreleaser.yml` again.
 
 ## Prerequisites
 
@@ -11,7 +19,7 @@ Provide an application for discovering and managing distributed Longevity Digita
 ### optional
 
 - make
-- docker
+- goreleaser
 
 ## General
 
@@ -21,13 +29,12 @@ Provide an application for discovering and managing distributed Longevity Digita
 
 ## Setup
 
-The Makefile provides a `init` command, that initializes the project, if that isn't already done. The `setup` command enables vendoring and fetches dependencies
+The Makefile provides a `init` command, that initializes the project, if that isn't already done. The `setup` command enables vendoring and fetches dependencies.
 
 ## Testing
 
 The `Makefile` provides several helpful commands for testing and coverage. _short_ and _verbose_ flags for the test command can be set via the CLI flags `TEST_VERBOSE` and `TEST_SHORT`. 
 The Coverage report can be generated via `make cover` and is located in the `out` directory.
-Testing and coverage will always be executed regardless of caching.
 
 ## Variables
 
@@ -40,14 +47,16 @@ If you worry about accidentally pushing your secret user token, use the followin
 git update-index --assume-unchanged src/ldt-orchestrator/github.env
 ```
 
-Unfortunately, the github.env file is used in multiple places, with a relative path. I don't really like this, but I didn't found an easy way to use a project root variable. Therefore be careful when refactoring.
+Unfortunately, the github.env file is used in multiple places, with a relative path. I don't really like this, but I didn't found an easy way to use a project root variable. Therefore, be careful when refactoring.
 
-The socket is currently hard-coded under `/tmp/orchestration-manager.sock`. The reason for this is to eliminate a runtime dependency of the cli-frontend-application.
+The socket is currently hard-coded under `/tmp/orchestration-manager.sock`. The reason for this is to eliminate a runtime dependency of the CLI application.
 
 ## Building
 
-`make build` produces the binary `orchestration-manager` located in the `out` directory.
-`make cli` produces the binary `odm` located in the `out` directory. This is the command line frontend application.
+`make odm-d` produces the binary `orchestration-manager` located in the `out` directory.
+`make cli` produces the binary `odm` located in the `out` directory. This is the CLI application.
+`make build` produces both.
+
 
 ## Commands
 
