@@ -31,12 +31,12 @@ func (b *Bootstrapper) Run(port int) {
 }
 
 func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
-	log.Println("Bootstrapper: A new registration request came")
+	log.Println("<Bootstrapper>: A new registration request came")
 
 	var device Device
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&device); err != nil {
-		log.Println("Bootstrapper: Decoding Error: ", err)
+		log.Println("<Bootstrapper>: Decoding Error: ", err)
 	}
 	defer r.Body.Close()
 
@@ -47,7 +47,7 @@ func (b *Bootstrapper) registration(w http.ResponseWriter, r *http.Request) {
 func (b *Bootstrapper) bootstrap(waiting_device Device) string {
 	result, err := b.monitor.GetLDTAddressForDevice(waiting_device)
 	if err != nil {
-		log.Println(fmt.Sprint("Bootstrapper: Failed to find pairable LDT", err))
+		log.Println(fmt.Sprint("<Bootstrapper>: Failed to find pairable LDT", err))
 		return " "
 	}
 	if result != "No pairable LDT available" {
