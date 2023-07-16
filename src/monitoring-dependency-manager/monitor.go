@@ -110,7 +110,7 @@ func (m *Monitor) GetLDTAddressForDevice(device Device) (string, error) {
 			return res, nil
 		}
 	}
-	return "No pairable LDT available", nil
+	return "nil", nil
 }
 
 func (m *Monitor) GetPidViaLdtName(name string) (int, error) {
