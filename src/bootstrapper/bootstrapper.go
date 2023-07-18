@@ -50,7 +50,7 @@ func (b *Bootstrapper) bootstrap(waiting_device Device) string {
 		return " "
 	}
 	if result != "nil" {
-		log.Printf("<Bootstrapper>: Found pairable LDT at: %s\n", result)
+		log.Printf("<Bootstrapper>: Found pairable/suitable LDT at: %s\n", result)
 		ldt_address := result
 		return ldt_address
 	} else {
@@ -59,7 +59,7 @@ func (b *Bootstrapper) bootstrap(waiting_device Device) string {
 		if found == true {
 			return b.bootstrap(waiting_device)
 		} else {
-			log.Println("<Bootstrapper>: No pairable LDT available")
+			log.Println("<Bootstrapper>: No pairable/suitable LDT available")
 			return "nil"
 		}
 	}
