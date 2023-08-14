@@ -14,7 +14,7 @@ import (
 func Test_Untar(t *testing.T) {
 	require := require.New(t)
 
-	source, err := download_helper("https://github.com/pixelboehm/ldt/releases/download/v0.6.0/switch_Darwin_x86_64.tar.gz")
+	source, err := download_helper("https://github.com/pixelboehm/ldt/releases/download/v0.6.0/lightbulb_Darwin_x86_64.tar.gz")
 	require.NoError(err)
 	var dest string = "./out/test_ldt"
 
