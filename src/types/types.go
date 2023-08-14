@@ -77,7 +77,7 @@ func (ll *LDTList) String() string {
 	writer := tabwriter.NewWriter(&result, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(writer, "\tUser\tLDT\tVersion\tOS\tArch\tHash")
 	for i, ldt := range ll.LDTs {
-		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\t%s\t%x\n", i, ldt.Name, ldt.Vendor, ldt.Version, ldt.Os, ldt.Arch, ldt.Hash[:6])
+		fmt.Fprintf(writer, "%d\t%s\t%s\t%s\t%s\t%s\t%x\n", i, ldt.Vendor, ldt.Name, ldt.Version, ldt.Os, ldt.Arch, ldt.Hash[:6])
 	}
 	writer.Flush()
 	return result.String()
