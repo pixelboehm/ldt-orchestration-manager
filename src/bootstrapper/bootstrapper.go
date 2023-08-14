@@ -8,6 +8,7 @@ import (
 	mon "longevity/src/monitoring-dependency-manager"
 	. "longevity/src/types"
 	"net/http"
+	"strings"
 )
 
 type Bootstrapper struct {
@@ -70,8 +71,12 @@ func (b *Bootstrapper) startSuitableLdt(waiting_device Device) bool {
 	var full_ldt_specifier string
 	var found bool = false
 	for _, ldt := range b.manager.Discovery.SupportedLDTs.LDTs {
-		if ldt.Name == waiting_device.Name && ldt.Version[1:] == waiting_device.Version {
-			full_ldt_specifier = ldt.Vendor + "/" + ldt.Name + ":" + ldt.Version[1:]
+		if ldt.Name == waiting_device.Name && ldt.Version == waiting_device.Version {
+			if strings.HasPrefix(ldt.Version, "l") {
+				full_ldt_specifier = ldt.Vendor + "/" + ldt.Name + ":" + ldt.Version
+			} else {
+				full_ldt_specifier = ldt.Vendor + "/" + ldt.Name + ":" + ldt.Version[1:]
+			}
 			b.manager.DownloadLDT(full_ldt_specifier)
 			found = true
 			break
